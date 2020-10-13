@@ -1,0 +1,55 @@
+{
+  "groups": [
+    {
+      "name": "jwt.config",
+      "type": "com.school.component.jwt.JwtProperties",
+      "sourceType": "com.school.component.jwt.JwtProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "jwt.config.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.school.component.jwt.JwtProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "jwt.config.issuer",
+      "type": "java.lang.String",
+      "sourceType": "com.school.component.jwt.JwtProperties"
+    },
+    {
+      "name": "jwt.config.key-alias",
+      "type": "java.lang.String",
+      "sourceType": "com.school.component.jwt.JwtProperties"
+    },
+    {
+      "name": "jwt.config.key-location",
+      "type": "java.lang.String",
+      "sourceType": "com.school.component.jwt.JwtProperties"
+    },
+    {
+      "name": "jwt.config.key-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.school.component.jwt.JwtProperties"
+    },
+    {
+      "name": "jwt.config.refresh-token-expiration-days",
+      "type": "java.lang.Integer",
+      "sourceType": "com.school.component.jwt.JwtProperties",
+      "defaultValue": 0
+    },
+    {
+      "name": "jwt.config.subscriber",
+      "type": "java.lang.String",
+      "sourceType": "com.school.component.jwt.JwtProperties"
+    },
+    {
+      "name": "jwt.config.token-expiration-days",
+      "type": "java.lang.Integer",
+      "sourceType": "com.school.component.jwt.JwtProperties",
+      "defaultValue": 0
+    }
+  ],
+  "hints": []
+}
