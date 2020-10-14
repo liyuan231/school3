@@ -88,7 +88,6 @@ public class UserServiceImpl implements UserDetailsService {
             List<Usertorole> usertoroles = this.userToRoleService.getUserToRoleByUserId(user.getId());
             List<Role> roles = new ArrayList();
             Iterator var6 = usertoroles.iterator();
-
             Role role;
             while(var6.hasNext()) {
                 Usertorole usertorole = (Usertorole)var6.next();

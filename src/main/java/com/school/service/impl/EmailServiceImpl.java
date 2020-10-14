@@ -50,7 +50,6 @@ public class EmailServiceImpl {
 
     private String generateCode() {
         StringBuilder code = new StringBuilder();
-
         for(int i = 0; i < 4; ++i) {
             code.append((int)(Math.random() * 10.0D));
         }

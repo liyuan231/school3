@@ -22,8 +22,10 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\SignAl
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\UserMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserAdminLoginInCorrectException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\JwtPayloadBuilder.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\UserExample.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailVerificationCodeNullPointerException.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\SignController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailVerificationCodeIllegalArgumentException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\Status.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\FileFormattingException.java
@@ -42,6 +44,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\Pic
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\SpringSecurityConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimplePage.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\JwtConfiguration.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserAllController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\SignExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\SwaggerConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\admin\AdminSystemController.java
@@ -76,6 +79,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailW
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\PicsExample.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Sign.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Likes.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\LikeController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\RoletoauthoritiesExample.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\UserToRoleServiceImpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\CommonExceptionHandler.java

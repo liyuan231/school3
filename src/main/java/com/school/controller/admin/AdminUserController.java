@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -63,6 +64,7 @@ public class AdminUserController {
             notes = "导出报名表(swagger-bootstarp无法下载，会直接显示内容，因此要测试可以直接浏览器访问该地址)"
     )
     @GetMapping({"/exportRegistrationForm"})
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public void exportRegistrationForm(HttpServletResponse response) throws IOException {
         Workbook workbook = this.userService.exportRegistrationForm();
         String fileName = User.class.getSimpleName() + ".xls";
@@ -79,6 +81,7 @@ public class AdminUserController {
             value = "高校信息管理->搜索/分页",
             notes = "输入搞高校名进行搜索"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String search(@ApiParam(example = "1", value = "schoolName") @RequestParam(required = false) String schoolName,
                          @ApiParam(example = "1", value = "分页使用，要第几页的数据")
                          @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer limit,
@@ -105,6 +108,7 @@ public class AdminUserController {
             value = "导入报名表",
             notes = "但对excel的字段名有严格要求，仅支持.xls以及.xlsx，请直接和我讨论这一块"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) throws Exception, FileFormattingException, EmailNotFoundException, ExcelDataException, UsernameAlreadyExistException {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "文件不能为空！", (Object) null);
@@ -119,6 +123,7 @@ public class AdminUserController {
             value = "通过id查询某一用户",
             notes = "通过id查询某一用户"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String show(@PathVariable("userId") Integer id) throws UserNotFoundException {
         User user = this.userService.findById(id);
         List<Pics> logos = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.LOGO.value());
@@ -146,6 +151,7 @@ public class AdminUserController {
             value = "上传logo",
             notes = "管理端上传某一学校logo"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String uploadLogo(@RequestParam("logo") MultipartFile file, @ApiParam(example = "1", value = "被上传图片的用户的id") @PathVariable("userId") Integer userId) throws IOException, UserNotFoundException {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "上传文件不能为空！", (Object) null);
@@ -160,6 +166,7 @@ public class AdminUserController {
             value = "上传校长签章",
             notes = "管理端上传校长签章"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String uploadSignature(@RequestParam("signature") MultipartFile file, @ApiParam(example = "1", value = "被上传图片的用户的id") @PathVariable("userId") Integer userId) throws IOException, UserNotFoundException {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "上传文件不能为空！", (Object) null);
@@ -174,6 +181,7 @@ public class AdminUserController {
             value = "导入单个高校信息",
             notes = "后台手动添加一个用户"
     )
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object create(@ApiParam(example = "123@qq.com", value = "用户名即为邮箱号") @RequestParam("username") String username, @ApiParam(example = "GDUFS", value = "学校名") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "人名", value = "联系人") @RequestParam(value = "contact", required = false) String contact, @ApiParam(example = "地址", value = "学校详细地址") @RequestParam(value = "address", required = false) String address, @ApiParam(example = "111", value = "电话号码") @RequestParam(value = "telephone", required = false) String telephone, @ApiParam(example = "111", value = "学校代码") @RequestParam(value = "schoolCode", required = false) String schoolCode, @ApiParam(example = "XXX主任", value = "职务") @RequestParam(value = "profession", required = false) String profession) throws UsernameAlreadyExistException, EmailNotFoundException {
         String password = String.valueOf(System.currentTimeMillis());
         this.userService.add(username, password, schoolName, contact, address, telephone, schoolCode, (String) null, (String) null, (LocalDateTime) null, "default.png", profession, 1);
@@ -181,11 +189,13 @@ public class AdminUserController {
         return ResponseUtil.build(HttpStatus.OK.value(), "添加一个用户成功!", (Object) null);
     }
 
+
     @DeleteMapping({"/delete/{id}"})
     @ApiOperation(
             value = "删除用户",
             notes = "依据传入的id删除用户"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object delete(@PathVariable("id") Integer id) throws UserNotFoundException {
         this.userService.deleteById(id);
         return ResponseUtil.build(HttpStatus.OK.value(), "删除一个用户成功!");
@@ -196,6 +206,7 @@ public class AdminUserController {
             value = "更新用户信息",
             notes = "更新用户信息,用户名，即邮箱是否应该修改？"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object update(@ApiParam(example = "1", value = "待修改的用户的id") @PathVariable("userId") Integer id, @ApiParam(example = "广外", value = "待修改的用户的学校名") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "联系人", value = "联系人") @RequestParam(value = "contact", required = false) String contact, @ApiParam(example = "详细地址", value = "详细地址") @RequestParam(value = "address", required = false) String address, @ApiParam(example = "电话", value = "电话") @RequestParam(value = "telephone", required = false) String telephone, @ApiParam(example = "email", value = "用户名") @RequestParam(value = "username", required = false) String username) throws UserNotFoundException {
         User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) null);
         SimpleUser simpleUser = new SimpleUser();
@@ -208,6 +219,7 @@ public class AdminUserController {
             value = "获取高校登陆信息",
             notes = "获取高校登陆信息"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object listSearchUserLoginInfos(@ApiParam(example = "1", value = "schoolName") @RequestParam(required = false) String schoolName,
                                            @ApiParam(example = "1", value = "分页使用，要第几页的数据")
                                            @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,

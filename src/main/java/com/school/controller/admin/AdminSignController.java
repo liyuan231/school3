@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Api(
@@ -52,6 +53,7 @@ public class AdminSignController {
             value = "高校信息管理/签约公示->搜索/分页显示",
             notes = "签约公示->搜索/分页显示"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String search(@ApiParam(example = "schoolName",value = "schoolName") @RequestParam(value = "schoolName",required = false) String schoolName, @ApiParam(example = "2020",value = "year") @RequestParam(value = "year",required = false) Integer year, @ApiParam(example = "1",value = "分页使用，要第几页的数据") @RequestParam(value = "page",required = false) Integer page, @ApiParam(example = "10",value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize",required = false) Integer pageSize, @ApiParam(example = "1",value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc",value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         List<Sign> signs = this.signService.querySelective((Integer)null, (Integer)null, schoolName, (Integer)null, (String)null, year, page, pageSize, sort, order);
         Integer count = this.signService.count(schoolName, (String)null, year);
@@ -63,6 +65,7 @@ public class AdminSignController {
             value = "签约公示->导出签约名单",
             notes = "签约公示->导出签约名单"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/exportSignForm"})
     public void exportSignForm(HttpServletResponse response) throws IOException {
         Workbook workbook = this.signService.exportSignForm();
@@ -79,6 +82,7 @@ public class AdminSignController {
             value = "签约结果管理->提醒",
             notes = "签约结果管理->发送消息提醒高校查看签约结果"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @PostMapping({"/remind"})
     public String remindSchools() {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -57,7 +58,8 @@ public class AdminLikesController {
             value = "签约意向管理->搜索/分页显示",
             notes = "输入高校名进行搜索"
     )
-    public Object search(@RequestParam(value = "schoolName", required = false) String likeSchoolName, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public String search(@RequestParam(value = "schoolName", required = false) String likeSchoolName, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
         List<Likes> list = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, true);
         LikeServiceImpl var10000 = this.likeService;
         int size = LikeServiceImpl.size;
@@ -72,9 +74,7 @@ public class AdminLikesController {
             if (strings == null) {
                 strings = new LinkedList();
             }
-
             Iterator var14 = tmpList.iterator();
-
             while (var14.hasNext()) {
                 Likes item = (Likes) var14.next();
                 ((List) strings).add(item.getLikedschoolname());
@@ -91,6 +91,7 @@ public class AdminLikesController {
             value = "签约意向管理->导出签约意向表",
             notes = "签约意向管理->导出签约意向表"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/exportLikesForm"})
     public void exportLikesForm(HttpServletResponse response) throws IOException {
         Workbook workbook = this.likeService.exportLikesForm();
@@ -108,16 +109,17 @@ public class AdminLikesController {
             value = "签约意向管理->查看",
             notes = "每个高校的意向的查看"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object list(@PathVariable("userId") Integer likeUserId) {
         List<Likes> likes = this.likeService.querySelective((Integer) null, likeUserId, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取该学校的所有意向成功！", likes);
     }
-
     @PostMapping({"/add/{likeUserId}/{likedUserId}"})
     @ApiOperation(
             value = "添加一则意向",
             notes = "管理端手动添加一则意向"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String add(@ApiParam(example = "2", value = "被喜欢的用户", required = true) @PathVariable("likedUserId") Integer likedUserId, @ApiParam(example = "1", value = "主动去喜欢其他用户的用户", required = true) @PathVariable("likeUserId") Integer likeUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
         List<User> users = this.userService.querySelectiveLike(likeUserId, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         if (users.size() == 0) {
@@ -140,6 +142,7 @@ public class AdminLikesController {
             value = "签约意向管理->修改签约意向-删除",
             notes = "签约意向管理->修改签约意向-删除"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object delete(@ApiParam(example = "1", value = "该则意向的id") @PathVariable("id") Integer id) throws UserLikesNotCorrespondException, LikesNotFoundException {
         this.likeService.deleteById(id);
         return ResponseUtil.build(HttpStatus.OK.value(), "删除一则意向成功！", (Object) null);
@@ -149,6 +152,7 @@ public class AdminLikesController {
             value = "签约意向管理->提醒",
             notes = "签约意向管理->发送消息提醒高校参与意向选择"
     )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @PostMapping({"/remind"})
     public String remindSchools() {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
@@ -165,6 +169,7 @@ public class AdminLikesController {
         return ResponseUtil.build(HttpStatus.OK.value(), "提醒成功!", (Object) null);
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/listSchools"})
     @ApiOperation(
             value = "签约意向管理->修改签约意向->搜索",
