@@ -38,6 +38,8 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
+
+import io.swagger.models.auth.In;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -213,6 +215,10 @@ public class UserServiceImpl implements UserDetailsService {
         PageInfo<User> pageInfo = new PageInfo(users);
         return pageInfo.getList();
     }
+
+//    public List<User> querySelective(Integer userId,String username,String schoolName,String ){
+//        return querySelectiveLike();
+//    }
 
     public void deleteById(Integer id) throws UserNotFoundException {
         User user = new User();

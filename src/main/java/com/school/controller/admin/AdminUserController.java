@@ -181,9 +181,19 @@ public class AdminUserController {
             value = "导入单个高校信息",
             notes = "后台手动添加一个用户"
     )
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public Object create(@ApiParam(example = "123@qq.com", value = "用户名即为邮箱号") @RequestParam("username") String username, @ApiParam(example = "GDUFS", value = "学校名") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "人名", value = "联系人") @RequestParam(value = "contact", required = false) String contact, @ApiParam(example = "地址", value = "学校详细地址") @RequestParam(value = "address", required = false) String address, @ApiParam(example = "111", value = "电话号码") @RequestParam(value = "telephone", required = false) String telephone, @ApiParam(example = "111", value = "学校代码") @RequestParam(value = "schoolCode", required = false) String schoolCode, @ApiParam(example = "XXX主任", value = "职务") @RequestParam(value = "profession", required = false) String profession) throws UsernameAlreadyExistException, EmailNotFoundException {
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public Object create(@ApiParam(example = "123@qq.com", value = "用户名即为邮箱号") @RequestParam("username") String username,
+                         @ApiParam(example = "GDUFS", value = "学校名") @RequestParam(value = "schoolName", required = false) String schoolName,
+                         @ApiParam(example = "人名", value = "联系人") @RequestParam(value = "contact", required = false) String contact,
+                         @ApiParam(example = "地址", value = "学校详细地址") @RequestParam(value = "address", required = false) String address,
+                         @ApiParam(example = "111", value = "电话号码") @RequestParam(value = "telephone", required = false) String telephone,
+                         @ApiParam(example = "111", value = "学校代码") @RequestParam(value = "schoolCode", required = false) String schoolCode,
+                         @ApiParam(example = "XXX主任", value = "职务") @RequestParam(value = "profession", required = false) String profession) throws UsernameAlreadyExistException, EmailNotFoundException {
         String password = String.valueOf(System.currentTimeMillis());
+        List<User> users = userService.querySelectiveLike(null, username, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        if (users.size() > 0) {
+            throw new UsernameAlreadyExistException("用户名已存在!");
+        }
         this.userService.add(username, password, schoolName, contact, address, telephone, schoolCode, (String) null, (String) null, (LocalDateTime) null, "default.png", profession, 1);
         this.emailService.sendVerificationCode("签约系统", "用户临时授权码(三天内有效,如果过期了可以直接点击忘记密码重置密码~)", username, 3, TimeUnit.DAYS);
         return ResponseUtil.build(HttpStatus.OK.value(), "添加一个用户成功!", (Object) null);
