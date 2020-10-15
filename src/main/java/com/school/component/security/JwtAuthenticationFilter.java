@@ -71,7 +71,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     this.authenticationEntryPoint.commence(request, response, new AuthenticationCredentialsNotFoundException("token is missing!"));
                 }
             }
-
             filterChain.doFilter(request, response);
         }
     }
@@ -86,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (!Objects.nonNull(jsonObject)) {
-            throw new BadCredentialsException("token is invalid!");
+            throw new BadCredentialsException("token内容无效，请重新登录获取token");
         } else {
             Collection<GrantedAuthority> roles_ = new ArrayList();
             JSONArray authoritiesJSONArray = jsonObject.getJSONArray("roles");

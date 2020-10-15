@@ -11,10 +11,6 @@ import com.school.service.impl.UserServiceImpl;
 import com.school.service.impl.UserToRoleServiceImpl;
 import com.school.utils.IpUtil;
 import com.school.utils.ResponseUtil;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,6 +20,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @EnableConfigurationProperties({JwtProperties.class})
 @ConditionalOnProperty(
@@ -49,25 +50,28 @@ public class JwtConfiguration {
     public AuthenticationSuccessHandler jsonAuthenticationSuccessHandler(JwtTokenGenerator jwtTokenGenerator) {
         return (request, response, authentication) -> {
             Map<String, Object> map = new HashMap();
-            UserDetails principal = (UserDetails)authentication.getPrincipal();
-            List<User> users = this.userService.querySelectiveLike((Integer)null, principal.getUsername(), (String)null, (String)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null);
-            User user = (User)users.get(0);
-            List<Usertorole> usertoroles = this.userToRoleService.querySelective((Integer)null, user.getId(), (Integer)null);
+            UserDetails principal = (UserDetails) authentication.getPrincipal();
+            List<User> users = this.userService.querySelectiveLike((Integer) null, principal.getUsername(), (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+            User user = (User) users.get(0);
+            List<Usertorole> usertoroles = this.userToRoleService.querySelective((Integer) null, user.getId(), (Integer) null);
             if (usertoroles.size() == 0) {
                 throw new NullPointerException("该用户未设置角色!");
             } else {
-                Usertorole usertorole = (Usertorole)usertoroles.get(0);
-                String level = request.getParameter("level").trim();
-                if (!usertorole.getRoleid().toString().equals(level)) {
-                    String build = ResponseUtil.build(HttpStatus.BAD_GATEWAY.value(), "用户名登录错地方！", (Object)null);
+                Usertorole usertorole = (Usertorole) usertoroles.get(0);
+                String level = (String) request.getAttribute("level");
+                if (level == null) {
+                    level = request.getParameter("level");
+                }
+                if (level == null || !usertorole.getRoleid().toString().equals(level.trim())) {
+                    String build = ResponseUtil.build(HttpStatus.BAD_GATEWAY.value(), "用户名登录错地方！", (Object) null);
                     ResponseUtil.printlnInfo(response, build);
                 } else {
                     user.setLastloginip(request.getRemoteAddr());
                     user.setLastlogintime(LocalDateTime.now());
                     user.setLocation(IpUtil.retrieveCity(user.getLastloginip()));
-                    user.setPassword((String)null);
+                    user.setPassword((String) null);
                     this.userService.update(user);
-                    JwtTokenPair jwtTokenPair = jwtTokenGenerator.jwtTokenPair(principal.getUsername(), principal.getAuthorities(), (Map)null);
+                    JwtTokenPair jwtTokenPair = jwtTokenGenerator.jwtTokenPair(principal.getUsername(), principal.getAuthorities(), (Map) null);
                     map.put("access_token", jwtTokenPair.getAccessToken());
                     map.put("refresh_token", jwtTokenPair.getRefreshToken());
                     String buildx = ResponseUtil.build(HttpStatus.OK.value(), "登录成功！", map);
@@ -80,7 +84,7 @@ public class JwtConfiguration {
     @Bean
     public AuthenticationFailureHandler jsonAuthenticationFailureHandler() {
         return (request, response, exception) -> {
-            String build = ResponseUtil.build(HttpStatus.UNAUTHORIZED.value(), "用户名或密码错误！", exception.getMessage());
+            String build = ResponseUtil.build(HttpStatus.UNAUTHORIZED.value(), exception.getMessage(), exception.getMessage());
             ResponseUtil.printlnInfo(response, build);
         };
     }

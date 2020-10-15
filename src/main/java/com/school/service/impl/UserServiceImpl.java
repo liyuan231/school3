@@ -84,6 +84,9 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        if(!StringUtils.hasText(username)){
+            throw new UsernameNotFoundException("用户名为空，请检查参数！");
+        }
         List<User> users = this.findByUsername(username);
         if (users != null && users.size() != 0) {
             User user = (User)users.get(0);

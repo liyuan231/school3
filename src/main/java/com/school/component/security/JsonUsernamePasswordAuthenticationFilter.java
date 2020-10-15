@@ -7,14 +7,15 @@ package com.school.component.security;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public JsonUsernamePasswordAuthenticationFilter() {
@@ -27,6 +28,7 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
         } else {
             String username = "";
             String password = "";
+            String level = "2";//默认未用户登录
             ObjectMapper objectMapper = new ObjectMapper();
             UsernamePasswordAuthenticationToken authenticationToken = null;
 
@@ -44,6 +46,11 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                     if (passwordJsonNode != null) {
                         password = passwordJsonNode.asText();
                     }
+                    JsonNode levelJsonNode = body.get("level");
+                    if (levelJsonNode != null) {
+                        level = levelJsonNode.asText();
+                    }
+                    request.setAttribute("level", level);
 
                     authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
                 } catch (Throwable var18) {
