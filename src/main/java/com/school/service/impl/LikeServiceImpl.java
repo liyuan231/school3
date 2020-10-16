@@ -8,6 +8,7 @@ package com.school.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.school.dao.LikesMapper;
+import com.school.dao.UserMapper;
 import com.school.exception.LikesAlreadyExistException;
 import com.school.exception.LikesNotFoundException;
 import com.school.exception.UserLikesNotCorrespondException;
@@ -29,6 +30,7 @@ import java.util.TreeMap;
 import java.util.Map.Entry;
 import javax.annotation.Resource;
 
+import com.school.model.UserExample;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -46,8 +48,12 @@ import org.springframework.util.StringUtils;
 public class LikeServiceImpl {
     @Resource
     private LikesMapper likesMapper;
+    @Resource
+    private UserMapper userMapper;
     @Autowired
     private UserServiceImpl userService;
+    @Autowired
+    private LikeServiceImpl likeService;
     @Autowired
     private UserToRoleServiceImpl userToRoleService;
     public static int size = 0;
@@ -190,7 +196,7 @@ public class LikeServiceImpl {
         likes.setId(id);
         this.delete(likes);
     }
-
+    //查询对我有意向的用户
     public List<Likes> matchByLikedUserId() {
         User user = this.userService.retrieveUserByToken();
         LikesExample likesExample = new LikesExample();
@@ -199,7 +205,7 @@ public class LikeServiceImpl {
         criteria.andLikeduseridEqualTo(user.getId());
         return this.likesMapper.selectByExample(likesExample);
     }
-
+    //查询我有意向的用户
     public List<Likes> matchByLikeUserId() {
         User user = this.userService.retrieveUserByToken();
         LikesExample likesExample = new LikesExample();
@@ -210,8 +216,9 @@ public class LikeServiceImpl {
     }
 
     public List<Likes> matchByUserId() {
-        User user = this.userService.retrieveUserByToken();
-        Integer userId = user.getId();
+//        User user = this.userService.retrieveUserByToken();
+//        Integer userId = user.getId();
+        Integer userId = 283;
         List<Likes> result = new LinkedList();
         List<Likes> matches = this.match();
         Iterator var5 = matches.iterator();
@@ -224,6 +231,57 @@ public class LikeServiceImpl {
         }
 
         return result;
+    }
+    //查询互相有意向的用户
+    public List<Integer> matchbyID() throws UserNotFoundException {
+        List<Integer> melike = likeService.findidBymelike();
+        List<Integer> likeme = likeService.findidByLikeme();
+        List<Integer> user = new LinkedList<>();
+        for(Integer id:melike){
+            for(Integer id2:likeme){
+                if(id==id2){
+                    user.add(id);
+                }
+            }
+        }
+        return user;
+
+    }
+    public User findById(Integer id) {
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andIdEqualTo(id);
+        User user = userMapper.selectOneByExampleSelective(userExample);
+        return user;
+    }
+    //    查询对我有意向的用户id
+    public List<Integer> findidByLikeme() throws UserNotFoundException {
+//        User user = userService.retrieveUserByToken();
+        List<Likes> matchs = likeService.matchByLikedUserId();
+//        Integer userId = user.getId();
+        Integer userId = 283;
+//      List<Likes> matchs = likeService.matchByLikeUserId();
+//        我被喜欢的用户idd
+        List<Integer> users = new LinkedList<>();
+        for (Likes match : matchs) {
+            User user1 = userService.findById(match.getLikeuserid());
+            users.add(user1.getId());
+        }
+        return users;
+    }
+    //    查询我有意向的用户id
+    public List<Integer> findidBymelike() throws UserNotFoundException {
+//        User user = userService.retrieveUserByToken();
+        List<Likes> matchs = likeService.matchByLikeUserId();
+//        Integer userId = user.getId();
+        Integer userId = 283;
+//      List<Likes> matchs = likeService.matchByLikeUserId();
+//        我喜欢的用户id
+        List<Integer> users = new LinkedList<>();
+        for (Likes match : matchs) {
+            User user1 = userService.findById(match.getLikeduserid());
+            users.add(user1.getId());
+        }
+        return users;
     }
 
     public Workbook exportLikesForm() {

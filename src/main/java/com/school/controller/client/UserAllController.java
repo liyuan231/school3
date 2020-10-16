@@ -1,5 +1,7 @@
 package com.school.controller.client;
 
+import com.school.dto.SimplePage;
+import com.school.dto.SimpleUser;
 import com.school.model.User;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
@@ -30,13 +32,15 @@ public class UserAllController {
     public Object list(@ApiParam(value = "分页，要第几页的数据", example = "1") @RequestParam(defaultValue = "1") Integer page,
                        @ApiParam(value = "分页，该页数据要多少条", example = "10") @RequestParam(defaultValue = "10") Integer limit) {
         List<User> userList = userService.querySelectiveAllByPage(page, limit);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", userList);
+        Integer size = this.userService.count();
+        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, userList);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", simplePage);
     }
 
     @GetMapping("select/like")
     @ApiOperation(value = "学校信息模糊查询", notes = "模糊查询")
 //    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-    public Object list(@ApiParam(value = "关键字", example = "1") @RequestParam(defaultValue = "1") String key) {
+    public Object list(@ApiParam(value = "关键字", example = "") @RequestParam(defaultValue = "") String key) {
         List<User> userList = userService.querySelectiveAllDim(key);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", userList);
     }
@@ -44,11 +48,13 @@ public class UserAllController {
     @GetMapping("select/like{schoolname}")
     @ApiOperation(value = "学校名称模糊查询", notes = "模糊查询")
 //    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-    public Object list(@ApiParam(value = "关键字", example = "1") @RequestParam(defaultValue = "1") String key,
+    public Object list(@ApiParam(value = "关键字", example = "") @RequestParam(defaultValue = "") String key,
                        @ApiParam(value = "分页，要第几页的数据", example = "1") @RequestParam(defaultValue = "1") Integer page,
                        @ApiParam(value = "分页，该页数据要多少条", example = "10") @RequestParam(defaultValue = "10") Integer limit) {
         List<User> userList = userService.querySelectiveBySchoolnameDim(key,page,limit);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", userList);
+        Integer size = this.userService.count(key);
+        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, userList);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", simplePage);
     }
 
 

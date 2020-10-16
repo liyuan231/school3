@@ -5,6 +5,7 @@ import com.school.model.Likes;
 import com.school.model.User;
 import com.school.service.impl.LikeServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
+import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
@@ -24,9 +25,10 @@ import java.util.List;
 public class LikeController {
     @Autowired
     private LikeServiceImpl likeService;
-
     @Autowired
     private UserServiceImpl userService;
+    @Autowired
+    private SignServiceImpl signService;
     @Autowired
     private PicsServiceImpl picsService;
 
@@ -36,18 +38,22 @@ public class LikeController {
      * @param likedUserId
      * @return
      */
-    @PreAuthorize("hasAnyRole('USER') and hasAnyAuthority('user::like')")
+//    @PreAuthorize("hasAnyRole('USER') and hasAnyAuthority('user::like')")
     @PostMapping("/like/{likedUserId}")
     @ApiOperation(value = "表明意向（需登录）", notes = "用户表明意向,添加一则意向记录")
     public String like(@ApiParam(example = "1", value = "被表明意向的用户的id") @PathVariable("likedUserId") Integer likedUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
-        User user = userService.retrieveUserByToken();
-        List<User> users = userService.querySelectiveLike(null, user.getUsername(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        if (users.size() == 0) {
-            throw new UserNotFoundException("用户名不存在！");
-        }
-        List<User> likedUsers = userService.querySelectiveLike(likedUserId, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+//        User user = userService.retrieveUserByToken();
+//        List<User> users = userService.querySelectiveLike(null, user.getUsername(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+//        if (users.size() == 0) {
+//            throw new UserNotFoundException("用户名不存在！");
+//        }
+//        List<User> likedUsers = userService.querySelectiveLike(likedUserId, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         //TODO
 //        likeService.add();
+//        User user = userService.retrieveUserByToken();
+        User user = userService.findById(298);
+        User user2 = userService.findById(likedUserId);
+        likeService.add(user.getId(),user.getSchoolname(),likedUserId,user2.getSchoolname());
         return ResponseUtil.build(HttpStatus.OK.value(), "表明意向成功！", null);
     }
 
@@ -108,9 +114,9 @@ public class LikeController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取我有意向的用户成功！", users);
     }
 
-    @GetMapping("/match")
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-    @ApiOperation(value = "查询互相有意向的用户", notes = "获取我有意向的用户且对我也有意向，即互相喜欢的用户")
+    @GetMapping("/match1")
+//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @ApiOperation(value = "查询互相有意向的用户1", notes = "获取我有意向的用户且对我也有意向，即互相喜欢的用户")
     public Object match() throws UserNotFoundException {
         List<Likes> matchs = likeService.matchByUserId();
         List<User> users = new LinkedList<>();
@@ -119,5 +125,39 @@ public class LikeController {
             users.add(user);
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "获取互相喜欢的用户们成功！", users);
+    }
+
+    @GetMapping("/match2")
+//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @ApiOperation(value = "查询互相有意向的用户2", notes = "获取我有意向的用户且对我也有意向，即互相喜欢的用户")
+    public Object match2() throws UserNotFoundException {
+        List<Integer> result = likeService.matchbyID();
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取互相喜欢的用户们成功！", result);
+    }
+    @GetMapping("/addSign1")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @ApiOperation(value = "添加到sign", notes = "添加到sign")
+    public Object addSign1() throws UserNotFoundException, SignAlreadyExistException, SignNotCorrectException {
+        List<Likes> matchs = likeService.matchByUserId();
+        List<User> users = new LinkedList<>();
+        for (Likes match : matchs) {
+            User user = userService.findById(match.getLikeduserid());
+            users.add(user);
+        }
+        for(User user:users){
+            Integer id = user.getId();
+            signService.sign(id);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "添加！", users);
+    }
+    @GetMapping("/addSign2")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @ApiOperation(value = "添加到sign2", notes = "添加到sign")
+    public Object addSign2() throws UserNotFoundException, SignAlreadyExistException, SignNotCorrectException {
+        List<Integer> result = likeService.matchbyID();
+        for(Integer id:result){
+            signService.sign(id);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "添加！", result);
     }
 }

@@ -566,7 +566,9 @@ public class UserServiceImpl implements UserDetailsService {
 
     public List<User> querySelectiveBySchoolnameDim(String schoolname, Integer page, Integer limit) {
         UserExample userExample = new UserExample();
-        userExample.createCriteria().andSchoolnameLike("%" + schoolname + "%");
+        if (StringUtils.hasText(schoolname)) {
+            userExample.createCriteria().andSchoolnameLike("%" + schoolname + "%");
+        }
         if (page != null || limit != null) {
             if (page == null) {
                 PageHelper.startPage(1, limit);
@@ -581,4 +583,10 @@ public class UserServiceImpl implements UserDetailsService {
         PageInfo<User> pageInfo = new PageInfo(users);
         return pageInfo.getList();
     }
+//    public User findById(Integer id) {
+//        UserExample userExample = new UserExample();
+//        userExample.createCriteria().andIdEqualTo(id);
+//        User user = userMapper.selectOneByExampleSelective(userExample);
+//        return user;
+//    }
 }
