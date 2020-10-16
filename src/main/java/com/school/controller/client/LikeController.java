@@ -38,7 +38,7 @@ public class LikeController {
      * @param likedUserId
      * @return
      */
-//    @PreAuthorize("hasAnyRole('USER') and hasAnyAuthority('user::like')")
+    @PreAuthorize("hasAnyRole('USER') and hasAnyAuthority('user::like')")
     @PostMapping("/like/{likedUserId}")
     @ApiOperation(value = "表明意向（需登录）", notes = "用户表明意向,添加一则意向记录")
     public String like(@ApiParam(example = "1", value = "被表明意向的用户的id") @PathVariable("likedUserId") Integer likedUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
@@ -50,8 +50,8 @@ public class LikeController {
 //        List<User> likedUsers = userService.querySelectiveLike(likedUserId, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         //TODO
 //        likeService.add();
-//        User user = userService.retrieveUserByToken();
-        User user = userService.findById(298);
+        User user = userService.retrieveUserByToken();
+//        User user = userService.findById(298);
         User user2 = userService.findById(likedUserId);
         likeService.add(user.getId(),user.getSchoolname(),likedUserId,user2.getSchoolname());
         return ResponseUtil.build(HttpStatus.OK.value(), "表明意向成功！", null);
@@ -115,7 +115,7 @@ public class LikeController {
     }
 
     @GetMapping("/match1")
-//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
     @ApiOperation(value = "查询互相有意向的用户1", notes = "获取我有意向的用户且对我也有意向，即互相喜欢的用户")
     public Object match() throws UserNotFoundException {
         List<Likes> matchs = likeService.matchByUserId();
@@ -128,7 +128,7 @@ public class LikeController {
     }
 
     @GetMapping("/match2")
-//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
     @ApiOperation(value = "查询互相有意向的用户2", notes = "获取我有意向的用户且对我也有意向，即互相喜欢的用户")
     public Object match2() throws UserNotFoundException {
         List<Integer> result = likeService.matchbyID();

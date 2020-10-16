@@ -216,9 +216,9 @@ public class LikeServiceImpl {
     }
 
     public List<Likes> matchByUserId() {
-//        User user = this.userService.retrieveUserByToken();
-//        Integer userId = user.getId();
-        Integer userId = 283;
+        User user = this.userService.retrieveUserByToken();
+        Integer userId = user.getId();
+//        Integer userId = 283;
         List<Likes> result = new LinkedList();
         List<Likes> matches = this.match();
         Iterator var5 = matches.iterator();
@@ -255,10 +255,10 @@ public class LikeServiceImpl {
     }
     //    查询对我有意向的用户id
     public List<Integer> findidByLikeme() throws UserNotFoundException {
-//        User user = userService.retrieveUserByToken();
+        User user = userService.retrieveUserByToken();
         List<Likes> matchs = likeService.matchByLikedUserId();
-//        Integer userId = user.getId();
-        Integer userId = 283;
+        Integer userId = user.getId();
+//        Integer userId = 283;
 //      List<Likes> matchs = likeService.matchByLikeUserId();
 //        我被喜欢的用户idd
         List<Integer> users = new LinkedList<>();
@@ -270,10 +270,10 @@ public class LikeServiceImpl {
     }
     //    查询我有意向的用户id
     public List<Integer> findidBymelike() throws UserNotFoundException {
-//        User user = userService.retrieveUserByToken();
+        User user = userService.retrieveUserByToken();
         List<Likes> matchs = likeService.matchByLikeUserId();
-//        Integer userId = user.getId();
-        Integer userId = 283;
+        Integer userId = user.getId();
+//        Integer userId = 283;
 //      List<Likes> matchs = likeService.matchByLikeUserId();
 //        我喜欢的用户id
         List<Integer> users = new LinkedList<>();
