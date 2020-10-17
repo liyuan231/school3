@@ -8,49 +8,26 @@ package com.school.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.school.dao.UserMapper;
-import com.school.exception.EmailNotFoundException;
 import com.school.exception.ExcelDataException;
 import com.school.exception.FileFormattingException;
 import com.school.exception.UserNotFoundException;
 import com.school.exception.UsernameAlreadyExistException;
 import com.school.model.Role;
 import com.school.model.User;
-import com.school.model.UserExample;
-import com.school.model.Usertorole;
 import com.school.model.User.Column;
+import com.school.model.UserExample;
 import com.school.model.UserExample.Criteria;
+import com.school.model.Usertorole;
 import com.school.utils.AssertUtil;
 import com.school.utils.RoleEnum;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
-
-import io.swagger.models.auth.In;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -61,6 +38,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl implements UserDetailsService {
@@ -84,27 +71,27 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if(!StringUtils.hasText(username)){
+        if (!StringUtils.hasText(username)) {
             throw new UsernameNotFoundException("用户名为空，请检查参数！");
         }
         List<User> users = this.findByUsername(username);
         if (users != null && users.size() != 0) {
-            User user = (User)users.get(0);
+            User user = (User) users.get(0);
             List<Usertorole> usertoroles = this.userToRoleService.getUserToRoleByUserId(user.getId());
             List<Role> roles = new ArrayList();
             Iterator var6 = usertoroles.iterator();
             Role role;
-            while(var6.hasNext()) {
-                Usertorole usertorole = (Usertorole)var6.next();
-                role = this.roleService.querySelective(usertorole.getRoleid(), (String)null);
+            while (var6.hasNext()) {
+                Usertorole usertorole = (Usertorole) var6.next();
+                role = this.roleService.querySelective(usertorole.getRoleid(), (String) null);
                 roles.add(role);
             }
 
             Collection<GrantedAuthority> roles_ = new HashSet();
             Iterator var10 = roles.iterator();
 
-            while(var10.hasNext()) {
-                role = (Role)var10.next();
+            while (var10.hasNext()) {
+                role = (Role) var10.next();
                 roles_.add(new SimpleGrantedAuthority(role.getName()));
             }
 
@@ -115,7 +102,7 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public List<User> findByUsername(String username) {
-        return this.querySelectiveLike((Integer)null, username, (String)null, (String)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null);
+        return this.querySelectiveLike((Integer) null, username, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
     }
 
     public void delete(User user) throws UserNotFoundException {
@@ -124,18 +111,18 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public User findById(Integer id) throws UserNotFoundException {
-        List<User> users = this.querySelectiveLike(id, (String)null, (String)null, (String)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null);
+        List<User> users = this.querySelectiveLike(id, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         if (users.size() == 0) {
             throw new UserNotFoundException("用户id不存在！");
         } else {
-            return (User)users.get(0);
+            return (User) users.get(0);
         }
     }
 
     private void add(User user, Integer roleId) throws UsernameAlreadyExistException {
         this.userMapper.insertSelective(user);
         List<User> users = this.findByUsername(user.getUsername());
-        this.userToRoleService.add(((User)users.get(0)).getId(), roleId);
+        this.userToRoleService.add(((User) users.get(0)).getId(), roleId);
     }
 
     public List<User> querySelectiveLike(Integer userId, String username, String schoolName, String contact, String address, String telephone, Integer updateYear, String schoolCode, String location, Integer addYear, String lastLoginIp, String lastLoginTime, Integer accountStatus, String profession, Integer page, Integer pageSize, String sort, String order) {
@@ -231,16 +218,16 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public User retrieveUserByToken() {
-        UserDetails principal = (UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<User> users = this.findByUsername(principal.getUsername());
-        return (User)users.get(0);
+        return (User) users.get(0);
     }
 
     public void clearPassword(List<User> users) {
         Iterator var2 = users.iterator();
 
-        while(var2.hasNext()) {
-            User user = (User)var2.next();
+        while (var2.hasNext()) {
+            User user = (User) var2.next();
             user.setPassword("[PROTECTED]");
         }
 
@@ -314,16 +301,16 @@ public class UserServiceImpl implements UserDetailsService {
     public User update(User user) {
         user.setUpdateTime(LocalDateTime.now());
         this.userMapper.updateByPrimaryKeySelective(user);
-        List<User> users = this.querySelectiveLike(user.getId(), (String)null, (String)null, (String)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null);
-        return users.size() == 0 ? null : (User)users.get(0);
+        List<User> users = this.querySelectiveLike(user.getId(), (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+        return users.size() == 0 ? null : (User) users.get(0);
     }
 
     public void openLogin() throws UserNotFoundException {
-        List<User> users = this.querySelectiveLike((Integer)null, (String)null, (String)null, (String)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null);
+        List<User> users = this.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         Iterator var2 = users.iterator();
 
-        while(var2.hasNext()) {
-            User user = (User)var2.next();
+        while (var2.hasNext()) {
+            User user = (User) var2.next();
             user.setAccountstatus(1);
             this.update(user);
         }
@@ -365,76 +352,66 @@ public class UserServiceImpl implements UserDetailsService {
 
             workbook = new HSSFWorkbook(file.getInputStream());
         }
-
-        int numberOfSheets = ((Workbook)workbook).getNumberOfSheets();
+        int numberOfSheets = ((Workbook) workbook).getNumberOfSheets();
 
         label82:
-        for(int i = 0; i < numberOfSheets; ++i) {
-            Sheet sheetAt = ((Workbook)workbook).getSheetAt(i);
+        for (int i = 0; i < numberOfSheets; ++i) {
+            Sheet sheetAt = ((Workbook) workbook).getSheetAt(i);
             Iterator<Row> rowIterator = sheetAt.iterator();
+            Map info = null;
             if (rowIterator.hasNext()) {
-                Row preRow = (Row)rowIterator.next();
-                Map info = this.preConstruct(preRow);
-
-                while(true) {
-                    while(true) {
-                        User user;
-                        do {
-                            do {
-                                if (!rowIterator.hasNext()) {
-                                    continue label82;
-                                }
-
-                                Row aRow = (Row)rowIterator.next();
-                                Constructor<User> constructor = User.class.getConstructor();
-                                user = (User)constructor.newInstance();
-                                Iterator cellIterator = aRow.iterator();
-
-                                while(cellIterator.hasNext()) {
-                                    Cell cell = (Cell)cellIterator.next();
-                                    CellType cellType = cell.getCellType();
-                                    String fieldValue = null;
-                                    if (cellType == CellType.NUMERIC) {
-                                        fieldValue = String.valueOf(cell.getNumericCellValue()).trim();
-                                    } else if (cellType == CellType.STRING) {
-                                        fieldValue = cell.getStringCellValue().trim();
-                                    }
-
-                                    int columnIndex = cell.getColumnIndex();
-                                    String fieldName = (String)info.get(columnIndex);
-
-                                    try {
-                                        this.invokeValue(user, fieldName, fieldValue);
-                                    } catch (NoSuchMethodException var21) {
-                                        throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！");
-                                    }
-                                }
-                            } while(user.getUsername() == null);
-                        } while(user.getUsername().trim().equals(""));
-
-                        List<User> byUsername = this.findByUsername(user.getUsername());
-                        if (byUsername.size() != 0) {
-                            System.out.println("该用户名已经被注册过了！");
-                        } else {
-                            String defaultPassword = this.generateDefaultPassword();
-                            user.setPassword(defaultPassword);
-
-                            try {
-                                this.emailService.sendVerificationCode("签约系统临时授权码", "签约系统临时授权码(3天内有效，请尽快重设您的密码)", user.getUsername(), 3, TimeUnit.DAYS);
-                            } catch (EmailNotFoundException var22) {
-                                this.logger.warn("邮箱号有误,无法发送邮件到指定用户:" + user.getUsername());
-                                continue;
-                            }
-
-                            this.add(user, RoleEnum.USER.value());
-                            System.out.println(user.toString());
-                        }
+                Row preRow = (Row) rowIterator.next();//第0行用于解析字段名
+                info = this.preConstruct(preRow);
+            }
+            User user = null;
+            while (rowIterator.hasNext()) {
+                //现在开始每一行代表一个用户
+                Row aRow = (Row) rowIterator.next();
+                Constructor<User> constructor = User.class.getConstructor();
+                user = (User) constructor.newInstance();
+                Iterator cellIterator = aRow.iterator();
+                //遍历该行的每一个元素
+                while (cellIterator.hasNext()) {
+                    Cell cell = (Cell) cellIterator.next();
+                    CellType cellType = cell.getCellType();
+                    String fieldValue = null;
+                    if (cellType == CellType.NUMERIC) {
+                        fieldValue = String.valueOf(cell.getNumericCellValue()).trim();
+                    } else if (cellType == CellType.STRING) {
+                        fieldValue = cell.getStringCellValue().trim();
                     }
+                    int columnIndex = cell.getColumnIndex();
+                    String fieldName = (String) info.get(columnIndex);
+                    try {
+                        this.invokeValue(user, fieldName, fieldValue);
+                    } catch (NoSuchMethodException var21) {
+                        throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！");
+                    }
+                }
+                //此时拼接完一个用户
+                if (StringUtils.isEmpty(user.getUsername())) {
+                    logger.warn("导入用户数据时，发现有一行用户名为空！");
+                    continue;
+                }
+                List<User> byUsername = this.findByUsername(user.getUsername());
+                if (byUsername.size() != 0) {
+                    System.out.println("该用户名已经被注册过了！");
+                } else {
+                    String defaultPassword = this.generateDefaultPassword();
+                    user.setPassword(defaultPassword);
+                    try {
+                        this.emailService.sendVerificationCode("签约系统临时授权码", "签约系统临时授权码(3天内有效，请尽快重设您的密码)", user.getUsername(), 3, TimeUnit.DAYS);
+                    } catch (MailException var22) {
+                        this.logger.warn("邮箱号有误,无法发送邮件到指定用户:" + user.getUsername());
+                        continue;
+                    }
+                    this.add(user, RoleEnum.USER.value());
+                    System.out.println(user.toString());
                 }
             }
         }
-
     }
+
 
     private String generateDefaultPassword() {
         String s = String.valueOf(System.currentTimeMillis());
@@ -451,17 +428,17 @@ public class UserServiceImpl implements UserDetailsService {
         Map<Integer, String> map = new HashMap();
         Iterator<Cell> cellIterator = aRow.iterator();
         int var4 = 0;
-
-        while(cellIterator.hasNext()) {
-            Cell cell = (Cell)cellIterator.next();
-            map.put(var4++, cell.getStringCellValue());
+        while (cellIterator.hasNext()) {
+            Cell cell = (Cell) cellIterator.next();
+            if (StringUtils.hasText(cell.getStringCellValue())) {
+                map.put(var4++, cell.getStringCellValue());
+            }
         }
-
         return map;
     }
 
     public Workbook exportRegistrationForm() throws IOException {
-        List<User> users = this.querySelectiveLike((Integer)null, (String)null, (String)null, (String)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null);
+        List<User> users = this.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         Workbook workbook = new HSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         Row row = sheet.createRow(0);
@@ -471,7 +448,7 @@ public class UserServiceImpl implements UserDetailsService {
         Field[] var8 = declaredFields;
         int var9 = declaredFields.length;
 
-        for(int var10 = 0; var10 < var9; ++var10) {
+        for (int var10 = 0; var10 < var9; ++var10) {
             Field declaredField = var8[var10];
             String fieldName = declaredField.getName();
             if (!fieldName.startsWith("IS_") && !fieldName.startsWith("NOT_")) {
@@ -482,16 +459,16 @@ public class UserServiceImpl implements UserDetailsService {
             }
         }
 
-        for(int i = 1; i <= users.size(); ++i) {
+        for (int i = 1; i <= users.size(); ++i) {
             Row eachUserRow = sheet.createRow(i);
             Iterator var17 = map.entrySet().iterator();
 
-            while(var17.hasNext()) {
-                Entry<String, Integer> entry = (Entry)var17.next();
-                Cell cell = eachUserRow.createCell((Integer)entry.getValue());
+            while (var17.hasNext()) {
+                Map.Entry<String, Integer> entry = (Map.Entry) var17.next();
+                Cell cell = eachUserRow.createCell((Integer) entry.getValue());
 
                 try {
-                    Object value = this.valueInvoke((User)users.get(i - 1), (String)entry.getKey());
+                    Object value = this.valueInvoke((User) users.get(i - 1), (String) entry.getKey());
                     cell.setCellValue(String.valueOf(value));
                 } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException var14) {
                     var14.printStackTrace();
@@ -509,7 +486,7 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public Integer count() {
-        return this.count((String)null);
+        return this.count((String) null);
     }
 
     public Integer count(String schoolName) {

@@ -40,7 +40,7 @@ public class EmailServiceImpl {
     public EmailServiceImpl() {
     }
 
-    public void sendVerificationCode(String subject, String message, String username, Integer duration, TimeUnit timeUnit) throws EmailNotFoundException {
+    public void sendVerificationCode(String subject, String message, String username, Integer duration, TimeUnit timeUnit) throws MailException{
         String code = this.generateCode();
         this.usernameToCodeMap.put(username, code, (long)duration, timeUnit);
         StringBuilder context = new StringBuilder();

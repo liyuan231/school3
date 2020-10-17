@@ -132,7 +132,9 @@ public class AdminLikesController {
             notes = "管理端手动添加一则意向"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String add(@ApiParam(example = "2", value = "被喜欢的用户", required = true) @PathVariable("likedUserId") Integer likedUserId, @ApiParam(example = "1", value = "主动去喜欢其他用户的用户", required = true) @PathVariable("likeUserId") Integer likeUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
+    public String add(
+            @ApiParam(example = "1", value = "主动去喜欢其他用户的用户", required = true) @PathVariable("likeUserId") Integer likeUserId,
+            @ApiParam(example = "2", value = "被喜欢的用户的id", required = true) @PathVariable("likedUserId") Integer likedUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
         List<User> users = this.userService.querySelectiveLike(likeUserId, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         if (users.size() == 0) {
             throw new UserNotFoundException("用户id不存在！");
@@ -143,7 +145,7 @@ public class AdminLikesController {
                 throw new UserNotFoundException("用户id不存在！");
             } else {
                 User likedUser = users.get(0);
-                this.likeService.add(likeUserId, likeUser.getSchoolname(), likedUserId, likedUser.getSchoolname());
+                this.likeService.add(likeUser.getId(), likeUser.getSchoolname(), likedUser.getId(), likedUser.getSchoolname());
                 return ResponseUtil.build(HttpStatus.OK.value(), "管理端添加该学校意向成功！");
             }
         }

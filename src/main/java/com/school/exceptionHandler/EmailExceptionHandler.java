@@ -16,8 +16,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Objects;
 
 @RestControllerAdvice
 public class EmailExceptionHandler {
@@ -26,16 +29,30 @@ public class EmailExceptionHandler {
     public EmailExceptionHandler() {
     }
 
-    @ExceptionHandler({EmailVerificationCodeIllegalArgumentException.class})
-    public String emailVerificationCodeIllegalArgumentException(HttpServletRequest request, Exception e) throws JsonProcessingException {
+    @ExceptionHandler({MailException.class})
+    public String mailException(HttpServletRequest request, Exception e){
         this.logger.info("[" + request.getRemoteAddr() + "] ERROR " + e.getMessage());
         return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
+    @ExceptionHandler({EmailVerificationCodeIllegalArgumentException.class})
+    public String emailVerificationCodeIllegalArgumentException(HttpServletRequest request, Exception e) throws JsonProcessingException {
+        this.logger.info("[" + request.getRemoteAddr() + "] ERROR " + e.getMessage());
+//        return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "验证码错误!");
+    }
+
     @ExceptionHandler({EmailVerificationCodeNullPointerException.class})
     public String emailVerificationCodeNullPointerException(HttpServletRequest request, Exception e) throws JsonProcessingException {
-        this.logger.info("[" + request.getRemoteAddr() + "] ERROR " + e.getMessage());
-        return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        Throwable cause = e.getCause();
+        String appendix = null;
+        if(Objects.nonNull(cause)){
+            appendix = cause.getMessage();
+        }
+        this.logger.info("[" + request.getRemoteAddr() + "] ERROR " + appendix+"->"+e.getMessage());
+//        return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), appendix+"->"+e.getMessage());
+        return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "验证码错误!");
+
     }
 
     @ExceptionHandler({UsernameNullPointerException.class})

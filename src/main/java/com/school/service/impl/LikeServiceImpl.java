@@ -166,7 +166,7 @@ public class LikeServiceImpl {
         likes.setLikeduserid(likedUserId);
         likes.setLikeuserid(likeUserId);
         likes.setLikeschoolname(likeSchoolName);
-        likes.setLikeschoolname(likedSchoolName);
+        likes.setLikedschoolname(likedSchoolName);
         this.add(likes);
     }
 
