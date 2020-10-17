@@ -994,6 +994,9 @@ SELECT|sys.sys_config:null
     </column>
     <column id="307" parent="285" name="type">
       <Position>4</Position>
+      <Comment>1：头像
+2：logo
+3：校长签章</Comment>
       <DataType>int(11)|0s</DataType>
     </column>
     <column id="308" parent="285" name="add_time">
@@ -1226,46 +1229,51 @@ SELECT|sys.sys_config:null
       <Comment>职务</Comment>
       <DataType>varchar(60)|0s</DataType>
     </column>
-    <key id="355" parent="289" name="PRIMARY">
+    <column id="355" parent="289" name="country">
+      <Position>18</Position>
+      <Comment>学校所在国家</Comment>
+      <DataType>varchar(255)|0s</DataType>
+    </column>
+    <key id="356" parent="289" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="356" parent="290" name="id">
+    <column id="357" parent="290" name="id">
       <Position>1</Position>
       <DataType>int(11)|0s</DataType>
       <NotNull>1</NotNull>
       <SequenceIdentity>null</SequenceIdentity>
     </column>
-    <column id="357" parent="290" name="userId">
+    <column id="358" parent="290" name="userId">
       <Position>2</Position>
       <DataType>int(11)|0s</DataType>
     </column>
-    <column id="358" parent="290" name="roleId">
+    <column id="359" parent="290" name="roleId">
       <Position>3</Position>
       <DataType>int(11)|0s</DataType>
     </column>
-    <index id="359" parent="290" name="usertorole_user__fk">
+    <index id="360" parent="290" name="usertorole_user__fk">
       <ColNames>userId</ColNames>
       <Type>btree</Type>
     </index>
-    <index id="360" parent="290" name="usertorole_role__fk">
+    <index id="361" parent="290" name="usertorole_role__fk">
       <ColNames>roleId</ColNames>
       <Type>btree</Type>
     </index>
-    <key id="361" parent="290" name="PRIMARY">
+    <key id="362" parent="290" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <foreign-key id="362" parent="290" name="usertorole_user__fk">
+    <foreign-key id="363" parent="290" name="usertorole_user__fk">
       <ColNames>userId</ColNames>
       <RefTableName>user</RefTableName>
       <RefColNames>id</RefColNames>
       <OnUpdate>cascade</OnUpdate>
       <OnDelete>cascade</OnDelete>
     </foreign-key>
-    <foreign-key id="363" parent="290" name="usertorole_role__fk">
+    <foreign-key id="364" parent="290" name="usertorole_role__fk">
       <ColNames>roleId</ColNames>
       <RefTableName>role</RefTableName>
       <RefColNames>id</RefColNames>

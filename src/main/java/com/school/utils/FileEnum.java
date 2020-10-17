@@ -8,7 +8,8 @@ package com.school.utils;
 public enum FileEnum {
     AVATAR_URL(1),
     LOGO(2),
-    SIGNATURE(3);
+    SIGNATURE(3),
+    TEMPLATE(4);
 
     private int code;
 
