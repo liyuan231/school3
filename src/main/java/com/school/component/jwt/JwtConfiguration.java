@@ -11,6 +11,7 @@ import com.school.service.impl.UserServiceImpl;
 import com.school.service.impl.UserToRoleServiceImpl;
 import com.school.utils.IpUtil;
 import com.school.utils.ResponseUtil;
+import com.school.utils.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -53,6 +54,7 @@ public class JwtConfiguration {
             UserDetails principal = (UserDetails) authentication.getPrincipal();
             List<User> users = this.userService.querySelectiveLike((Integer) null, principal.getUsername(), (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
             User user = (User) users.get(0);
+
             List<Usertorole> usertoroles = this.userToRoleService.querySelective((Integer) null, user.getId(), (Integer) null);
             if (usertoroles.size() == 0) {
                 throw new NullPointerException("该用户未设置角色!");
@@ -66,6 +68,10 @@ public class JwtConfiguration {
                     String build = ResponseUtil.build(HttpStatus.BAD_GATEWAY.value(), "用户名登录错地方！", (Object) null);
                     ResponseUtil.printlnInfo(response, build);
                 } else {
+                    if(user.getAccountstatus().equals(Status.LOGIN_NOT_ALLOWED)){
+                        String build = ResponseUtil.build(HttpStatus.BAD_GATEWAY.value(), "还没开始登录呢~", (Object) null);
+                        ResponseUtil.printlnInfo(response, build);
+                    }
                     user.setLastloginip(request.getRemoteAddr());
 
 //                    String remoteAddr = request.getRemoteAddr();

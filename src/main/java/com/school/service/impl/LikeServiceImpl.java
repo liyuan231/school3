@@ -275,4 +275,17 @@ public class LikeServiceImpl {
         User likedUser = userService.findById(likedUserId);
         add(likeUser.getId(),likeUser.getSchoolname(),likedUserId, likedUser.getSchoolname());
     }
+
+    public int count(Integer userId, String schoolName) {
+        LikesExample likesExample =new LikesExample();
+        Criteria criteria = likesExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        if(!StringUtils.isEmpty(userId)){
+            criteria.andLikeuseridEqualTo(userId);
+        }
+        if(StringUtils.hasText(schoolName)){
+            criteria.andLikeschoolnameLike("%"+schoolName+"%");
+        }
+        return (int) likesMapper.countByExample(likesExample);
+    }
 }

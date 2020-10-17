@@ -167,11 +167,27 @@ public class UserController {
     @ApiOperation(value = "获取当前用户信息", notes = "获取用户信息")
     @GetMapping("/retrieveUserInfo")
     public Object retrieveUserInfo() {
-        User userInDb = userService.retrieveUserByToken();
-        userInDb.setPassword("[PASSWORD]");
-        userInDb.setAvatarurl(springFilePath + userInDb.getAvatarurl());
-//        List<Pics> avatarUrls = picsService.findByUserId(userInDb.getId(), FileEnum.AVATAR_URL);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", userInDb);
+        User user = userService.retrieveUserByToken();
+        user.setAvatarurl(springFilePath + user.getAvatarurl());
+
+        List<Pics> logos = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.LOGO.value());
+        String logo = logos.size() == 0 ? null : this.springFilePath + ((Pics) logos.get(0)).getLocation();
+        List<Pics> signatures = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.SIGNATURE.value());
+        String signature = signatures.size() == 0 ? null : this.springFilePath + ((Pics) signatures.get(0)).getLocation();
+        SimpleUser simpleUser = new SimpleUser();
+
+        this.fillNexessaryUserInfo(user, simpleUser);
+        simpleUser.setLogo(logo);
+        simpleUser.setSignature(signature);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", simpleUser);
+    }
+    private void fillNexessaryUserInfo(User user, SimpleUser simpleUser) {
+        simpleUser.setUsername(user.getUsername());
+        simpleUser.setAddress(user.getAddress());
+        simpleUser.setContact(user.getContact());
+        simpleUser.setId(user.getId());
+        simpleUser.setSchoolName(user.getSchoolname());
+        simpleUser.setTelephone(user.getTelephone());
     }
 
 //    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")

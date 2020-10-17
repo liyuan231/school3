@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -109,11 +110,17 @@ public class AdminUserController {
             notes = "但对excel的字段名有严格要求，仅支持.xls以及.xlsx，请直接和我讨论这一块"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) throws Exception, FileFormattingException, EmailNotFoundException, ExcelDataException, UsernameAlreadyExistException {
+    public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "文件不能为空！", (Object) null);
         } else {
-            this.userService.importRegistrationForm(file);
+            new Thread(() -> {
+                try {
+                    this.userService.importRegistrationForm(file);
+                } catch (FileFormattingException | IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | ExcelDataException | UsernameAlreadyExistException e) {
+                    logger.warn(e.getMessage());
+                }
+            }).start();
             return ResponseUtil.build(HttpStatus.OK.value(), "录入excel数据成功！");
         }
     }
@@ -222,6 +229,19 @@ public class AdminUserController {
         SimpleUser simpleUser = new SimpleUser();
         this.fill(update, simpleUser);
         return ResponseUtil.build(HttpStatus.OK.value(), "修改一个用户成功!", simpleUser);
+    }
+
+    @PostMapping("/openLogin")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @ApiOperation(
+            value = "开放登录",
+            notes = "开放登录"
+    )
+    public String openLogin() {
+        new Thread(() -> {
+            userService.openLogin();
+        }).start();
+        return ResponseUtil.build(HttpStatus.OK.value(), "开放登录！");
     }
 
     @PostMapping({"/listSearchUserLoginInfos"})

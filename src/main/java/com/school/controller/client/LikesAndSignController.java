@@ -5,20 +5,30 @@ import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.PictureRenderData;
 import com.deepoove.poi.util.BytePictureUtils;
-import com.school.dto.golden.likelist;
+import com.school.dto.LikesWithMark;
+import com.school.dto.SimplePage;
 import com.school.dto.golden.picture;
+import com.school.exception.UserNotFoundException;
+import com.school.model.Likes;
 import com.school.model.Pics;
+import com.school.model.Sign;
 import com.school.model.User;
 import com.school.service.golden.userserviceimpl;
+import com.school.service.impl.LikeServiceImpl;
+import com.school.service.impl.PicsServiceImpl;
+import com.school.service.impl.SignServiceImpl;
+import com.school.service.impl.UserServiceImpl;
+import com.school.utils.FileEnum;
+import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,9 +43,9 @@ import java.util.*;
 
 
 @Controller
-@RequestMapping({"/api"})
+@RequestMapping({"/api/client/signs"})
 @Api(value = "我的意向及签约",
-        tags = {"签约意向"})
+        tags = {"我的意向及签约"})
 public class LikesAndSignController {
     @Value("${spring.file.path}")
     private String springFilePath;
@@ -46,18 +56,136 @@ public class LikesAndSignController {
     @Autowired
     userserviceimpl user_service;
 
+
+    @Autowired
+    private UserServiceImpl userService;
+    @Autowired
+    private LikeServiceImpl likeService;
+    @Autowired
+    private SignServiceImpl signService;
+    @Autowired
+    private PicsServiceImpl picsService;
+
+
+    @ResponseBody
+    @GetMapping("/list")
+    @ApiOperation(value = "我的意向及签约列表", notes = "我的意向及签约列表")
+    @PreAuthorize("hasRole('USER')")
+    public Object list(
+            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
+            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+            @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort,
+            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
+        User user = userService.retrieveUserByToken();
+        //获取当前用户所有的意向
+        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null);
+        int size = likeService.count(user.getId(), null);
+        List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
+        HashSet<Integer> signedUserIds = new HashSet<>();
+        for (Sign sign : signs) {
+            signedUserIds.add(sign.getSigneduserid());
+        }
+        List<LikesWithMark> likesWithMarks = new LinkedList<>();
+        for (Likes like : likes) {
+            LikesWithMark likesWithMark = new LikesWithMark();
+            clean(like);
+            likesWithMark.setLikes(like);
+            if (signedUserIds.contains(like.getLikeduserid())) {
+                likesWithMark.setSigned(true);
+            } else {
+                likesWithMark.setSigned(false);
+            }
+            likesWithMarks.add(likesWithMark);
+        }
+        SimplePage simplePage = new SimplePage(size, likesWithMarks);
+        return ResponseUtil.build(HttpStatus.OK.value(), "我的意向及签约列表成功!", simplePage);
+
+        //现在当前用户的意向以及签约都有了，就是整合在一起
+    }
+
+    private void clean(Likes like) {
+        like.setAddTime(null);
+        like.setDeleted(null);
+        like.setLikeuserid(null);
+        like.setLikeschoolname(null);
+        like.setUpdateTime(null);
+    }
+
+    @ResponseBody
+    @GetMapping("/download/{signId}")
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
+    public String download(@PathVariable("signId") Integer signId) throws UserNotFoundException {
+        List<Sign> signs = signService.querySelective(signId, null, null, null, null, null, null, null, null, null);
+        if (signs.size() == 0) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
+        }
+        Sign sign = signs.get(0);
+        User user = userService.retrieveUserByToken();
+        if (!sign.getSignuserid().equals(user.getId())) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "当前用户与目标的签约id不符！");
+        }
+
+        List<Pics> userLogos = picsService.querySelective(null, user.getId(), FileEnum.LOGO.value());
+        if (userLogos.size() == 0) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "还未上传学校logo！");
+        }
+
+        List<Pics> useredLogos = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.LOGO.value());
+        if (useredLogos.size() == 0) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校logo！");
+        }
+
+        User usered = userService.findById(sign.getSigneduserid());
+
+        String country1 = user.getCountry();
+        String logo1 = userLogos.get(0).getLocation();
+        String school1 = user.getSchoolname();
+        String job1 = user.getProfession();
+
+        String country2 = usered.getCountry();
+        String logo2 = useredLogos.get(0).getLocation();
+        String school2 = usered.getSchoolname();
+        String job2 = usered.getProfession();
+
+
+        Map<String, Object> datas = new HashMap<String, Object>() {
+            {
+                //����ͼƬ
+                put("country1", country1);
+                put("country2", country2);
+                put("school1", school1);
+                put("school2", school2);
+                put("job1", job1);
+                put("job2", job2);
+                //��·ͼƬ
+                put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo1)));
+                put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo2)));
+                put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo3)));
+                put("name1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name1)));
+                put("name2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name2)));
+                Date date = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                String time = sdf.format(date);
+                put("date1", time);
+                put("date2", time);
+            }
+        };
+    }
+
+
     @ResponseBody
     @PostMapping("/get_Word")
-    public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value="当前用户logo访问地址") String logo1,
-                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value="被签约用户logo访问地址") String logo2,
-                             @ApiParam(example =  "GDUFS",value = "当前用户学校名称") String school1,
-                             @ApiParam(example = "HUA NAN LI GONG",value = "被签约用户学校名称") String school2,
-                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value="当前用户签章访问地址") String name1,
-                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value = "被签约用户签章访问地址") String name2,
+    public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户logo访问地址") String logo1,
+                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户logo访问地址") String logo2,
+                             @ApiParam(example = "GDUFS", value = "当前用户学校名称") String school1,
+                             @ApiParam(example = "HUA NAN LI GONG", value = "被签约用户学校名称") String school2,
+                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户签章访问地址") String name1,
+                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户签章访问地址") String name2,
                              @ApiParam(example = "headmaster", value = "当前用户职务") String job1,
-                             @ApiParam(example = "headmaster",value = "被签约用户职务") String job2,
-                             @ApiParam(example = "PRC",value = "当前用户所属国家") String country1,
-                             @ApiParam(example = "USA",value = "被签约用户所属国家") String country2,
+                             @ApiParam(example = "headmaster", value = "被签约用户职务") String job2,
+                             @ApiParam(example = "PRC", value = "当前用户所属国家") String country1,
+                             @ApiParam(example = "USA", value = "被签约用户所属国家") String country2,
                              HttpServletRequest request,
                              HttpServletResponse response) throws IOException {
         //ͼƬ·������ע������linux����windows
@@ -194,49 +322,49 @@ public class LikesAndSignController {
         return result;
     }
 
-    @ResponseBody
-    @GetMapping("/select_likes")
-    public JSON select_sch(@ApiParam(example = "1",value = "当前用户id") Integer id) {
-        String msg = null;
-        String code = null;
-        int flag = 0;
-        JSONObject result = new JSONObject();
-        if (id == null) {
-            msg = "school_id missing";
-            code = "-1";
-            result.put("msg", msg);
-            result.put("code", code);
-            return result;
-        }
-        List<likelist> list = new ArrayList<likelist>();
-        try {
-            list = user_service.select_likes(id);
-        } catch (java.lang.NullPointerException e) {
-            e.printStackTrace();
-            msg = "null like";
-            code = "-2";
-            result.put("msg", msg);
-            result.put("code", code);
-            return result;
-        }
-        int len = list.size();
-        for (int i = 0; i < len; i++) {
-            if (user_service.select_both(list.get(i).getSch_name(), id)) {
-                list.get(i).setFlag(true);
-            }
-        }
-        msg = "success";
-        code = "200";
-        result.put("msg", msg);
-        result.put("code", code);
-        result.put("list", list);
-        return result;
-    }
+//    @ResponseBody
+//    @GetMapping("/select_likes")
+//    public JSON select_sch(@ApiParam(example = "1", value = "当前用户id") Integer id) {
+//        String msg = null;
+//        String code = null;
+//        int flag = 0;
+//        JSONObject result = new JSONObject();
+//        if (id == null) {
+//            msg = "school_id missing";
+//            code = "-1";
+//            result.put("msg", msg);
+//            result.put("code", code);
+//            return result;
+//        }
+//        List<likelist> list = new ArrayList<likelist>();
+//        try {
+//            list = user_service.select_likes(id);
+//        } catch (java.lang.NullPointerException e) {
+//            e.printStackTrace();
+//            msg = "null like";
+//            code = "-2";
+//            result.put("msg", msg);
+//            result.put("code", code);
+//            return result;
+//        }
+//        int len = list.size();
+//        for (int i = 0; i < len; i++) {
+//            if (user_service.select_both(list.get(i).getSch_name(), id)) {
+//                list.get(i).setFlag(true);
+//            }
+//        }
+//        msg = "success";
+//        code = "200";
+//        result.put("msg", msg);
+//        result.put("code", code);
+//        result.put("list", list);
+//        return result;
+//    }
 
     @ResponseBody
     @GetMapping("/get_certi")
-    public JSON get_certi(@ApiParam(example = "1",value = "当前用户id") Integer host_id,
-                          @ApiParam(example = "2",value = "被签约用户的id") Integer liked_id) throws UnknownHostException {
+    public JSON get_certi(@ApiParam(example = "1", value = "当前用户id") Integer host_id,
+                          @ApiParam(example = "2", value = "被签约用户的id") Integer liked_id) throws UnknownHostException {
         String msg = null;
         String code = null;
         JSONObject result = new JSONObject();

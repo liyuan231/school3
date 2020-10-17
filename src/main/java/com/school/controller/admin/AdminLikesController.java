@@ -170,17 +170,18 @@ public class AdminLikesController {
     @PostMapping({"/remind"})
     public String remindSchools() {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
-        Iterator var2 = users.iterator();
-        while (var2.hasNext()) {
-            User user = (User) var2.next();
-            try {
-                this.emailService.send(user.getUsername(), "!签约意向提醒!", "时间马上就要截至了,记得来签约表明意向~");
-            } catch (MailException var5) {
-                this.logger.warn("该邮箱号不存在:" + user.getUsername());
+        new Thread(()->{
+            Iterator var2 = users.iterator();
+            while (var2.hasNext()) {
+                User user = (User) var2.next();
+                try {
+                    this.emailService.send(user.getUsername(), "!签约意向提醒!", "时间马上就要截至了,记得来签约表明意向~");
+                } catch (MailException var5) {
+                    this.logger.warn("该邮箱号不存在:" + user.getUsername());
+                }
             }
-        }
-
-        return ResponseUtil.build(HttpStatus.OK.value(), "提醒成功!", (Object) null);
+        }).start();
+        return ResponseUtil.build(HttpStatus.OK.value(), "签约意向提醒成功!", (Object) null);
     }
 
     @PreAuthorize("hasRole('ADMINISTRATOR')")

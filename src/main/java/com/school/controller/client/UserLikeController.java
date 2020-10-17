@@ -37,7 +37,7 @@ public class UserLikeController {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
-    @PreAuthorize("hasAnyRole('USER') and hasAnyAuthority('user::like')")
+    @PreAuthorize("hasAnyRole('USER') and hasAuthority('user::like')")
     @ApiOperation(value = "选择签约->勾选参会学校->提交", notes = "批量表明意向")
     @GetMapping("/batchLike")
     public Object batchSign(@RequestParam("likes") Integer[] likedUserIds) {
@@ -45,7 +45,7 @@ public class UserLikeController {
             try {
                 likeService.like(likedUserId);
             } catch (UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
-                logger.warn("该高校id不正确->" + likedUserId);
+                logger.warn(e.getMessage()+"->"+ likedUserId);
 //                e.printStackTrace();
             }
         }

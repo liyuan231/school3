@@ -90,16 +90,17 @@ public class AdminSignController {
     @PostMapping({"/remind"})
     public String remindSchools() {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
-        Iterator var2 = users.iterator();
-        while (var2.hasNext()) {
-            User user = (User) var2.next();
-            try {
-                this.emailService.send(user.getUsername(), "!签约结果提醒!", "记得查看签约结果~");
-            } catch (MailException var5) {
-                this.logger.warn("该邮箱号不存在:" + user.getUsername());
+        new Thread(()->{
+            Iterator var2 = users.iterator();
+            while (var2.hasNext()) {
+                User user = (User) var2.next();
+                try {
+                    this.emailService.send(user.getUsername(), "!签约结果提醒!", "记得查看签约结果~");
+                } catch (MailException var5) {
+                    this.logger.warn("该邮箱号不存在:" + user.getUsername());
+                }
             }
-        }
-
+        }).start();
         return ResponseUtil.build(HttpStatus.OK.value(), "提醒成功!", (Object) null);
     }
 

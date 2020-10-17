@@ -1256,46 +1256,50 @@ APPLICATION_PASSWORD_ADMIN,AUDIT_ADMIN,BACKUP_ADMIN,BINLOG_ADMIN,BINLOG_ENCRYPTI
       <Comment>职务</Comment>
       <DataType>varchar(60)|0s</DataType>
     </column>
-    <key id="364" parent="298" name="PRIMARY">
+    <column id="364" parent="298" name="country">
+      <Position>18</Position>
+      <DataType>varchar(200)|0s</DataType>
+    </column>
+    <key id="365" parent="298" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="365" parent="299" name="id">
+    <column id="366" parent="299" name="id">
       <Position>1</Position>
       <DataType>int|0s</DataType>
       <NotNull>1</NotNull>
       <SequenceIdentity>null</SequenceIdentity>
     </column>
-    <column id="366" parent="299" name="userId">
+    <column id="367" parent="299" name="userId">
       <Position>2</Position>
       <DataType>int|0s</DataType>
     </column>
-    <column id="367" parent="299" name="roleId">
+    <column id="368" parent="299" name="roleId">
       <Position>3</Position>
       <DataType>int|0s</DataType>
     </column>
-    <index id="368" parent="299" name="usertorole_user__fk">
+    <index id="369" parent="299" name="usertorole_user__fk">
       <ColNames>userId</ColNames>
       <Type>btree</Type>
     </index>
-    <index id="369" parent="299" name="usertorole_role__fk">
+    <index id="370" parent="299" name="usertorole_role__fk">
       <ColNames>roleId</ColNames>
       <Type>btree</Type>
     </index>
-    <key id="370" parent="299" name="PRIMARY">
+    <key id="371" parent="299" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <foreign-key id="371" parent="299" name="usertorole_user__fk">
+    <foreign-key id="372" parent="299" name="usertorole_user__fk">
       <ColNames>userId</ColNames>
       <RefTableName>user</RefTableName>
       <RefColNames>id</RefColNames>
       <OnUpdate>cascade</OnUpdate>
       <OnDelete>cascade</OnDelete>
     </foreign-key>
-    <foreign-key id="372" parent="299" name="usertorole_role__fk">
+    <foreign-key id="373" parent="299" name="usertorole_role__fk">
       <ColNames>roleId</ColNames>
       <RefTableName>role</RefTableName>
       <RefColNames>id</RefColNames>

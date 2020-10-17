@@ -30,7 +30,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,9 +40,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 @Api(
         value = "系统参数配置",
@@ -85,25 +86,33 @@ public class AdminSystemController {
 
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @PostMapping("/sysConfig")
-    public Object sysConfig(@ApiParam(value = "意向开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("likeStartTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime likeStartTime,
-                            @ApiParam(value = "意向结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("likeEndTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime likeEndTime,
-                            @ApiParam(value = "签约查看开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("signStartTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime signStartTime,
-                            @ApiParam(value = "签约查看结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("signEndTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime signEndTime,
-                            @ApiParam(value = "mou下载开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("mouStartTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime mouStartTime,
-                            @ApiParam(value = "mou下载结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("mouEndTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime mouEndTime,
-                            @ApiParam(example = "123@qq.com", value = "系统邮箱账号") @RequestParam("username") String username,
-                            @ApiParam(example = "123456", value = "开启POP3后获得的授权码") @RequestParam("code") String code,
+    public Object sysConfig(@ApiParam(value = "意向开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "likeStartTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime likeStartTime,
+                            @ApiParam(value = "意向结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "likeEndTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime likeEndTime,
+                            @ApiParam(value = "签约查看开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "signStartTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime signStartTime,
+                            @ApiParam(value = "签约查看结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "signEndTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime signEndTime,
+                            @ApiParam(value = "mou下载开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "mouStartTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime mouStartTime,
+                            @ApiParam(value = "mou下载结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "mouEndTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime mouEndTime,
+                            @ApiParam(example = "123@qq.com", value = "系统邮箱账号") @RequestParam(value = "username", required = false) String username,
+                            @ApiParam(example = "123456", value = "开启POP3后获得的授权码") @RequestParam(value = "code", required = false) String code,
                             HttpServletRequest request) {
 
         try {
-            String s = controlLikes(likeStartTime, likeEndTime);
-            String s1 = controlSings(signStartTime, signEndTime);
-            String s2 = controlMouDownload(mouStartTime, mouEndTime);
+            if (Objects.nonNull(likeStartTime) && Objects.nonNull(likeEndTime)) {
+                String s = controlLikes(likeStartTime, likeEndTime);
+            }
+            if (Objects.nonNull(signStartTime) && Objects.nonNull(signEndTime)) {
+                String s1 = controlSings(signStartTime, signEndTime);
+            }
+            if (Objects.nonNull(mouStartTime) && Objects.nonNull(mouEndTime)) {
+                String s2 = controlMouDownload(mouStartTime, mouEndTime);
+            }
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
         try {
-            modifySystemEmail(username, code, request);
+            if (StringUtils.hasText(username) && StringUtils.hasText(code)) {
+                modifySystemEmail(username, code, request);
+            }
         } catch (EmailWrongFormatException | UsernameNullPointerException e) {
             e.printStackTrace();
         }
@@ -114,7 +123,7 @@ public class AdminSystemController {
 //    @ApiOperation(value = "配置用户意向时段", notes = "配置用户可以进行意向的时段")
 //    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     private String controlLikes(@ApiParam(value = "开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("startTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
-                               @ApiParam(value = "结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws SchedulerException {
+                                @ApiParam(value = "结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws SchedulerException {
         schedulerManager.startJob(startTime, onLikeJobName, likeJobGroup, LikeOperationOnJob.class);
         schedulerManager.startJob(endTime, offLikeJobName, likeJobGroup, LikeOperationOffJob.class);
         return ResponseUtil.build(HttpStatus.OK.value(), "限制用户意向期间的成功", null);
@@ -124,7 +133,7 @@ public class AdminSystemController {
 //    @PostMapping("/configSignPeriod")
     //    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     private String controlSings(@ApiParam(value = "开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("startTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
-                               @ApiParam(value = "结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws SchedulerException {
+                                @ApiParam(value = "结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws SchedulerException {
         schedulerManager.startJob(startTime, onSignJobName, signJobGroup, SignOperationOnJob.class);
         schedulerManager.startJob(endTime, offSignJobName, signJobGroup, SignOperationOffJob.class);
         return ResponseUtil.build(HttpStatus.OK.value(), "限制用户意向期间的成功", null);
@@ -134,7 +143,7 @@ public class AdminSystemController {
 //    @PostMapping("/configMouDownloadPeriod")
     //    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     private String controlMouDownload(@ApiParam(value = "开始时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("startTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
-                                     @ApiParam(value = "结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws SchedulerException {
+                                      @ApiParam(value = "结束时间", example = "yyyy-MM-dd HH:mm:ss") @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws SchedulerException {
         schedulerManager.startJob(startTime, onMouDownloadJobName, mouDownloadJobGroup, MouDownloadOperationOnJob.class);
         schedulerManager.startJob(endTime, offMouDownloadJobName, mouDownloadJobGroup, MouDownloadOperationOffJob.class);
         return ResponseUtil.build(HttpStatus.OK.value(), "限制用户意向期间的成功", null);
@@ -143,8 +152,8 @@ public class AdminSystemController {
     //    @PostMapping("/modifySystemEmail")
 //    @ApiOperation(value = "修改系统邮箱", notes = "修改系统邮箱，须有邮箱号以及该邮箱号的授权码")
     private String modifySystemEmail(@ApiParam(example = "123@qq.com", value = "系统邮箱账号") @RequestParam("username") String username,
-                                    @ApiParam(example = "123456", value = "开启POP3后获得的授权码") @RequestParam("code") String code,
-                                    HttpServletRequest request) throws EmailWrongFormatException, UsernameNullPointerException {
+                                     @ApiParam(example = "123456", value = "开启POP3后获得的授权码") @RequestParam("code") String code,
+                                     HttpServletRequest request) throws EmailWrongFormatException, UsernameNullPointerException {
         logger.info("[" + request.getRemoteAddr() + "] 管理员修改默认系统邮箱！");
         Assert.notNull(code, "管理端设置系统的邮箱的授权码不应为空！");
         AssertUtil.isValidMail(username, "设置的系统邮箱不能为空！");
@@ -153,7 +162,8 @@ public class AdminSystemController {
     }
 
     @PostMapping("/clean")
-    @ApiOperation(value = "清除数据",notes = "清除所有数据")
+    @ApiOperation(value = "清除数据", notes = "清除所有数据")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String cleanData() throws UserNotFoundException, UserSignCorrespondException, SignNotFoundException, UserLikesNotCorrespondException, LikesNotFoundException {
         List<User> users = userService.querySelectiveLike(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         for (User user : users) {
@@ -176,42 +186,64 @@ public class AdminSystemController {
     }
 
 
+    @Component
     class MouDownloadOperationOnJob implements Job {
+        @Autowired
+        private RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
             roleToAuthoritiesService.addAuthority(RoleEnum.USER.value(), "user::mouDownload");
         }
     }
 
+    @Component
     class MouDownloadOperationOffJob implements Job {
+        @Autowired
+        private RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
             roleToAuthoritiesService.addAuthority(RoleEnum.USER.value(), "user::mouDownload");
         }
     }
 
+    @Component
     class LikeOperationOnJob implements Job {
+        @Autowired
+        private RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
+
         @Override
-        public void execute(JobExecutionContext context) throws JobExecutionException {
+        public void execute(JobExecutionContext context) {
             roleToAuthoritiesService.addAuthority(RoleEnum.USER.value(), "user::like");
         }
     }
 
+    @Component
     class LikeOperationOffJob implements Job {
+        @Autowired
+        private RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
+
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
             roleToAuthoritiesService.removeAuthority(RoleEnum.USER.value(), "user::like");
         }
     }
 
+    @Component
     class SignOperationOnJob implements Job {
+        @Autowired
+        private RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
+
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
             roleToAuthoritiesService.addAuthority(RoleEnum.USER.value(), "user::sign");
         }
     }
 
+    @Component
     class SignOperationOffJob implements Job {
+        @Autowired
+        private RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
+
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
             roleToAuthoritiesService.removeAuthority(RoleEnum.USER.value(), "user::sign");

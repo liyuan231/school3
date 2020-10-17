@@ -20,6 +20,7 @@ import com.school.model.UserExample.Criteria;
 import com.school.model.Usertorole;
 import com.school.utils.AssertUtil;
 import com.school.utils.RoleEnum;
+import com.school.utils.Status;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -201,7 +202,7 @@ public class UserServiceImpl implements UserDetailsService {
         }
 
         criteria.andDeletedEqualTo(false);
-        List<User> users = this.userMapper.selectByExampleSelective(userExample, new Column[0]);
+        List<User> users = this.userMapper.selectByExampleSelective(userExample);
         PageInfo<User> pageInfo = new PageInfo(users);
         return pageInfo.getList();
     }
@@ -306,10 +307,10 @@ public class UserServiceImpl implements UserDetailsService {
         return users.size() == 0 ? null : (User) users.get(0);
     }
 
-    public void openLogin() throws UserNotFoundException {
+    //    @Async
+    public void openLogin() {
         List<User> users = this.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         Iterator var2 = users.iterator();
-
         while (var2.hasNext()) {
             User user = (User) var2.next();
             user.setAccountstatus(1);
@@ -339,6 +340,7 @@ public class UserServiceImpl implements UserDetailsService {
         this.add(user, RoleEnum.USER.value());
     }
 
+    //    @Async
     public void importRegistrationForm(MultipartFile file) throws FileFormattingException, IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ExcelDataException, UsernameAlreadyExistException {
         String originalFilename = file.getOriginalFilename();
         String format = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -350,7 +352,6 @@ public class UserServiceImpl implements UserDetailsService {
             if (!format.equals(".xls")) {
                 throw new FileFormattingException("文件格式不支持，仅支持.xls以及.xlsx");
             }
-
             workbook = new HSSFWorkbook(file.getInputStream());
         }
         int numberOfSheets = ((Workbook) workbook).getNumberOfSheets();
@@ -406,6 +407,7 @@ public class UserServiceImpl implements UserDetailsService {
                         this.logger.warn("邮箱号有误,无法发送邮件到指定用户:" + user.getUsername());
                         continue;
                     }
+                    user.setAccountstatus(Status.LOGIN_NOT_ALLOWED);
                     this.add(user, RoleEnum.USER.value());
                     System.out.println(user.toString());
                 }

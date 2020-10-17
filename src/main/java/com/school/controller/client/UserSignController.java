@@ -44,7 +44,7 @@ public class UserSignController {
 //        return ResponseUtil.build(HttpStatus.OK.value(), "签约成功！", null);
 //    }
 
-    @PreAuthorize("hasAnyRole('USER')")
+    @PreAuthorize("hasAnyRole('USER') and hasAuthority('user::sign')")
     @ApiOperation(value = "批量签约", notes = "当前用户批量进行签约")
     @GetMapping("/batchSign")
     public String sibatchSign(@RequestParam("signedUserIds") Integer[] signedUserIds) {
@@ -53,7 +53,7 @@ public class UserSignController {
                 signService.sign(signedUserId);
             } catch (UserNotFoundException | SignAlreadyExistException | SignNotCorrectException e) {
 //                e.printStackTrace();
-                logger.warn("当前被签约的高校id不存在!" + signedUserId);
+                logger.warn("当前被签约的高校id不存在->" + signedUserId);
             }
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "批量签约用户成功！");
