@@ -8,38 +8,23 @@ package com.school.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.school.dao.LikesMapper;
-import com.school.exception.LikesAlreadyExistException;
-import com.school.exception.LikesNotFoundException;
-import com.school.exception.UserLikesNotCorrespondException;
-import com.school.exception.UserNotCorrectException;
-import com.school.exception.UserNotFoundException;
+import com.school.exception.*;
 import com.school.model.Likes;
-import com.school.model.LikesExample;
-import com.school.model.User;
 import com.school.model.Likes.Column;
+import com.school.model.LikesExample;
 import com.school.model.LikesExample.Criteria;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.Map.Entry;
-import javax.annotation.Resource;
-
+import com.school.model.User;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.Map.Entry;
 
 @Service
 @Transactional
@@ -113,7 +98,7 @@ public class LikeServiceImpl {
         if (byId == null) {
             throw new UserNotFoundException("用户不存在！");
         } else {
-            List<Likes> likes1 = this.querySelective((Integer)null, likeUserId, likeSchoolName, likedUserId, likedSchoolName, (Integer)null, (Integer)null, (String)null, (String)null, (Boolean)null);
+            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, likeSchoolName, likedUserId, likedSchoolName, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
             if (likes1.size() >= 1) {
                 throw new LikesAlreadyExistException("已经和该用户表明过意向了!");
             } else if (likeUserId.equals(likedUserId)) {
@@ -138,14 +123,14 @@ public class LikeServiceImpl {
     }
 
     public Likes update(Likes like) throws LikesNotFoundException, UserLikesNotCorrespondException {
-        List<Likes> likes = this.querySelective(like.getId(), (Integer)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null, (Boolean)null);
+        List<Likes> likes = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
         if (likes.size() == 0) {
             throw new LikesNotFoundException("该则意向不存在，请检查id");
         } else {
             like.setUpdateTime(LocalDateTime.now());
             this.likesMapper.updateByPrimaryKeySelective(like);
-            List<Likes> likesInDb = this.querySelective(like.getId(), (Integer)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null, (Boolean)null);
-            return likesInDb.size() == 0 ? null : (Likes)likesInDb.get(0);
+            List<Likes> likesInDb = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
+            return likesInDb.size() == 0 ? null : (Likes) likesInDb.get(0);
         }
     }
 
@@ -163,9 +148,9 @@ public class LikeServiceImpl {
         List<Likes> result = new LinkedList();
         Iterator var6 = likes.iterator();
 
-        while(var6.hasNext()) {
-            Likes like = (Likes)var6.next();
-            Integer integer = (Integer)map.get(like.getLikeuserid());
+        while (var6.hasNext()) {
+            Likes like = (Likes) var6.next();
+            Integer integer = (Integer) map.get(like.getLikeuserid());
             if (integer != null) {
                 result.add(like);
             } else {
@@ -216,8 +201,8 @@ public class LikeServiceImpl {
         List<Likes> matches = this.match();
         Iterator var5 = matches.iterator();
 
-        while(var5.hasNext()) {
-            Likes next = (Likes)var5.next();
+        while (var5.hasNext()) {
+            Likes next = (Likes) var5.next();
             if (next.getLikeuserid().equals(userId)) {
                 result.add(next);
             }
@@ -227,20 +212,20 @@ public class LikeServiceImpl {
     }
 
     public Workbook exportLikesForm() {
-        List<Likes> likes = this.querySelective((Integer)null, (Integer)null, (String)null, (Integer)null, (String)null, (Integer)null, (Integer)null, (String)null, (String)null, (Boolean)null);
+        List<Likes> likes = this.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
         Map<String, List<String>> map = new TreeMap();
         Iterator var3 = likes.iterator();
 
-        while(var3.hasNext()) {
-            Likes like = (Likes)var3.next();
+        while (var3.hasNext()) {
+            Likes like = (Likes) var3.next();
             String likeSchoolName = like.getLikeschoolname();
             String likedSchoolName = like.getLikedschoolname();
-            List<String> list = (List)map.get(likeSchoolName);
+            List<String> list = (List) map.get(likeSchoolName);
             if (list == null) {
                 list = new LinkedList();
             }
 
-            ((List)list).add(likedSchoolName);
+            ((List) list).add(likedSchoolName);
             map.put(likeSchoolName, list);
         }
 
@@ -254,13 +239,13 @@ public class LikeServiceImpl {
         this.prepare(cellStyle, sheet);
         int i = 0;
 
-        for(Iterator var10 = map.entrySet().iterator(); var10.hasNext(); ++i) {
-            Entry<String, List<String>> entry = (Entry)var10.next();
+        for (Iterator var10 = map.entrySet().iterator(); var10.hasNext(); ++i) {
+            Entry<String, List<String>> entry = (Entry) var10.next();
             Row row = sheet.createRow(i + 2);
             Cell cell = row.createCell(0);
-            cell.setCellValue((String)entry.getKey());
+            cell.setCellValue((String) entry.getKey());
             cell = row.createCell(1);
-            StringBuilder s = new StringBuilder(Arrays.toString(((List)entry.getValue()).toArray()));
+            StringBuilder s = new StringBuilder(Arrays.toString(((List) entry.getValue()).toArray()));
             if (s.length() > 0) {
                 s.deleteCharAt(s.length() - 1);
                 s.deleteCharAt(0);
@@ -282,5 +267,12 @@ public class LikeServiceImpl {
         cell = row.createCell(1);
         cell.setCellValue("签约意向");
         cell.setCellStyle(cellStyle);
+    }
+
+    public void like(Integer likedUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
+        //当前用户的信息
+        User likeUser = userService.retrieveUserByToken();
+        User likedUser = userService.findById(likedUserId);
+        add(likeUser.getId(),likeUser.getSchoolname(),likedUserId, likedUser.getSchoolname());
     }
 }

@@ -1,12 +1,18 @@
 package com.school.controller.admin;
 
+import com.school.exception.UserNotFoundException;
+import com.school.model.Pics;
+import com.school.model.User;
+import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.UserServiceImpl;
+import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,19 +33,22 @@ public class AdminTemplateController {
     @Value("${spring.file.path}")
     private String springFilePath;
 
+    @Autowired
+    private PicsServiceImpl picsService;
+
     //上传的签约模板文档简易处理下,默认模板名为template，当然可通过
+    //TODO 由于前期没想到用户上传的静态资源应该统一管理，所以先暂时使用PicsServiceImpl表示该资源
     @PostMapping("/upload")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     @ApiOperation(value = "上传模板",notes = "管理端上传模板，为避免歧义，模板名称默认为'template',放在相应路径下")
-    public Object upload(@RequestParam("file") MultipartFile file) throws IOException {
+    public Object upload(@RequestParam("file") MultipartFile file) throws IOException, UserNotFoundException {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.OK.value(), "签约模板为空");
         }
         String fileName = file.getOriginalFilename();
-        String format = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-        fileName =  "template" + "."+format;
-        File fileInServer = new File(this.filePath +fileName);
-        file.transferTo(fileInServer);
-        return ResponseUtil.build(HttpStatus.OK.value(), "上传模板成功!",springFilePath+fileName);
+        User user = userService.retrieveUserByToken();
+        Pics upload = picsService.upload(user.getId(), FileEnum.TEMPLATE.value(), file);
+        return ResponseUtil.build(HttpStatus.OK.value(), "上传模板成功!",springFilePath+upload.getLocation());
     }
 
 }

@@ -1,5 +1,7 @@
 package com.school.controller.client;
 
+import com.school.dto.SimplePage;
+import com.school.dto.SimpleUser;
 import com.school.exception.*;
 import com.school.model.Pics;
 import com.school.model.User;
@@ -24,10 +26,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Api(tags = {"客户端用户"}, value = "客户端")
+@Api(tags = {"参会学校|(选择签约->勾选参会学校中高校搜索)"}, value = "参会学校")
 @RestController
 @RequestMapping("/api/client/user")
 public class UserController {
@@ -74,86 +78,124 @@ public class UserController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！", null);
     }
 
-    @PostMapping("/upload")
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-    @ApiOperation(value = "上传头像", notes = "用户上传头像")
-    public Object upload(@ApiParam(example = "file", value = "该文件流,参数名应该为file") @RequestParam("file") MultipartFile file) throws IOException, FileFormattingException, UserNotFoundException {
-        if (!file.isEmpty()) {
-            String fileName = file.getOriginalFilename();
-            String format = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-            AssertUtil.isPicture(format);
-            //上传图片并插入数据库中
-            upload(file, format, FileEnum.AVATAR_URL);
-            return ResponseUtil.build(HttpStatus.OK.value(), "上传图片成功！", null);
+
+    @GetMapping("/listSearch")
+    @ApiOperation(
+            value = "参会学校->所有参会学校",
+            notes = "输入高校名进行搜索"
+    )
+    @PreAuthorize("hasRole('USER')")
+    public String listSearch(@ApiParam(example = "广外", value = "schoolName") @RequestParam(required = false) String schoolName,
+                             @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                             @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort,
+                             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
+        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
+        Integer size = this.userService.count(schoolName);
+        List<SimpleUser> result = new LinkedList();
+        Iterator var9 = users.iterator();
+        while (var9.hasNext()) {
+            User user = (User) var9.next();
+            SimpleUser simpleUser = new SimpleUser();
+            fill(user, simpleUser);
+            result.add(simpleUser);
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "图片为空！", null);
+        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, result);
+        return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
     }
 
-    private void upload(MultipartFile file, String format, FileEnum fileEnum) throws IOException, UserNotFoundException {
-        User user = userService.retrieveUserByToken();
-        picsService.upload(user.getId(),fileEnum.value(),file);
+    private void fill(User user, SimpleUser simpleUser) {
+//        simpleUser.setUsername(user.getUsername());
+//        simpleUser.setAddress(user.getAddress());
+//        simpleUser.setContact(user.getContact());
+        simpleUser.setId(user.getId());
+        simpleUser.setSchoolName(user.getSchoolname());
+//        simpleUser.setTelephone(user.getTelephone());
     }
 
-    @PostMapping("/uploadLogoAndSignature")
-    @ApiOperation(value = "上传学校logo以及校长签章", nickname = "用户上传学校logo以及校长签章")
-    @PreAuthorize("hasAnyRole('USER')")
-    public Object uploadLogoAndSignature(@RequestParam("files") List<MultipartFile> files) throws IOException, UserNotFoundException, FileFormattingException {
-        if (files.size() != 0) {
-            for (MultipartFile file : files) {
-                String fileName = file.getOriginalFilename();
-                String format = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-                AssertUtil.isPicture(format);
-                User user = userService.retrieveUserByToken();
-                //TODO
-                List<Pics> picsToLogoAndSignature = picsService.querySelective(null,user.getId(), FileEnum.LOGO.value());
-                if (picsToLogoAndSignature.size() != 0) {
-                    for (Pics pics : picsToLogoAndSignature) {
-                        picsService.delete(pics);
-                    }
-                }
-                //TODO
-                upload(file, format, FileEnum.LOGO);
-            }
+//    @PostMapping("/upload")
+//    @PreAuthorize("hasAnyRole('USER')")
+//    @ApiOperation(value = "上传头像", notes = "用户上传头像")
+//    public Object upload(@ApiParam(example = "file", value = "该文件流,参数名应该为file") @RequestParam("file") MultipartFile file) throws IOException, FileFormattingException, UserNotFoundException {
+//        if (!file.isEmpty()) {
+//            String fileName = file.getOriginalFilename();
+//            String format = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+//            AssertUtil.isPicture(format);
+//            //上传图片并插入数据库中
+//            upload(file, format, FileEnum.AVATAR_URL);
+//            return ResponseUtil.build(HttpStatus.OK.value(), "上传图片成功！", null);
+//        }
+//        return ResponseUtil.build(HttpStatus.OK.value(), "图片为空！", null);
+//    }
 
-            return ResponseUtil.build(HttpStatus.OK.value(), "上传图片成功！", null);
-        }
-        return ResponseUtil.build(HttpStatus.OK.value(), "上传文件为空！", null);
+//    private void upload(MultipartFile file, String format, FileEnum fileEnum) throws IOException, UserNotFoundException {
+//        User user = userService.retrieveUserByToken();
+//        picsService.upload(user.getId(), fileEnum.value(), file);
+//    }
 
-    }
-
-
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-    @ApiOperation(value = "获取当前用户信息", notes = "获取用户信息")
-    @GetMapping("/retrieveUserInfo")
-    public Object retrieveUserInfo() {
-        User userInDb = userService.retrieveUserByToken();
-        userInDb.setPassword("[PASSWORD]");
-        userInDb.setAvatarurl(springFilePath + userInDb.getAvatarurl());
-//        List<Pics> avatarUrls = picsService.findByUserId(userInDb.getId(), FileEnum.AVATAR_URL);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", userInDb);
-    }
-
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-    @ApiOperation(value = "④　参会学校展示", notes = "，获取所有的用户信息，")
-    @GetMapping("/retrieveAllUserInfo")
-    public Object retrieveAllUserInfo() {
-        List<User> users = userService.querySelectiveLike(null,null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        clearPassword(users);
-        updateAvatarUrl(users);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", users);
-    }
-
-    private void updateAvatarUrl(List<User> users) {
-        for (User user : users) {
-            user.setAvatarurl(springFilePath + user.getAvatarurl());
+    @PostMapping("/upload/logo")
+    @ApiOperation(
+            value = "提交签约材料->logo",
+            notes = "上传学校logo"
+    )
+    @PreAuthorize("hasRole('USER')")
+    public String uploadLogo(@RequestParam("logo") MultipartFile file) throws IOException, UserNotFoundException {
+        if (file.isEmpty()) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "上传文件不能为空！", (Object) null);
+        } else {
+            User user = userService.retrieveUserByToken();
+            Pics upload = this.picsService.upload(user.getId(), FileEnum.LOGO.value(), file);
+            return ResponseUtil.build(HttpStatus.OK.value(), "上传学校logo成功！", this.springFilePath + upload.getLocation());
         }
     }
 
-    private void clearPassword(List<User> users) {
-        for (User user : users) {
-            user.setPassword("[PASSWORD]");
+    @PostMapping({"/upload/signature"})
+    @ApiOperation(
+            value = "提交签约材料->校长签章",
+            notes = "上传校长签章"
+    )
+    @PreAuthorize("hasRole('USER')")
+    public String uploadSignature(@RequestParam("signature") MultipartFile file) throws IOException, UserNotFoundException {
+        if (file.isEmpty()) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "上传文件不能为空！", (Object) null);
+        } else {
+            User user = userService.retrieveUserByToken();
+            Pics upload = this.picsService.upload(user.getId(), FileEnum.SIGNATURE.value(), file);
+            return ResponseUtil.build(HttpStatus.OK.value(), "上传校长签章成功！", this.springFilePath + upload.getLocation());
         }
     }
+
+//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+//    @ApiOperation(value = "获取当前用户信息", notes = "获取用户信息")
+//    @GetMapping("/retrieveUserInfo")
+//    public Object retrieveUserInfo() {
+//        User userInDb = userService.retrieveUserByToken();
+//        userInDb.setPassword("[PASSWORD]");
+//        userInDb.setAvatarurl(springFilePath + userInDb.getAvatarurl());
+////        List<Pics> avatarUrls = picsService.findByUserId(userInDb.getId(), FileEnum.AVATAR_URL);
+//        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", userInDb);
+//    }
+
+//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+//    @ApiOperation(value = "④　参会学校展示", notes = "，获取所有的用户信息，")
+//    @GetMapping("/retrieveAllUserInfo")
+//    public Object retrieveAllUserInfo() {
+//        List<User> users = userService.querySelectiveLike(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+//        clearPassword(users);
+//        updateAvatarUrl(users);
+//        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", users);
+//    }
+
+//    private void updateAvatarUrl(List<User> users) {
+//        for (User user : users) {
+//            user.setAvatarurl(springFilePath + user.getAvatarurl());
+//        }
+//    }
+
+//    private void clearPassword(List<User> users) {
+//        for (User user : users) {
+//            user.setPassword("[PASSWORD]");
+//        }
+//    }
 
 
 }

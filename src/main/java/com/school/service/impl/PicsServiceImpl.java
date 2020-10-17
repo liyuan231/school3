@@ -8,7 +8,6 @@ package com.school.service.impl;
 import com.school.dao.PicsMapper;
 import com.school.exception.UserNotFoundException;
 import com.school.model.Pics;
-import com.school.model.Pics.Column;
 import com.school.model.PicsExample;
 import com.school.model.PicsExample.Criteria;
 import com.school.model.User;
@@ -52,7 +51,14 @@ public class PicsServiceImpl {
     }
 
     public List<Pics> querySelective(Integer id, Integer userId, Integer type) {
+        return querySelective(id, userId, type, null, null);
+    }
+
+    public List<Pics> querySelective(Integer id, Integer userId, Integer type, String sort, String order) {
         PicsExample picsExample = new PicsExample();
+        if (StringUtils.hasText(sort) && StringUtils.hasText(order)) {
+            picsExample.setOrderByClause(sort + " " + order);
+        }
         Criteria criteria = picsExample.createCriteria();
         if (!StringUtils.isEmpty(id)) {
             criteria.andIdEqualTo(id);
@@ -65,9 +71,8 @@ public class PicsServiceImpl {
         if (!StringUtils.isEmpty(type)) {
             criteria.andTypeEqualTo(type);
         }
-
         criteria.andDeletedEqualTo(false);
-        return this.picsMapper.selectByExampleSelective(picsExample, new Column[0]);
+        return this.picsMapper.selectByExampleSelective(picsExample);
     }
 
     public void add(User user, String location, Integer type) throws IOException, UserNotFoundException {
@@ -123,7 +128,7 @@ public class PicsServiceImpl {
             pics.setUpdateTime(LocalDateTime.now());
             this.picsMapper.updateByPrimaryKeySelective(pics);
             List<Pics> pics1 = this.querySelective(pics.getId(), (Integer) null, (Integer) null);
-            return pics1.size()== 0 ? null : pics1.get(0);
+            return pics1.size() == 0 ? null : pics1.get(0);
         }
     }
 
