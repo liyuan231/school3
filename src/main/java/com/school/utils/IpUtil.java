@@ -7,10 +7,11 @@ package com.school.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.mysql.cj.util.StringUtils;
-import java.net.InetAddress;
-import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
+import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 
 public class IpUtil {
     private static final String key = "P5EBZ-ITH3I-5A3GT-5QIXG-36QW5-O2FS7";
@@ -20,18 +21,19 @@ public class IpUtil {
     }
 
     public static String retrieveCity(String ip) {
-        String requestUrl = "https://apis.map.qq.com/ws/location/v1/ip?ip=" + ip + "&key=" + "P5EBZ-ITH3I-5A3GT-5QIXG-36QW5-O2FS7";
+        String requestUrl = url + "?ip=" + ip + "&key=" + key;
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<JSONObject> responseEntity = restTemplate.getForEntity(requestUrl, JSONObject.class, new Object[0]);
+        JSONObject body = responseEntity.getBody();
+        assert body != null;
+        Integer status = body.getInteger("status");
         String city = null;
-
-        try {
-            city = ((JSONObject)responseEntity.getBody()).getJSONObject("result").getJSONObject("ad_info").getString("city");
-        } catch (Exception var6) {
-            return "ip无法定位！";
+        if (status == 0) {
+            //正常
+        } else {
+            city = body.getString("message");
         }
-
-        return city == null ? "ip无法定位" : city;
+        return city;
     }
 
     public static String retrieveIp(HttpServletRequest request) {

@@ -234,10 +234,11 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     public User update(Integer id, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession) throws UserNotFoundException {
-        User user = this.findById(id);
-        if (user == null) {
+        List<User> users = this.findByUsername(username);
+        if (users.size() == 0) {
             throw new UserNotFoundException("用户id不存在！");
         } else {
+            User user = users.get(0);
             if (StringUtils.hasText(username)) {
                 user.setUsername(username);
             }

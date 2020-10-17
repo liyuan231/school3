@@ -72,7 +72,6 @@ public class UserController {
                                            HttpServletRequest request) throws EmailNotFoundException, UsernameNullPointerException, EmailWrongFormatException {
         logger.info("[" + request.getRemoteAddr() + "] is retrieving a verificationCode for his account!");
         AssertUtil.usernameNotNull(username, "邮箱号不应为空！");
-        //TODO 这里可以进行校验邮箱是否合法
         AssertUtil.isValidMail(username, "邮箱格式错误!");
         emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（3分钟内有效）", username, 180, TimeUnit.SECONDS);//忘记密码
         return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！", null);
@@ -164,16 +163,16 @@ public class UserController {
         }
     }
 
-//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-//    @ApiOperation(value = "获取当前用户信息", notes = "获取用户信息")
-//    @GetMapping("/retrieveUserInfo")
-//    public Object retrieveUserInfo() {
-//        User userInDb = userService.retrieveUserByToken();
-//        userInDb.setPassword("[PASSWORD]");
-//        userInDb.setAvatarurl(springFilePath + userInDb.getAvatarurl());
-////        List<Pics> avatarUrls = picsService.findByUserId(userInDb.getId(), FileEnum.AVATAR_URL);
-//        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", userInDb);
-//    }
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    @ApiOperation(value = "获取当前用户信息", notes = "获取用户信息")
+    @GetMapping("/retrieveUserInfo")
+    public Object retrieveUserInfo() {
+        User userInDb = userService.retrieveUserByToken();
+        userInDb.setPassword("[PASSWORD]");
+        userInDb.setAvatarurl(springFilePath + userInDb.getAvatarurl());
+//        List<Pics> avatarUrls = picsService.findByUserId(userInDb.getId(), FileEnum.AVATAR_URL);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", userInDb);
+    }
 
 //    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
 //    @ApiOperation(value = "④　参会学校展示", notes = "，获取所有的用户信息，")

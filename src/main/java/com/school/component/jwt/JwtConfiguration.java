@@ -67,6 +67,12 @@ public class JwtConfiguration {
                     ResponseUtil.printlnInfo(response, build);
                 } else {
                     user.setLastloginip(request.getRemoteAddr());
+
+//                    String remoteAddr = request.getRemoteAddr();
+//                    String remoteUser = request.getRemoteUser();
+//                    String remoteHost = request.getRemoteHost();
+//                    int remotePort = request.getRemotePort();
+
                     user.setLastlogintime(LocalDateTime.now());
                     user.setLocation(IpUtil.retrieveCity(user.getLastloginip()));
                     user.setPassword((String) null);

@@ -11,9 +11,12 @@ import com.school.model.Pics;
 import com.school.model.User;
 import com.school.service.golden.userserviceimpl;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -31,26 +34,30 @@ import java.util.*;
 
 @Controller
 @RequestMapping({"/api"})
-@Api(value = "")
+@Api(value = "我的意向及签约",
+        tags = {"签约意向"})
 public class LikesAndSignController {
     @Value("${spring.file.path}")
     private String springFilePath;
+
+    @Value("${file.path}")
+    private String filePath;
 
     @Autowired
     userserviceimpl user_service;
 
     @ResponseBody
-    @RequestMapping("/get_Word")
-    public JSON generateWord(String logo1,
-                             String logo2,
-                             String school1,
-                             String school2,
-                             String name1,
-                             String name2,
-                             String job1,
-                             String job2,
-                             String country1,
-                             String country2,
+    @PostMapping("/get_Word")
+    public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value="当前用户logo访问地址") String logo1,
+                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value="被签约用户logo访问地址") String logo2,
+                             @ApiParam(example =  "GDUFS",value = "当前用户学校名称") String school1,
+                             @ApiParam(example = "HUA NAN LI GONG",value = "被签约用户学校名称") String school2,
+                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value="当前用户签章访问地址") String name1,
+                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg",value = "被签约用户签章访问地址") String name2,
+                             @ApiParam(example = "headmaster", value = "当前用户职务") String job1,
+                             @ApiParam(example = "headmaster",value = "被签约用户职务") String job2,
+                             @ApiParam(example = "PRC",value = "当前用户所属国家") String country1,
+                             @ApiParam(example = "USA",value = "被签约用户所属国家") String country2,
                              HttpServletRequest request,
                              HttpServletResponse response) throws IOException {
         //ͼƬ·������ע������linux����windows
@@ -59,7 +66,7 @@ public class LikesAndSignController {
         JSONObject result = new JSONObject();
         String path = request.getServletContext().getRealPath("");//��ȡ��Ŀ��̬����·��
         System.out.println(path);
-        String wordtmp = path + "tmp.docx";
+        String wordtmp = filePath + "tmp.docx";//TODO
         if (logo1 == null || logo1.equals("")) {
             msg = "logo1 missing";
             code = "-1";
@@ -130,7 +137,10 @@ public class LikesAndSignController {
             result.put("code", code);
             return result;
         }
-        String logo3 = "http://175.24.4.196/images/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg";
+
+        //协会的图片logo
+        //TODO 改正ip 以及 images,  files
+        String logo3 = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg";
         Map<String, Object> datas = new HashMap<String, Object>() {
             {
                 //����ͼƬ
@@ -185,8 +195,8 @@ public class LikesAndSignController {
     }
 
     @ResponseBody
-    @RequestMapping("/select_likes")
-    public JSON select_sch(Integer id) {
+    @GetMapping("/select_likes")
+    public JSON select_sch(@ApiParam(example = "1",value = "当前用户id") Integer id) {
         String msg = null;
         String code = null;
         int flag = 0;
@@ -224,8 +234,9 @@ public class LikesAndSignController {
     }
 
     @ResponseBody
-    @RequestMapping("/get_certi")
-    public JSON get_certi(Integer host_id, Integer liked_id) throws UnknownHostException {
+    @GetMapping("/get_certi")
+    public JSON get_certi(@ApiParam(example = "1",value = "当前用户id") Integer host_id,
+                          @ApiParam(example = "2",value = "被签约用户的id") Integer liked_id) throws UnknownHostException {
         String msg = null;
         String code = null;
         JSONObject result = new JSONObject();
