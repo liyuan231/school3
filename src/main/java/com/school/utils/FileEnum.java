@@ -9,7 +9,8 @@ public enum FileEnum {
     AVATAR_URL(1),
     LOGO(2),
     SIGNATURE(3),
-    TEMPLATE(4);
+    TEMPLATE(4),
+    WITNESS_LOGO(5);
 
     private int code;
 

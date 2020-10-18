@@ -41,6 +41,14 @@ public class SwaggerConfiguration {
         parameters.add(tokenPar.build());
         return (new Docket(DocumentationType.SWAGGER_2)).groupName("客户端").apiInfo(this.apiInfo()).select().apis(RequestHandlerSelectors.basePackage("com.school.controller.client")).paths(PathSelectors.any()).build().globalOperationParameters(parameters);
     }
+    @Bean
+    public Docket commonDocket() {
+        ParameterBuilder tokenPar = new ParameterBuilder();
+        List<Parameter> parameters = new LinkedList();
+        tokenPar.name("Authorization").description("令牌").modelRef(new ModelRef("string")).parameterType("header").required(false).build();
+        parameters.add(tokenPar.build());
+        return (new Docket(DocumentationType.SWAGGER_2)).groupName("签约证书下载").apiInfo(this.apiInfo()).select().apis(RequestHandlerSelectors.basePackage("com.school.controller.common")).paths(PathSelectors.any()).build().globalOperationParameters(parameters);
+    }
 
     @Bean
     public ApiInfo apiInfo() {

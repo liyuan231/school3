@@ -30,14 +30,14 @@ public class UserMouDownloadController {
 
     @GetMapping("/download")
     @ApiOperation(value = "下载mou模板", notes = "客户端下载管理端的mou模板")
-    @PreAuthorize("hasAnyRole('USER') and hasAuthority('user::mouDownload')")
+    @PreAuthorize("(hasRole('USER') and hasAuthority('user::mouDownload'))or hasRole('ADMINISTRATOR')")
     public Object download(HttpServletResponse response) throws IOException {
 
         List<Pics> pics = picsService.querySelective(null, null, FileEnum.TEMPLATE.value(), "update_time", "desc");
         if (pics.size() == 0) {
             return ResponseUtil.build(HttpStatus.OK.value(), "管理员还未配置mou模板，请等待管理员配置");
         }
-        Pics file1 = pics.get(0);
+        Pics file1 = pics.get(pics.size()-1);
 
         response.addHeader("Content-Disposition", "attachment;filename=" + file1.getLocation());
         response.setContentType("application/vnd.ms-excel;charset=utf-8");
@@ -45,7 +45,10 @@ public class UserMouDownloadController {
         File file = new File(filePath + file1.getLocation());
         DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
         DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
-        outputStream.write(dataInputStream.readAllBytes());
+        int val=-1;
+        while ((val=dataInputStream.read())!=-1){
+            dataOutputStream.write(val);
+        }
 //        workbook.write(outputStream);
         dataInputStream.close();
         dataInputStream.close();

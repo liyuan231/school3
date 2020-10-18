@@ -5,6 +5,15 @@ import com.school.model.Likes;
 public class LikesWithMark {
     private Likes likes;
     private Boolean signed;
+    private Integer signId;
+
+    public Integer getSignId() {
+        return signId;
+    }
+
+    public void setSignId(Integer signId) {
+        this.signId = signId;
+    }
 
     public Likes getLikes() {
         return likes;

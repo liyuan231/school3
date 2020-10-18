@@ -51,4 +51,8 @@ public class AdminTemplateController {
         return ResponseUtil.build(HttpStatus.OK.value(), "上传模板成功!",springFilePath+upload.getLocation());
     }
 
+
+
+
+
 }

@@ -34,6 +34,7 @@ public class ResponseUtil {
         response.setCharacterEncoding("utf-8");
         PrintWriter printWriter = response.getWriter();
         printWriter.println(build);
-//        printWriter.close();
+//        printWriter.flush();
+        printWriter.close();
     }
 }

@@ -9,6 +9,10 @@ public class SimpleUser {
     private Integer id;
     private String address;
     private String contact;
+    private String profession;
+
+
+
     private String schoolName;
     private String telephone;
     private String username;
@@ -16,6 +20,14 @@ public class SimpleUser {
     private String signature;
 
     public SimpleUser() {
+    }
+
+    public String getProfession() {
+        return profession;
+    }
+
+    public void setProfession(String profession) {
+        this.profession = profession;
     }
 
     public Integer getId() {

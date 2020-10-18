@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.PictureRenderData;
 import com.deepoove.poi.util.BytePictureUtils;
+import com.school.dto.Certification;
 import com.school.dto.LikesWithMark;
 import com.school.dto.SimplePage;
 import com.school.dto.golden.picture;
@@ -18,6 +19,7 @@ import com.school.service.impl.LikeServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
+import com.school.utils.CommonUtil;
 import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
@@ -65,6 +67,10 @@ public class LikesAndSignController {
     private SignServiceImpl signService;
     @Autowired
     private PicsServiceImpl picsService;
+    @Value("${file.name.witness}")
+    private String witness;
+    @Autowired
+    private CommonUtil commonUtil;
 
 
     @ResponseBody
@@ -81,9 +87,22 @@ public class LikesAndSignController {
         List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null);
         int size = likeService.count(user.getId(), null);
         List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
+        List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);
+        signs.addAll(signs_);
+
+
+        //userId->signId
+        HashMap<Integer, Integer> map = new HashMap<>();
         HashSet<Integer> signedUserIds = new HashSet<>();
         for (Sign sign : signs) {
-            signedUserIds.add(sign.getSigneduserid());
+            if (sign.getSigneduserid().equals(user.getId())) {
+                signedUserIds.add(sign.getSignuserid());
+                map.put(sign.getSignuserid(), sign.getId());
+            } else {
+                signedUserIds.add(sign.getSigneduserid());
+                map.put(sign.getSigneduserid(), sign.getId());
+
+            }
         }
         List<LikesWithMark> likesWithMarks = new LinkedList<>();
         for (Likes like : likes) {
@@ -92,6 +111,7 @@ public class LikesAndSignController {
             likesWithMark.setLikes(like);
             if (signedUserIds.contains(like.getLikeduserid())) {
                 likesWithMark.setSigned(true);
+                likesWithMark.setSignId(map.get(like.getLikeduserid()));
             } else {
                 likesWithMark.setSigned(false);
             }
@@ -101,6 +121,24 @@ public class LikesAndSignController {
         return ResponseUtil.build(HttpStatus.OK.value(), "我的意向及签约列表成功!", simplePage);
 
         //现在当前用户的意向以及签约都有了，就是整合在一起
+    }
+
+    @ResponseBody
+    @GetMapping("/show/{signId}")
+    @ApiOperation(value = "我的意向及签约->签约证书查看", notes = "签约证书查看")
+    @PreAuthorize("hasRole('USER')")
+    public String show(@ApiParam(value = "签约证书的id", example = "1") @PathVariable("signId") Integer signId) throws UserNotFoundException {
+        Sign sign = signService.findById(signId);
+        if (sign == null) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
+        }
+        Certification certification = new Certification();
+        certification.setSignId(sign.getId());
+        certification.setWitness(springFilePath + witness);
+        certification.setSignUserDate(sign.getUpdateTime().toLocalDate().toString());
+        certification.setSignedUserDate(sign.getUpdateTime().toLocalDate().toString());
+        commonUtil.fill(certification, sign.getSignuserid(), sign.getSigneduserid());
+        return ResponseUtil.build(HttpStatus.OK.value(), "查看该则签约成功！",certification);
     }
 
     private void clean(Likes like) {
@@ -161,9 +199,9 @@ public class LikesAndSignController {
                 //��·ͼƬ
                 put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo1)));
                 put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo2)));
-                put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo3)));
-                put("name1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name1)));
-                put("name2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name2)));
+//                put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo3)));
+//                put("name1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name1)));
+//                put("name2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name2)));
                 Date date = new Date();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 String time = sdf.format(date);
@@ -171,6 +209,7 @@ public class LikesAndSignController {
                 put("date2", time);
             }
         };
+        return null;
     }
 
 

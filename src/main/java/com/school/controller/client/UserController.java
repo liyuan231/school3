@@ -90,24 +90,39 @@ public class UserController {
                              @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
         Integer size = this.userService.count(schoolName);
-        List<SimpleUser> result = new LinkedList();
+        List<User> result = new LinkedList();
         Iterator var9 = users.iterator();
         while (var9.hasNext()) {
             User user = (User) var9.next();
-            SimpleUser simpleUser = new SimpleUser();
-            fill(user, simpleUser);
-            result.add(simpleUser);
+//            SimpleUser simpleUser = new SimpleUser();
+//            fill(user, simpleUser);
+            clean(user);
+            result.add(user);
         }
         SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, result);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
     }
 
+    private void clean(User user) {
+        user.setAccountstatus(null);
+//        user.setUsername(null);
+        user.setPassword(null);
+        user.setUpdateTime(null);
+        user.setLocation(null);
+        user.setAddTime(null);
+        user.setLastloginip(null);
+        user.setLastlogintime(null);
+        user.setAvatarurl(null);
+        user.setDeleted(null);
+    }
+
     private void fill(User user, SimpleUser simpleUser) {
 //        simpleUser.setUsername(user.getUsername());
 //        simpleUser.setAddress(user.getAddress());
-//        simpleUser.setContact(user.getContact());
+        simpleUser.setContact(user.getContact());
         simpleUser.setId(user.getId());
         simpleUser.setSchoolName(user.getSchoolname());
+        simpleUser.setProfession(user.getProfession());
 //        simpleUser.setTelephone(user.getTelephone());
     }
 

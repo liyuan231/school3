@@ -19,6 +19,7 @@ public class SimpleAuthenticationEntryPoint implements AuthenticationEntryPoint 
     }
 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+        authException.getMessage();
         String build = ResponseUtil.build(HttpStatus.UNAUTHORIZED.value(), authException.getMessage());
         ResponseUtil.printlnInfo(response, build);
     }
