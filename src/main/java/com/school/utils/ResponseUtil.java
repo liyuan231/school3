@@ -6,18 +6,19 @@
 package com.school.utils;
 
 import com.alibaba.fastjson.JSONObject;
+
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.http.HttpServletResponse;
 
 public class ResponseUtil {
     public ResponseUtil() {
     }
 
     public static String build(int status, String message) {
-        return build(status, message, (Object)null);
+        return build(status, message, (Object) null);
     }
 
     public static String build(int status, String message, Object data) {
@@ -36,5 +37,6 @@ public class ResponseUtil {
         printWriter.println(build);
 //        printWriter.flush();
         printWriter.close();
+
     }
 }

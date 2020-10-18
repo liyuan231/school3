@@ -11,6 +11,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\RoleEnum.j
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\KeyPairFactory.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Usertorole.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\RoleMapper.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\Certification.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\SignAlreadyExistException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\UserMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserAdminLoginInCorrectException.java
@@ -37,6 +38,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\JwtExp
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\JwtTokenPair.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Pics.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\AssertUtil.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\CommonUtil.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\security\SimpleAccessDeniedHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\RoleToAuthoritiesServiceImpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\SignNotFoundException.java
@@ -52,6 +54,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailW
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\PicsExample.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Sign.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\golden\userserviceimpl.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\FileUtil.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\RoletoauthoritiesExample.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\SignNotCorrectException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserSignController.java
@@ -75,6 +78,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\Userna
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\security\JwtAuthenticationFilter.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\PicsMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserLikeController.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\common\CertificationDownloadController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\PicsServiceImpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\SpringSecurityConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimplePage.java
@@ -99,3 +103,4 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\LikesAlreadyExistException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\UserExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\IpUtil.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\admin\AdminCertificationController.java

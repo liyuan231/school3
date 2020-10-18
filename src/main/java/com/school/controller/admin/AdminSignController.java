@@ -15,6 +15,7 @@ import com.school.service.impl.EmailServiceImpl;
 import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
+import com.school.utils.Status;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -65,6 +66,20 @@ public class AdminSignController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取该关键字学校的签约结果成功！", result);
     }
 
+    @PostMapping("/changeStatus/{signId}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @ApiOperation(value = "修改签约状态，即是否公示",notes = "修改签约状态")
+    public String switchSignId(@ApiParam(value = "该则签约的id", example = "1") @PathVariable("signId") Integer signId) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {
+        Sign sign = signService.findById(signId);
+        if (sign == null) {
+            return ResponseUtil.build(HttpStatus.OK.value(), "该则签约不存在！");
+        }
+        sign.setStatus(Status.SIGN_HIDDEN);
+        signService.update(sign);
+        return ResponseUtil.build(HttpStatus.OK.value(), "修改该则签约状态成功！");
+    }
+
+
     @ApiOperation(
             value = "签约公示->导出签约名单",
             notes = "签约公示->导出签约名单"
@@ -90,7 +105,7 @@ public class AdminSignController {
     @PostMapping({"/remind"})
     public String remindSchools() {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
-        new Thread(()->{
+        new Thread(() -> {
             Iterator var2 = users.iterator();
             while (var2.hasNext()) {
                 User user = (User) var2.next();
