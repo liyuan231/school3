@@ -73,7 +73,7 @@ public class UserController {
         logger.info("[" + request.getRemoteAddr() + "] is retrieving a verificationCode for his account!");
         AssertUtil.usernameNotNull(username, "邮箱号不应为空！");
         AssertUtil.isValidMail(username, "邮箱格式错误!");
-        emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（3分钟内有效）", username, 180, TimeUnit.SECONDS);//忘记密码
+        emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（用于重置密码，3分钟内有效）", username, 180, TimeUnit.SECONDS);//忘记密码
         return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！", null);
     }
 

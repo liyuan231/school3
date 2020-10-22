@@ -27,6 +27,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -168,7 +169,6 @@ public class SignServiceImpl {
         Workbook workbook = new HSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         this.prepare(sheet);
-
         for (int i = 0; i < signs.size(); ++i) {
             Sign sign = (Sign) signs.get(i);
             Row row = sheet.createRow(i + 2);
@@ -201,9 +201,12 @@ public class SignServiceImpl {
         cell3.setCellValue("签约时间");
     }
 
-    public Integer count(String signSchoolName, String signedSchoolName, Integer year) {
+    public Integer count(Integer likeUserId, String signSchoolName, String signedSchoolName, Integer year) {
         SignExample signExample = new SignExample();
         Criteria criteria = signExample.createCriteria();
+        if (Objects.nonNull(likeUserId)) {
+            criteria.andSignuseridEqualTo(likeUserId);
+        }
         if (StringUtils.hasText(signedSchoolName)) {
             criteria.andSignedschoolnameLike("%" + signedSchoolName + "%");
         }
@@ -217,7 +220,30 @@ public class SignServiceImpl {
             LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
             criteria.andUpdateTimeBetween(start, end);
         }
+        criteria.andDeletedEqualTo(false);
+        long l = this.signMapper.countByExample(signExample);
+        return Math.toIntExact(l);
+    }
 
+    public Integer countByLikedUserId(Integer likedUserId, String signSchoolName, String signedSchoolName, Integer year) {
+        SignExample signExample = new SignExample();
+        Criteria criteria = signExample.createCriteria();
+        if (Objects.nonNull(likedUserId)) {
+            criteria.andSigneduseridEqualTo(likedUserId);
+        }
+        if (StringUtils.hasText(signedSchoolName)) {
+            criteria.andSignedschoolnameLike("%" + signedSchoolName + "%");
+        }
+
+        if (StringUtils.hasText(signSchoolName)) {
+            criteria.andSignschoolnameLike("%" + signSchoolName + "%");
+        }
+
+        if (!StringUtils.isEmpty(year)) {
+            LocalDateTime end = LocalDateTime.of(year, 12, 31, 23, 59);
+            LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+            criteria.andUpdateTimeBetween(start, end);
+        }
         criteria.andDeletedEqualTo(false);
         long l = this.signMapper.countByExample(signExample);
         return Math.toIntExact(l);

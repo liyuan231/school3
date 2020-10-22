@@ -63,8 +63,8 @@ public class CommonUtil {
             throw new NullPointerException("当前用户尚未上传校长签章！");
         }
         String signedUserSignature = springFilePath + signatures.get(0).getLocation();
-        certification.setSignUserLogo(signedUserLogo);
-        certification.setSignUserSignature(signedUserSignature);
+        certification.setSignedUserLogo(signedUserLogo);
+        certification.setSignedUserSignature(signedUserSignature);
 
     }
 

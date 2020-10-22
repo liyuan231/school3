@@ -30,7 +30,7 @@ public class UserMouDownloadController {
 
     @GetMapping("/download")
     @ApiOperation(value = "下载mou模板", notes = "客户端下载管理端的mou模板")
-    @PreAuthorize("(hasRole('USER') and hasAuthority('user::mouDownload'))or hasRole('ADMINISTRATOR')")
+    @PreAuthorize("(hasRole('USER'))or hasRole('ADMINISTRATOR')")
     public Object download(HttpServletResponse response) throws IOException {
 
         List<Pics> pics = picsService.querySelective(null, null, FileEnum.TEMPLATE.value(), "update_time", "desc");

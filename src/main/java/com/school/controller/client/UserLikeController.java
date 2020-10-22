@@ -1,8 +1,6 @@
 package com.school.controller.client;
 
-import com.school.exception.LikesAlreadyExistException;
-import com.school.exception.UserNotCorrectException;
-import com.school.exception.UserNotFoundException;
+import com.school.exception.*;
 import com.school.model.Likes;
 import com.school.model.User;
 import com.school.service.impl.LikeServiceImpl;
@@ -37,14 +35,14 @@ public class UserLikeController {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
-    @PreAuthorize("hasAnyRole('USER') and hasAuthority('user::like')")
+    @PreAuthorize("hasAnyRole('USER')")
     @ApiOperation(value = "选择签约->勾选参会学校->提交", notes = "批量表明意向")
     @GetMapping("/batchLike")
     public Object batchSign(@RequestParam("likes") Integer[] likedUserIds) {
         for (Integer likedUserId : likedUserIds) {
             try {
                 likeService.like(likedUserId);
-            } catch (UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
+            } catch (UserLikesNotCorrespondException | LikesNotFoundException|UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
                 logger.warn(e.getMessage()+"->"+ likedUserId);
 //                e.printStackTrace();
             }

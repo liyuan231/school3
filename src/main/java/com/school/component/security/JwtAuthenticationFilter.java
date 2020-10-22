@@ -90,22 +90,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Collection<GrantedAuthority> roles_ = new ArrayList();
             JSONArray authoritiesJSONArray = jsonObject.getJSONArray("roles");
             Iterator iterator = authoritiesJSONArray.iterator();
-
             String next;
             while(iterator.hasNext()) {
                 next = (String)iterator.next();
+                roles_.add(new SimpleGrantedAuthority("ROLE_"+next));
                 Role role = this.roleService.querySelective((Integer)null, next);
                 List<Roletoauthorities> byRoleId = this.roleToAuthoritiesService.querySelective((Integer)null, role.getId(), (String)null);
                 Iterator var10 = byRoleId.iterator();
-
                 while(var10.hasNext()) {
                     Roletoauthorities roletoauthorities = (Roletoauthorities)var10.next();
                     roles_.add(new SimpleGrantedAuthority(roletoauthorities.getAuthority()));
                 }
-                String finalNext = next;
-                roles_.add(() -> {
-                    return "ROLE_" + finalNext;
-                });
             }
 
             next = jsonObject.getString("audience");

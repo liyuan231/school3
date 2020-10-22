@@ -12,12 +12,9 @@ import com.school.exception.ExcelDataException;
 import com.school.exception.FileFormattingException;
 import com.school.exception.UserNotFoundException;
 import com.school.exception.UsernameAlreadyExistException;
-import com.school.model.Role;
-import com.school.model.User;
+import com.school.model.*;
 import com.school.model.User.Column;
-import com.school.model.UserExample;
 import com.school.model.UserExample.Criteria;
-import com.school.model.Usertorole;
 import com.school.utils.AssertUtil;
 import com.school.utils.RoleEnum;
 import com.school.utils.Status;
@@ -67,7 +64,11 @@ public class UserServiceImpl implements UserDetailsService {
     private EmailServiceImpl emailService;
     @Autowired
     RoleServiceImpl roleService;
+    @Autowired
+    RoleToAuthoritiesServiceImpl roleToAuthoritiesService;
 
+    @Value("${file.default.avatarUrl:default.jpg}")
+    private String defaultAvatarUrl;
     public UserServiceImpl() {
     }
 
@@ -87,15 +88,18 @@ public class UserServiceImpl implements UserDetailsService {
                 role = this.roleService.querySelective(usertorole.getRoleid(), (String) null);
                 roles.add(role);
             }
-
             Collection<GrantedAuthority> roles_ = new HashSet();
             Iterator var10 = roles.iterator();
 
+//            HashSet<String> authorities = new HashSet<>();
             while (var10.hasNext()) {
                 role = (Role) var10.next();
+                List<Roletoauthorities> roletoauthorities = roleToAuthoritiesService.querySelective(null, role.getId(), null);
+//                for (Roletoauthorities roletoauthority : roletoauthorities) {
+//                    roles_.add(new SimpleGrantedAuthority(roletoauthority.getAuthority()));
+//                }
                 roles_.add(new SimpleGrantedAuthority(role.getName()));
             }
-
             return new org.springframework.security.core.userdetails.User(username, this.encodedPasswordPrefix + user.getPassword(), roles_);
         } else {
             throw new UsernameNotFoundException("用户名不存在！");
@@ -120,7 +124,9 @@ public class UserServiceImpl implements UserDetailsService {
         }
     }
 
-    private void add(User user, Integer roleId) throws UsernameAlreadyExistException {
+    private void add(User user, Integer roleId) {
+        user.setAddTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
         this.userMapper.insertSelective(user);
         List<User> users = this.findByUsername(user.getUsername());
         this.userToRoleService.add(((User) users.get(0)).getId(), roleId);
@@ -221,12 +227,14 @@ public class UserServiceImpl implements UserDetailsService {
     public User retrieveUserByToken() {
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<User> users = this.findByUsername(principal.getUsername());
+        if (users.size() == 0) {
+            throw new UsernameNotFoundException("token中信息已过期！,请重新获取token信息！");
+        }
         return (User) users.get(0);
     }
 
     public void clearPassword(List<User> users) {
         Iterator var2 = users.iterator();
-
         while (var2.hasNext()) {
             User user = (User) var2.next();
             user.setPassword("[PROTECTED]");
@@ -234,10 +242,15 @@ public class UserServiceImpl implements UserDetailsService {
 
     }
 
-    public User update(Integer id, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession) throws UserNotFoundException {
-        List<User> users = this.findByUsername(username);
+    public User update(Integer userId, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession) throws UserNotFoundException {
+//        List<User> users = this.findByUsername(username);
+        //若同时传来用户名以及用户id，以用户id为准
+        if (StringUtils.hasText(username) && Objects.nonNull(userId)) {
+            username = null;
+        }
+        List<User> users = querySelectiveLike(userId, username, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         if (users.size() == 0) {
-            throw new UserNotFoundException("用户id不存在！");
+            throw new UserNotFoundException("用户id或用户名不存在！");
         } else {
             User user = users.get(0);
             if (StringUtils.hasText(username)) {
@@ -295,7 +308,6 @@ public class UserServiceImpl implements UserDetailsService {
             if (!StringUtils.isEmpty(lastLoginTime)) {
                 user.setLastlogintime(lastLoginTime);
             }
-
             return this.update(user);
         }
     }
@@ -376,16 +388,18 @@ public class UserServiceImpl implements UserDetailsService {
                 while (cellIterator.hasNext()) {
                     Cell cell = (Cell) cellIterator.next();
                     CellType cellType = cell.getCellType();
-                    String fieldValue = null;
-                    if (cellType == CellType.NUMERIC) {
-                        fieldValue = String.valueOf(cell.getNumericCellValue()).trim();
-                    } else if (cellType == CellType.STRING) {
-                        fieldValue = cell.getStringCellValue().trim();
-                    }
+                    cell.setCellType(CellType.STRING);
+//                    System.out.println(cell.getRichStringCellValue());
+                    RichTextString fieldValue = cell.getRichStringCellValue();
+//                    if (cellType == CellType.NUMERIC) {
+//                        fieldValue = String.valueOf(cell.getNumericCellValue()).trim();
+//                    } else if (cellType == CellType.STRING) {
+//                        fieldValue = cell.getStringCellValue().trim();
+//                    }
                     int columnIndex = cell.getColumnIndex();
                     String fieldName = (String) info.get(columnIndex);
                     try {
-                        this.invokeValue(user, fieldName, fieldValue);
+                        this.invokeValue(user, fieldName, fieldValue.getString());
                     } catch (NoSuchMethodException var21) {
                         throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！");
                     }
@@ -397,10 +411,12 @@ public class UserServiceImpl implements UserDetailsService {
                 }
                 List<User> byUsername = this.findByUsername(user.getUsername());
                 if (byUsername.size() != 0) {
-                    System.out.println("该用户名已经被注册过了！");
+                    logger.info("该用户名已经被注册过了->"+user.getUsername());
+                    System.out.println("！");
                 } else {
                     String defaultPassword = this.generateDefaultPassword();
-                    user.setPassword(defaultPassword);
+                    user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
+                    user.setAvatarurl(defaultAvatarUrl);
                     try {
                         this.emailService.sendVerificationCode("签约系统临时授权码", "签约系统临时授权码(3天内有效，请尽快重设您的密码)", user.getUsername(), 3, TimeUnit.DAYS);
                     } catch (MailException var22) {

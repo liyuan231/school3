@@ -56,7 +56,7 @@ public class FileUtil {
         if (useredLogos.size() == 0) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校logo！");
         }
-        List<Pics> useredSignatures = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.LOGO.value());
+        List<Pics> useredSignatures = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.SIGNATURE.value());
         if (useredSignatures.size() == 0) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校校长签章！");
         }
@@ -113,8 +113,7 @@ public class FileUtil {
         String templateLocation = filePath + theTemplate.getLocation();
         XWPFTemplate template = XWPFTemplate.compile(templateLocation)
                 .render(datas);
-        FileOutputStream out;
-        response.setHeader("Content-disposition", String.format("attachment;filename=\"%s\"", "sign_up.docx"));//�̶�ģʽ�������ļ��������ͣ��пղ�������������ɶ��˼
+        response.setHeader("Content-disposition", String.format("attachment;filename=\"%s\"", System.currentTimeMillis()+".docx"));
         response.setContentType("multipart/form-data");
         response.setCharacterEncoding("UTF-8");
         BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());

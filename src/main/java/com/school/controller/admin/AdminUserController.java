@@ -99,7 +99,6 @@ public class AdminUserController {
             this.fill(user, simpleUser);
             result.add(simpleUser);
         }
-
         SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, result);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
     }
@@ -127,7 +126,7 @@ public class AdminUserController {
 
     @GetMapping({"/show/{userId}"})
     @ApiOperation(
-            value = "通过id查询某一用户",
+            value = "查看报名表->通过id查询某一用户",
             notes = "通过id查询某一用户"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
@@ -220,8 +219,8 @@ public class AdminUserController {
 
     @PostMapping({"/update/{userId}"})
     @ApiOperation(
-            value = "更新用户信息",
-            notes = "更新用户信息,用户名，即邮箱是否应该修改？"
+            value = "修改用户信息",
+            notes = "更新用户信息"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object update(@ApiParam(example = "1", value = "待修改的用户的id") @PathVariable("userId") Integer id, @ApiParam(example = "广外", value = "待修改的用户的学校名") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "联系人", value = "联系人") @RequestParam(value = "contact", required = false) String contact, @ApiParam(example = "详细地址", value = "详细地址") @RequestParam(value = "address", required = false) String address, @ApiParam(example = "电话", value = "电话") @RequestParam(value = "telephone", required = false) String telephone, @ApiParam(example = "email", value = "用户名") @RequestParam(value = "username", required = false) String username) throws UserNotFoundException {
@@ -251,11 +250,10 @@ public class AdminUserController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object listSearchUserLoginInfos(@ApiParam(example = "1", value = "schoolName") @RequestParam(required = false) String schoolName,
-                                           @ApiParam(example = "1", value = "分页使用，要第几页的数据")
-                                           @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
-                                           @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time")
-                                           @RequestParam(defaultValue = "lastLoginTime") String sort,
-                                           @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
+                                           @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
+                                           @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                           @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "lastLoginTime",required = false) String sort,
+                                           @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc",required = false) String order) {
         List<User> users = userService.querySelectiveLike(null,
                 null,
                 schoolName,
@@ -284,10 +282,9 @@ public class AdminUserController {
             user.setAddress(null);
             user.setDeleted(null);
             user.setContact(null);
+            user.setAccountstatus(null);
         }
         SimplePage simplePage = new SimplePage(size, users);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取高校信息成功！", simplePage);
     }
-
-
 }

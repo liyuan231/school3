@@ -61,7 +61,11 @@ public class AdminSignController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String search(@ApiParam(example = "schoolName", value = "schoolName") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         List<Sign> signs = this.signService.querySelective((Integer) null, (Integer) null, schoolName, (Integer) null, (String) null, year, page, pageSize, sort, order);
-        Integer count = this.signService.count(schoolName, (String) null, year);
+        for (Sign sign : signs) {
+            sign.setAddTime(null);
+            sign.setDeleted(null);
+        }
+        Integer count = this.signService.count(null,schoolName, (String) null, year);
         SimplePage<List<Sign>> result = new SimplePage(count, signs);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取该关键字学校的签约结果成功！", result);
     }
@@ -74,7 +78,7 @@ public class AdminSignController {
         if (sign == null) {
             return ResponseUtil.build(HttpStatus.OK.value(), "该则签约不存在！");
         }
-        sign.setStatus(Status.SIGN_HIDDEN);
+        sign.setStatus(sign.getStatus()==Status.SIGN_SHOW?Status.SIGN_HIDDEN:Status.SIGN_SHOW);
         signService.update(sign);
         return ResponseUtil.build(HttpStatus.OK.value(), "修改该则签约状态成功！");
     }
@@ -84,7 +88,7 @@ public class AdminSignController {
             value = "签约公示->导出签约名单",
             notes = "签约公示->导出签约名单"
     )
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/exportSignForm"})
     public void exportSignForm(HttpServletResponse response) throws IOException {
         Workbook workbook = this.signService.exportSignForm();
@@ -98,7 +102,7 @@ public class AdminSignController {
     }
 
     @ApiOperation(
-            value = "签约结果管理->提醒",
+            value = "签约结果管理->发送消息提醒高校查看签约结果",
             notes = "签约结果管理->发送消息提醒高校查看签约结果"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
@@ -112,7 +116,7 @@ public class AdminSignController {
                 try {
                     this.emailService.send(user.getUsername(), "!签约结果提醒!", "记得查看签约结果~");
                 } catch (MailException var5) {
-                    this.logger.warn("该邮箱号不存在:" + user.getUsername());
+                    this.logger.warn("该邮箱号不存在->" + user.getUsername());
                 }
             }
         }).start();
@@ -122,7 +126,7 @@ public class AdminSignController {
     @PostMapping("/rollBack")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @ApiOperation(value = "高校信息管理->高校签约名单管理->回退签约名单", notes = "即管理员选中多个签约记录，然后点击回退，因此前端需传来一个数组")
-    public Object rollBack(@RequestParam("") Integer[] signIds) {
+    public Object rollBack(@RequestParam("signIds") Integer[] signIds) {
         for (Integer signId : signIds) {
             try {
                 signService.deleteById(signId);

@@ -89,17 +89,16 @@ public class LikeServiceImpl {
         return pageInfo.getList();
     }
 
-    public void add(Likes like) throws UserNotFoundException, LikesAlreadyExistException, UserNotCorrectException {
+    public void add(Likes like) throws UserNotFoundException, LikesAlreadyExistException, UserNotCorrectException, UserLikesNotCorrespondException, LikesNotFoundException {
         Integer likeUserId = like.getLikeuserid();
-        String likeSchoolName = like.getLikeschoolname();
         Integer likedUserId = like.getLikeduserid();
-        String likedSchoolName = like.getLikedschoolname();
         User byId = this.userService.findById(like.getLikeduserid());
         if (byId == null) {
             throw new UserNotFoundException("用户不存在！");
         } else {
-            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, likeSchoolName, likedUserId, likedSchoolName, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
+            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, null, likedUserId, null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
             if (likes1.size() >= 1) {
+                update(likes1.get(0).getId(),likeUserId,likedUserId,like.getLikeschoolname(),like.getLikedschoolname(),null);
                 throw new LikesAlreadyExistException("已经和该用户表明过意向了!");
             } else if (likeUserId.equals(likedUserId)) {
                 throw new UserNotCorrectException("不能自己对自己有意向！");
@@ -114,19 +113,22 @@ public class LikeServiceImpl {
     public Likes update(Integer id, Integer likeUserId, Integer likedUserId, String likeSchoolName, String likedSchoolName, Boolean deleted) throws UserLikesNotCorrespondException, LikesNotFoundException {
         Likes likes = new Likes();
         likes.setId(id);
-        likes.setLikeduserid(likeUserId);
+        likes.setLikeuserid(likeUserId);
+        likes.setLikeschoolname(likeSchoolName);
         likes.setLikeduserid(likedUserId);
         likes.setLikedschoolname(likedSchoolName);
-        likes.setLikeschoolname(likeSchoolName);
         likes.setDeleted(deleted);
         return this.update(likes);
     }
 
-    public Likes update(Likes like) throws LikesNotFoundException, UserLikesNotCorrespondException {
+    //这是根据意向id更新每一则意向
+    public Likes update(Likes like) throws LikesNotFoundException {
         List<Likes> likes = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
         if (likes.size() == 0) {
             throw new LikesNotFoundException("该则意向不存在，请检查id");
         } else {
+            Likes likeInDb = likes.get(0);
+            like.setId(likeInDb.getId());
             like.setUpdateTime(LocalDateTime.now());
             this.likesMapper.updateByPrimaryKeySelective(like);
             List<Likes> likesInDb = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
@@ -134,7 +136,7 @@ public class LikeServiceImpl {
         }
     }
 
-    public void delete(Likes like) throws UserLikesNotCorrespondException, LikesNotFoundException {
+    public void delete(Likes like) throws LikesNotFoundException {
         like.setDeleted(true);
         this.update(like);
     }
@@ -161,7 +163,7 @@ public class LikeServiceImpl {
         return result;
     }
 
-    public void add(Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
+    public void add(Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException, UserLikesNotCorrespondException, LikesNotFoundException {
         Likes likes = new Likes();
         likes.setLikeduserid(likedUserId);
         likes.setLikeuserid(likeUserId);
@@ -170,7 +172,7 @@ public class LikeServiceImpl {
         this.add(likes);
     }
 
-    public void deleteById(Integer id) throws UserLikesNotCorrespondException, LikesNotFoundException {
+    public void deleteById(Integer id) throws LikesNotFoundException {
         Likes likes = new Likes();
         likes.setId(id);
         this.delete(likes);
@@ -269,7 +271,7 @@ public class LikeServiceImpl {
         cell.setCellStyle(cellStyle);
     }
 
-    public void like(Integer likedUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException {
+    public void like(Integer likedUserId) throws UserNotFoundException, UserNotCorrectException, LikesAlreadyExistException, UserLikesNotCorrespondException, LikesNotFoundException {
         //当前用户的信息
         User likeUser = userService.retrieveUserByToken();
         User likedUser = userService.findById(likedUserId);

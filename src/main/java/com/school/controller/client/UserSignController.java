@@ -44,7 +44,7 @@ public class UserSignController {
 //        return ResponseUtil.build(HttpStatus.OK.value(), "签约成功！", null);
 //    }
 
-    @PreAuthorize("hasAnyRole('USER') and hasAuthority('user::sign')")
+    @PreAuthorize("hasAnyRole('USER')")
     @ApiOperation(value = "批量签约", notes = "当前用户批量进行签约")
     @GetMapping("/batchSign")
     public String sibatchSign(@RequestParam("signedUserIds") Integer[] signedUserIds) {

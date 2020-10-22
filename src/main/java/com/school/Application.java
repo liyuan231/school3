@@ -19,7 +19,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @MapperScan({"com.school.dao"})
 @EnableTransactionManagement
 @EnableSwagger2
-@EnableScheduling
+//@EnableScheduling
 //@EnableAsync
 public class Application {
     public Application() {

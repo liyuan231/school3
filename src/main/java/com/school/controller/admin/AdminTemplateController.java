@@ -36,7 +36,6 @@ public class AdminTemplateController {
     @Autowired
     private PicsServiceImpl picsService;
 
-    //上传的签约模板文档简易处理下,默认模板名为template，当然可通过
     //TODO 由于前期没想到用户上传的静态资源应该统一管理，所以先暂时使用PicsServiceImpl表示该资源
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
@@ -45,7 +44,7 @@ public class AdminTemplateController {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.OK.value(), "签约模板为空");
         }
-        String fileName = file.getOriginalFilename();
+//        String fileName = file.getOriginalFilename();
         User user = userService.retrieveUserByToken();
         Pics upload = picsService.upload(user.getId(), FileEnum.TEMPLATE.value(), file);
         return ResponseUtil.build(HttpStatus.OK.value(), "上传模板成功!",springFilePath+upload.getLocation());

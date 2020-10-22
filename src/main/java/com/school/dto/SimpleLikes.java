@@ -6,6 +6,24 @@ public class SimpleLikes {
     private Integer likeUserId;
     private String likeSchoolName;
     private List<String> likedSchoolNames;
+    private Integer numOfLikes;
+    private Integer numOfSigns;
+
+    public Integer getNumOfLikes() {
+        return numOfLikes;
+    }
+
+    public void setNumOfLikes(Integer numOfLikes) {
+        this.numOfLikes = numOfLikes;
+    }
+
+    public Integer getNumOfSigns() {
+        return numOfSigns;
+    }
+
+    public void setNumOfSigns(Integer numOfSigns) {
+        this.numOfSigns = numOfSigns;
+    }
 
     public Integer getLikeUserId() {
         return likeUserId;
