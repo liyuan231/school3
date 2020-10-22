@@ -32,9 +32,6 @@ public class UserAllController {
 //    @Autowired
     private UserServiceImpl userService;
 
-
-
-
 //    @GetMapping("/select")
 //    @ApiOperation(value = "查询所有学校", notes = "查询所有学校")
 //    @PreAuthorize("hasAnyRole('USER')")
@@ -45,7 +42,7 @@ public class UserAllController {
 //        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, userList);
 //        return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", simplePage);
 //    }
-
+//
 //    @GetMapping("select/like")
 //    @ApiOperation(value = "勾选参会学校，学校信息模糊查询", notes = "模糊查询")
 //    @PreAuthorize("hasAnyRole('USER')")
@@ -53,7 +50,7 @@ public class UserAllController {
 //        List<User> userList = userService.querySelectiveAllDim(key);
 //        return ResponseUtil.build(HttpStatus.OK.value(), "获取列表成功！", userList);
 //    }
-
+//
 //    @GetMapping("select/like/{schoolname}")
 //    @ApiOperation(value = "学校名称模糊查询", notes = "模糊查询")
 ////    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")

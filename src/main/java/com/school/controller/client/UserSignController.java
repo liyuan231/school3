@@ -22,13 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/client/sign")
 public class UserSignController {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired
     private SignServiceImpl signService;
-    @Autowired
-    private UserServiceImpl userService;
 
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
 //    /**
 //     * 传入被签约一方的userId
@@ -47,7 +44,7 @@ public class UserSignController {
     @PreAuthorize("hasAnyRole('USER')")
     @ApiOperation(value = "批量签约", notes = "当前用户批量进行签约")
     @GetMapping("/batchSign")
-    public String sibatchSign(@RequestParam("signedUserIds") Integer[] signedUserIds) {
+    public String batchSign(@RequestParam("signedUserIds") Integer[] signedUserIds) {
         for (Integer signedUserId : signedUserIds) {
             try {
                 signService.sign(signedUserId);

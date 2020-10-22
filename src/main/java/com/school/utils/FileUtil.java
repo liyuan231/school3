@@ -7,9 +7,7 @@ import com.school.exception.UserNotFoundException;
 import com.school.model.Pics;
 import com.school.model.Sign;
 import com.school.model.User;
-import com.school.service.impl.LikeServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
-import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -79,7 +76,7 @@ public class FileUtil {
 
         String country2 = usered.getCountry();
         String logo2 = filePath + useredLogos.get(0).getLocation();
-        String signature2 =filePath +  useredSignatures.get(0).getLocation();
+        String signature2 = filePath + useredSignatures.get(0).getLocation();
         String school2 = usered.getSchoolname();
         String job2 = usered.getProfession();
         String time2 = dateTimeFormatter.format(LocalDateTime.now());
@@ -88,7 +85,7 @@ public class FileUtil {
         String witness = filePath + witnessFileName;
 
         File file = new File(witness);
-        if(!file.exists()){
+        if (!file.exists()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "见证者的logo未上传，且需命名为${file.name.witness}！");
         }
         Map<String, Object> datas = fillData(
@@ -113,7 +110,7 @@ public class FileUtil {
         String templateLocation = filePath + theTemplate.getLocation();
         XWPFTemplate template = XWPFTemplate.compile(templateLocation)
                 .render(datas);
-        response.setHeader("Content-disposition", String.format("attachment;filename=\"%s\"", System.currentTimeMillis()+".docx"));
+        response.setHeader("Content-disposition", String.format("attachment;filename=\"%s\"", System.currentTimeMillis() + ".docx"));
         response.setContentType("multipart/form-data");
         response.setCharacterEncoding("UTF-8");
         BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
@@ -140,8 +137,8 @@ public class FileUtil {
 
                 //最顶部公用的图片
                 put("witness", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo3))));
-                put("signature1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature1))));
-                put("signature2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature2))));
+                put("signature1", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature1))));
+                put("signature2", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature2))));
 
                 Date date = new Date();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

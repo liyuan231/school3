@@ -8,6 +8,7 @@ import com.deepoove.poi.util.BytePictureUtils;
 import com.school.dto.Certification;
 import com.school.dto.LikesWithMark;
 import com.school.dto.SimplePage;
+import com.school.dto.golden.likelist;
 import com.school.dto.golden.picture;
 import com.school.exception.UserNotFoundException;
 import com.school.model.Likes;
@@ -149,72 +150,72 @@ public class LikesAndSignController {
         like.setUpdateTime(null);
     }
 
-    @ResponseBody
-    @GetMapping("/download/{signId}")
-    @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
-    public String download(@PathVariable("signId") Integer signId) throws UserNotFoundException {
-        List<Sign> signs = signService.querySelective(signId, null, null, null, null, null, null, null, null, null);
-        if (signs.size() == 0) {
-            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
-        }
-        Sign sign = signs.get(0);
-        User user = userService.retrieveUserByToken();
-        if (!sign.getSignuserid().equals(user.getId())) {
-            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "当前用户与目标的签约id不符！");
-        }
-
-        List<Pics> userLogos = picsService.querySelective(null, user.getId(), FileEnum.LOGO.value());
-        if (userLogos.size() == 0) {
-            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "还未上传学校logo！");
-        }
-
-        List<Pics> useredLogos = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.LOGO.value());
-        if (useredLogos.size() == 0) {
-            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校logo！");
-        }
-
-        User usered = userService.findById(sign.getSigneduserid());
-
-        String country1 = user.getCountry();
-        String logo1 = userLogos.get(0).getLocation();
-        String school1 = user.getSchoolname();
-        String job1 = user.getProfession();
-
-        String country2 = usered.getCountry();
-        String logo2 = useredLogos.get(0).getLocation();
-        String school2 = usered.getSchoolname();
-        String job2 = usered.getProfession();
-
-
-        Map<String, Object> datas = new HashMap<String, Object>() {
-            {
-                //����ͼƬ
-                put("country1", country1);
-                put("country2", country2);
-                put("school1", school1);
-                put("school2", school2);
-                put("job1", job1);
-                put("job2", job2);
-                //��·ͼƬ
-                put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo1)));
-                put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo2)));
-//                put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo3)));
-//                put("name1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name1)));
-//                put("name2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name2)));
-                Date date = new Date();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                String time = sdf.format(date);
-                put("date1", time);
-                put("date2", time);
-            }
-        };
-        return null;
-    }
+//    @ResponseBody
+//    @GetMapping("/download/{signId}")
+//    @PreAuthorize("hasRole('USER')")
+//    @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
+//    public String download(@PathVariable("signId") Integer signId) throws UserNotFoundException {
+//        List<Sign> signs = signService.querySelective(signId, null, null, null, null, null, null, null, null, null);
+//        if (signs.size() == 0) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
+//        }
+//        Sign sign = signs.get(0);
+//        User user = userService.retrieveUserByToken();
+//        if (!sign.getSignuserid().equals(user.getId())) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "当前用户与目标的签约id不符！");
+//        }
+//
+//        List<Pics> userLogos = picsService.querySelective(null, user.getId(), FileEnum.LOGO.value());
+//        if (userLogos.size() == 0) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "还未上传学校logo！");
+//        }
+//
+//        List<Pics> useredLogos = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.LOGO.value());
+//        if (useredLogos.size() == 0) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校logo！");
+//        }
+//
+//        User usered = userService.findById(sign.getSigneduserid());
+//
+//        String country1 = user.getCountry();
+//        String logo1 = userLogos.get(0).getLocation();
+//        String school1 = user.getSchoolname();
+//        String job1 = user.getProfession();
+//
+//        String country2 = usered.getCountry();
+//        String logo2 = useredLogos.get(0).getLocation();
+//        String school2 = usered.getSchoolname();
+//        String job2 = usered.getProfession();
+//
+//        Map<String, Object> datas = new HashMap<String, Object>() {
+//            {
+//
+//                put("country1", country1);
+//                put("country2", country2);
+//                put("school1", school1);
+//                put("school2", school2);
+//                put("job1", job1);
+//                put("job2", job2);
+//
+//                put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo1)));
+//                put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo2)));
+////                put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo3)));
+////                put("name1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name1)));
+////                put("name2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name2)));
+//                Date date = new Date();
+//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//                String time = sdf.format(date);
+//                put("date1", time);
+//                put("date2", time);
+//            }
+//        };
+//        return null;
+//    }
 
 
     @ResponseBody
     @PostMapping("/get_Word")
+    @ApiOperation(value = "下载签约证书",notes = "下载签约证书")
     public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户logo访问地址") String logo1,
                              @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户logo访问地址") String logo2,
                              @ApiParam(example = "GDUFS", value = "当前用户学校名称") String school1,
@@ -361,44 +362,44 @@ public class LikesAndSignController {
         return result;
     }
 
-//    @ResponseBody
-//    @GetMapping("/select_likes")
-//    public JSON select_sch(@ApiParam(example = "1", value = "当前用户id") Integer id) {
-//        String msg = null;
-//        String code = null;
-//        int flag = 0;
-//        JSONObject result = new JSONObject();
-//        if (id == null) {
-//            msg = "school_id missing";
-//            code = "-1";
-//            result.put("msg", msg);
-//            result.put("code", code);
-//            return result;
-//        }
-//        List<likelist> list = new ArrayList<likelist>();
-//        try {
-//            list = user_service.select_likes(id);
-//        } catch (java.lang.NullPointerException e) {
-//            e.printStackTrace();
-//            msg = "null like";
-//            code = "-2";
-//            result.put("msg", msg);
-//            result.put("code", code);
-//            return result;
-//        }
-//        int len = list.size();
-//        for (int i = 0; i < len; i++) {
-//            if (user_service.select_both(list.get(i).getSch_name(), id)) {
-//                list.get(i).setFlag(true);
-//            }
-//        }
-//        msg = "success";
-//        code = "200";
-//        result.put("msg", msg);
-//        result.put("code", code);
-//        result.put("list", list);
-//        return result;
-//    }
+    @ResponseBody
+    @GetMapping("/select_likes")
+    public JSON select_sch(@ApiParam(example = "1", value = "当前用户id") Integer id) {
+        String msg = null;
+        String code = null;
+        int flag = 0;
+        JSONObject result = new JSONObject();
+        if (id == null) {
+            msg = "school_id missing";
+            code = "-1";
+            result.put("msg", msg);
+            result.put("code", code);
+            return result;
+        }
+        List<likelist> list = new ArrayList<likelist>();
+        try {
+            list = user_service.select_likes(id);
+        } catch (java.lang.NullPointerException e) {
+            e.printStackTrace();
+            msg = "null like";
+            code = "-2";
+            result.put("msg", msg);
+            result.put("code", code);
+            return result;
+        }
+        int len = list.size();
+        for (int i = 0; i < len; i++) {
+            if (user_service.select_both(list.get(i).getSch_name(), id)) {
+                list.get(i).setFlag(true);
+            }
+        }
+        msg = "success";
+        code = "200";
+        result.put("msg", msg);
+        result.put("code", code);
+        result.put("list", list);
+        return result;
+    }
 
     @ResponseBody
     @GetMapping("/get_certi")

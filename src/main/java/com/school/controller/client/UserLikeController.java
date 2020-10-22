@@ -103,18 +103,18 @@ public class UserLikeController {
 //        return ResponseUtil.build(HttpStatus.OK.value(), "删除一则意向成功！", null);
 //    }
 
-//    @ApiOperation(value = "查询对我有意向的用户", notes = "看看谁对我有意向，同查询")
-//    @GetMapping("/matchWhoLikesMe")
-//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-//    public Object matchWhoLikesMe() throws UserNotFoundException {
-//        List<Likes> matchs = likeService.matchByLikedUserId();
-//        List<User> users = new LinkedList<>();
-//        for (Likes match : matchs) {
-//            User user = userService.findById(match.getLikeuserid());
-//            users.add(user);
-//        }
-//        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功！", users);
-//    }
+    @ApiOperation(value = "查询对我有意向的用户", notes = "看看谁对我有意向，同查询")
+    @GetMapping("/matchWhoLikesMe")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
+    public Object matchWhoLikesMe() throws UserNotFoundException {
+        List<Likes> matchs = likeService.matchByLikedUserId();
+        List<User> users = new LinkedList<>();
+        for (Likes match : matchs) {
+            User user = userService.findById(match.getLikeuserid());
+            users.add(user);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功！", users);
+    }
 
     @GetMapping("/listILikesWho")
     @PreAuthorize("hasAnyRole('USER')")
