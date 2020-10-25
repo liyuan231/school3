@@ -57,15 +57,14 @@ public class CommonUtil {
         if (signedUserlogos.size() == 0) {
             throw new NullPointerException("当前用户尚未上传logo！");
         }
-        String signedUserLogo = springFilePath + logos.get(0).getLocation();
-        List<Pics> signedUserSignatures = picsService.querySelective(null, signUserId, FileEnum.SIGNATURE.value());
+        String signedUserLogo = springFilePath + signedUserlogos.get(0).getLocation();
+        List<Pics> signedUserSignatures = picsService.querySelective(null, signedUserId, FileEnum.SIGNATURE.value());
         if (signedUserSignatures.size() == 0) {
             throw new NullPointerException("当前用户尚未上传校长签章！");
         }
-        String signedUserSignature = springFilePath + signatures.get(0).getLocation();
+        String signedUserSignature = springFilePath + signedUserSignatures.get(0).getLocation();
         certification.setSignedUserLogo(signedUserLogo);
         certification.setSignedUserSignature(signedUserSignature);
-
     }
 
 }

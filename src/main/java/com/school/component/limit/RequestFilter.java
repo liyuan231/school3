@@ -16,7 +16,7 @@ public class RequestFilter implements Filter {
     private static final long LIMIT_TIME_MILLIS = 60 * 60 * 1000;
     private static final int LIMIT_TIMES = 1000;
     private static final int MIN_SAFE_TIME = 200;
-    //若用户在MIN_SAFE_TIME 内访问超过LIMIT_TIMES，则判定为机器人
+    //若用户在MIN_SAFE_TIME时间 内访问超过LIMIT_TIMES，则判定为机器人
     private FilterConfig filterConfig;
 
     @Override

@@ -11,6 +11,7 @@ import com.school.dto.SimpleUser;
 import com.school.dto.SimpleUserLikes;
 import com.school.exception.*;
 import com.school.model.Likes;
+import com.school.model.Sign;
 import com.school.model.User;
 import com.school.service.impl.EmailServiceImpl;
 import com.school.service.impl.LikeServiceImpl;
@@ -96,8 +97,8 @@ public class AdminLikesController {
                 simpleLike.setLikeUserId(likes.getLikeuserid());
                 simpleLike.setLikeSchoolName(likes.getLikeschoolname());
                 Integer count1 = signService.count(likes.getLikeuserid(), null, null, null);
-                Integer count2 = signService.countByLikedUserId(likes.getLikeuserid(),null,null,null);
-                simpleLike.setNumOfSigns(count1+count2);
+                Integer count2 = signService.countByLikedUserId(likes.getLikeuserid(), null, null, null);
+                simpleLike.setNumOfSigns(count1 + count2);
                 simpleLike.setNumOfLikes(entry.getValue().size());
             }
             List<String> likeds = entry.getValue();
@@ -180,6 +181,7 @@ public class AdminLikesController {
                         like.setLikeduserid(likedUser.getId());
                         like.setLikedschoolname(likedUser.getSchoolname());
                         this.likeService.add(like);
+                        checkIfNeedSign(like);
                     }
                 } catch (LikesNotFoundException | UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException | UserLikesNotCorrespondException e) {
                     logger.warn("[" + likeUser.getId() + "->" + likedUserId + "]" + e.getMessage());
@@ -187,6 +189,26 @@ public class AdminLikesController {
             }
             return ResponseUtil.build(HttpStatus.OK.value(), "管理端添加该学校意向成功！");
         }
+    }
+
+    private void checkIfNeedSign(Likes like) {
+        List<Likes> likesList = likeService.querySelective(null, like.getLikeduserid(), null, like.getLikeuserid(), null, null, null, null, null, null);
+        //管理端添加一则意向，若这则意向的likeUserId->likedUserId 对应的意向 likedUserId->likeUserId在意向表中已经存在了，说明可实行自动签约
+        if (likesList.size() > 0) {
+            List<Sign> signs1 = signService.querySelective(null, like.getLikeuserid(), null, like.getLikeduserid(), null, null, null, null, null, null);
+            List<Sign> signs2 = signService.querySelective(null, like.getLikeduserid(), null, like.getLikeuserid(), null, null, null, null, null, null);
+            //说明该则意向已经有对应
+            if (signs1.size() + signs2.size() > 0) {
+                return;
+            }
+            Sign sign = new Sign();
+            sign.setSignuserid(like.getLikeuserid());
+            sign.setSignschoolname(like.getLikeschoolname());
+            sign.setSigneduserid(like.getLikeduserid());
+            sign.setSignedschoolname(like.getLikedschoolname());
+            signService.add(sign);
+        }
+
     }
 
     @DeleteMapping({"/delete"})

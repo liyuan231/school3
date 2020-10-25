@@ -23,10 +23,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -84,6 +81,15 @@ public class AdminSystemController {
             return ResponseUtil.build(HttpStatus.OK.value(), "系统配置成功！");
         }
         return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "系统邮箱账号或授权码不能为空！");
+    }
+
+    @GetMapping("/sysConfig")
+    @ApiOperation(value = "获取系统邮箱配置", notes = "获取系统邮箱配置")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public Object retrieveSysConfig() {
+//        emailService.modifySystemEmail;
+        EmailServiceImpl.EmailInfo emailInfo = emailService.retrieveSystemEmailInfo();
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取系统设置成功！", emailInfo);
     }
 
 

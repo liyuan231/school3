@@ -5,15 +5,10 @@
 
 package com.school.service.impl;
 
-import com.school.exception.EmailNotFoundException;
 import com.school.exception.EmailVerificationCodeIllegalArgumentException;
 import com.school.exception.EmailVerificationCodeNullPointerException;
 import com.school.exception.UserNotFoundException;
 import com.school.utils.AssertUtil;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import net.jodah.expiringmap.ExpiringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +19,11 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -104,5 +104,39 @@ public class EmailServiceImpl {
         simpleMailMessage.setText(context);
         simpleMailMessage.setTo(to);
         this.javaMailSenderImpl.send(simpleMailMessage);
+    }
+
+    public EmailInfo retrieveSystemEmailInfo() {
+        String username = this.mailProperties.getUsername();
+        String password = this.mailProperties.getPassword();
+        return new EmailInfo(username,password);
+    }
+    public  static class EmailInfo{
+        public EmailInfo() {
+        }
+
+        public EmailInfo(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
+
+        private String username;
+        private String password;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
     }
 }

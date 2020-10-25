@@ -4,14 +4,9 @@ package com.school.controller.admin;
 import com.school.dto.Certification;
 import com.school.dto.SimplePage;
 import com.school.exception.UserNotFoundException;
-import com.school.model.Pics;
 import com.school.model.Sign;
-import com.school.model.User;
-import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.SignServiceImpl;
-import com.school.service.impl.UserServiceImpl;
 import com.school.utils.CommonUtil;
-import com.school.utils.FileEnum;
 import com.school.utils.FileUtil;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
@@ -85,7 +80,7 @@ public class AdminCertificationController {
 
     @GetMapping("/downloadAll")
     @ApiOperation(value = "签约证书下载->下载所有证书", notes = "下载所有证书")
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String download(HttpServletResponse response) {
         List<Sign> signs = signService.querySelective(null, null, null, null, null, null, null, null, null, null);
         //多线程方式会报错，之后再弄，先暂时这样

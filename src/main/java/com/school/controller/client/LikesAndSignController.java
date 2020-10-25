@@ -364,6 +364,7 @@ public class LikesAndSignController {
 
     @ResponseBody
     @GetMapping("/select_likes")
+    @ApiOperation(value = "获取当前用户所有的意向列表,其他意向也可使用，",notes = "获取当前用户所有的意向列表，且返回对方是否喜欢自己")
     public JSON select_sch(@ApiParam(example = "1", value = "当前用户id") Integer id) {
         String msg = null;
         String code = null;
@@ -403,6 +404,7 @@ public class LikesAndSignController {
 
     @ResponseBody
     @GetMapping("/get_certi")
+    @ApiOperation(value = "在线查看签约证书",notes = "在线查看签约证书")
     public JSON get_certi(@ApiParam(example = "1", value = "当前用户id") Integer host_id,
                           @ApiParam(example = "2", value = "被签约用户的id") Integer liked_id) throws UnknownHostException {
         String msg = null;
