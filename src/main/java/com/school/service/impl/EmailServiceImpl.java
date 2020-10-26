@@ -61,7 +61,7 @@ public class EmailServiceImpl {
         String codeInCache = (String)this.usernameToCodeMap.get(username);
         AssertUtil.emailVerificationCodeNotNull(codeInCache, "验证码不存在！");
         AssertUtil.emailVerificationCodeEquals(code.trim().equals(codeInCache), "验证码错误！");
-        this.userService.update((Integer)null, username, newPassword, (String)null, (String)null, (String)null, (String)null, (String)null, (String)null, (String)null, (LocalDateTime)null, (Boolean)null, (String)null, (Integer)null, (String)null);
+        this.userService.update((Integer)null, username, newPassword, (String)null, (String)null, (String)null, (String)null, (String)null, (String)null, (String)null, (LocalDateTime)null, (Boolean)null, (String)null, (Integer)null, (String)null,null);
         this.usernameToCodeMap.remove(username);
     }
 

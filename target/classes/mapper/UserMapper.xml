@@ -24,6 +24,7 @@
     <result column="accountStatus" jdbcType="INTEGER" property="accountstatus" />
     <result column="profession" jdbcType="VARCHAR" property="profession" />
     <result column="country" jdbcType="VARCHAR" property="country" />
+    <result column="website" jdbcType="VARCHAR" property="website" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <!--
@@ -98,7 +99,7 @@
     -->
     id, username, `password`, schoolname, contact, address, telephone, update_time, schoolCode, 
     `location`, add_time, lastLoginIp, lastLoginTime, deleted, avatarUrl, accountStatus, 
-    profession, country
+    profession, country, website
   </sql>
   <select id="selectByExample" parameterType="com.school.model.UserExample" resultMap="BaseResultMap">
     <!--
@@ -224,13 +225,15 @@
       update_time, schoolCode, `location`, 
       add_time, lastLoginIp, lastLoginTime, 
       deleted, avatarUrl, accountStatus, 
-      profession, country)
+      profession, country, website
+      )
     values (#{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{schoolname,jdbcType=VARCHAR}, 
       #{contact,jdbcType=VARCHAR}, #{address,jdbcType=VARCHAR}, #{telephone,jdbcType=VARCHAR}, 
       #{updateTime,jdbcType=TIMESTAMP}, #{schoolcode,jdbcType=VARCHAR}, #{location,jdbcType=VARCHAR}, 
       #{addTime,jdbcType=TIMESTAMP}, #{lastloginip,jdbcType=VARCHAR}, #{lastlogintime,jdbcType=TIMESTAMP}, 
       #{deleted,jdbcType=BIT}, #{avatarurl,jdbcType=VARCHAR}, #{accountstatus,jdbcType=INTEGER}, 
-      #{profession,jdbcType=VARCHAR}, #{country,jdbcType=VARCHAR})
+      #{profession,jdbcType=VARCHAR}, #{country,jdbcType=VARCHAR}, #{website,jdbcType=VARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="com.school.model.User">
     <!--
@@ -293,6 +296,9 @@
       <if test="country != null">
         country,
       </if>
+      <if test="website != null">
+        website,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="username != null">
@@ -345,6 +351,9 @@
       </if>
       <if test="country != null">
         #{country,jdbcType=VARCHAR},
+      </if>
+      <if test="website != null">
+        #{website,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -419,6 +428,9 @@
       <if test="record.country != null">
         country = #{record.country,jdbcType=VARCHAR},
       </if>
+      <if test="record.website != null">
+        website = #{record.website,jdbcType=VARCHAR},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -447,7 +459,8 @@
       avatarUrl = #{record.avatarurl,jdbcType=VARCHAR},
       accountStatus = #{record.accountstatus,jdbcType=INTEGER},
       profession = #{record.profession,jdbcType=VARCHAR},
-      country = #{record.country,jdbcType=VARCHAR}
+      country = #{record.country,jdbcType=VARCHAR},
+      website = #{record.website,jdbcType=VARCHAR}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -510,6 +523,9 @@
       <if test="country != null">
         country = #{country,jdbcType=VARCHAR},
       </if>
+      <if test="website != null">
+        website = #{website,jdbcType=VARCHAR},
+      </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
@@ -535,7 +551,8 @@
       avatarUrl = #{avatarurl,jdbcType=VARCHAR},
       accountStatus = #{accountstatus,jdbcType=INTEGER},
       profession = #{profession,jdbcType=VARCHAR},
-      country = #{country,jdbcType=VARCHAR}
+      country = #{country,jdbcType=VARCHAR},
+      website = #{website,jdbcType=VARCHAR}
     where id = #{id,jdbcType=INTEGER}
   </update>
   <select id="selectOneByExample" parameterType="com.school.model.UserExample" resultMap="BaseResultMap">

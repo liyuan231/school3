@@ -242,7 +242,7 @@ public class UserServiceImpl implements UserDetailsService {
 
     }
 
-    public User update(Integer userId, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession) throws UserNotFoundException {
+    public User update(Integer userId, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession,String website) throws UserNotFoundException {
 //        List<User> users = this.findByUsername(username);
         //若同时传来用户名以及用户id，以用户id为准
         if (StringUtils.hasText(username) && Objects.nonNull(userId)) {
@@ -303,6 +303,10 @@ public class UserServiceImpl implements UserDetailsService {
 
             if (StringUtils.hasText(profession)) {
                 user.setProfession(profession);
+            }
+
+            if (StringUtils.hasText(website)) {
+                user.setWebsite(website);
             }
 
             if (!StringUtils.isEmpty(lastLoginTime)) {
@@ -485,7 +489,6 @@ public class UserServiceImpl implements UserDetailsService {
             while (var17.hasNext()) {
                 Map.Entry<String, Integer> entry = (Map.Entry) var17.next();
                 Cell cell = eachUserRow.createCell((Integer) entry.getValue());
-
                 try {
                     Object value = this.valueInvoke((User) users.get(i - 1), (String) entry.getKey());
                     cell.setCellValue(String.valueOf(value));

@@ -5,6 +5,7 @@
 
 package com.school.controller.admin;
 
+import com.school.dto.FullUser;
 import com.school.dto.SimplePage;
 import com.school.dto.SimpleUser;
 import com.school.exception.*;
@@ -35,8 +36,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -91,16 +90,27 @@ public class AdminUserController {
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, limit, sort, order);
         Integer size = this.userService.count(schoolName);
-        List<SimpleUser> result = new LinkedList();
-        Iterator var9 = users.iterator();
-        while (var9.hasNext()) {
-            User user = (User) var9.next();
-            SimpleUser simpleUser = new SimpleUser();
-            this.fill(user, simpleUser);
-            result.add(simpleUser);
-        }
-        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, result);
+//        clean(users);
+//        List<SimpleUser> result = new LinkedList();
+//        Iterator var9 = users.iterator();
+//        while (var9.hasNext()) {
+//            User user = (User) var9.next();
+//            SimpleUser simpleUser = new SimpleUser();
+//            this.fill(user, simpleUser);
+//            result.add(simpleUser);
+//        }
+        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, users);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
+    }
+
+    private void clean(List<User> users) {
+        for (User user : users) {
+            user.setUpdateTime(null);
+            user.setUpdateTime(null);
+            user.setAvatarurl(null);
+            user.setLastloginip(null);
+            user.setLocation(null);
+        }
     }
 
     @PostMapping({"/importRegistrationForm"})
@@ -136,11 +146,15 @@ public class AdminUserController {
         String logo = logos.size() == 0 ? null : this.springFilePath + ((Pics) logos.get(0)).getLocation();
         List<Pics> signatures = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.SIGNATURE.value());
         String signature = signatures.size() == 0 ? null : this.springFilePath + ((Pics) signatures.get(0)).getLocation();
-        SimpleUser simpleUser = new SimpleUser();
-        this.fill(user, simpleUser);
-        simpleUser.setLogo(logo);
-        simpleUser.setSignature(signature);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", simpleUser);
+        FullUser fullUser = new FullUser();
+        fullUser.setUser(user);
+        fullUser.setSignature(signature);
+        fullUser.setLogo(logo);
+//        SimpleUser simpleUser = new SimpleUser();
+//        this.fill(user, simpleUser);
+//        simpleUser.setLogo(logo);
+//        simpleUser.setSignature(signature);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", fullUser);
     }
 
     private void fill(User user, SimpleUser simpleUser) {
@@ -223,8 +237,15 @@ public class AdminUserController {
             notes = "更新用户信息"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public Object update(@ApiParam(example = "1", value = "待修改的用户的id") @PathVariable("userId") Integer id, @ApiParam(example = "广外", value = "待修改的用户的学校名") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "联系人", value = "联系人") @RequestParam(value = "contact", required = false) String contact, @ApiParam(example = "详细地址", value = "详细地址") @RequestParam(value = "address", required = false) String address, @ApiParam(example = "电话", value = "电话") @RequestParam(value = "telephone", required = false) String telephone, @ApiParam(example = "email", value = "用户名") @RequestParam(value = "username", required = false) String username) throws UserNotFoundException {
-        User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) null);
+    public Object update(@ApiParam(example = "1", value = "待修改的用户的id") @PathVariable("userId") Integer id,
+                         @ApiParam(example = "广外", value = "待修改的用户的学校名") @RequestParam(value = "schoolName", required = false) String schoolName,
+                         @ApiParam(example = "联系人", value = "联系人") @RequestParam(value = "contact", required = false) String contact,
+                         @ApiParam(example = "详细地址", value = "详细地址") @RequestParam(value = "address", required = false) String address,
+                         @ApiParam(example = "电话", value = "电话") @RequestParam(value = "telephone", required = false) String telephone,
+                         @ApiParam(example = "email", value = "用户名") @RequestParam(value = "username", required = false) String username,
+                         @ApiParam(example = "profession", value = "职务") @RequestParam(value = "profession", required = false) String profession,
+                         @ApiParam(example = "website", value = "网站") @RequestParam(value = "website", required = false) String website) throws UserNotFoundException {
+        User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) profession,website);
         SimpleUser simpleUser = new SimpleUser();
         this.fill(update, simpleUser);
         return ResponseUtil.build(HttpStatus.OK.value(), "修改一个用户成功!", simpleUser);
@@ -252,8 +273,8 @@ public class AdminUserController {
     public Object listSearchUserLoginInfos(@ApiParam(example = "1", value = "schoolName") @RequestParam(required = false) String schoolName,
                                            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
                                            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
-                                           @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "lastLoginTime",required = false) String sort,
-                                           @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc",required = false) String order) {
+                                           @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "lastLoginTime", required = false) String sort,
+                                           @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
         List<User> users = userService.querySelectiveLike(null,
                 null,
                 schoolName,
