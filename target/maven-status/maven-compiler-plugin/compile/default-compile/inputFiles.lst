@@ -29,6 +29,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\FileEnum.j
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserMouDownloadController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\admin\AdminUserController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\SignExample.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\Pics_2.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\JwtConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Roletoauthorities.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\schedule\SchedulerManager.java
@@ -50,6 +51,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\limit\
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserLikesNotCorrespondException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\Signature.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\golden\picture.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\golden\userservice.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\UsertoroleMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailWrongFormatException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\PicsExample.java
@@ -108,6 +110,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Likes.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\UserToRoleServiceImpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\CommonExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\LikesAlreadyExistException.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\Likes_1.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\UserExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\IpUtil.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\admin\AdminCertificationController.java

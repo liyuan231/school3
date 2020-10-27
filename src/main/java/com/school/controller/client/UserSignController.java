@@ -42,7 +42,7 @@ public class UserSignController {
 //    }
 
     @PreAuthorize("hasAnyRole('USER')")
-    @ApiOperation(value = "批量签约", notes = "当前用户批量进行签约")
+    @ApiOperation(value = "批量签约,不用此接口进行签约，用户批量选择意向时会自动与已选择自己的学校进行匹配签约", notes = "当前用户批量进行签约")
     @GetMapping("/batchSign")
     public String batchSign(@RequestParam("signedUserIds") Integer[] signedUserIds) {
         for (Integer signedUserId : signedUserIds) {

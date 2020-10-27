@@ -5,12 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.PictureRenderData;
 import com.deepoove.poi.util.BytePictureUtils;
-import com.school.dto.Certification;
 import com.school.dto.LikesWithMark;
 import com.school.dto.SimplePage;
-import com.school.dto.golden.likelist;
 import com.school.dto.golden.picture;
-import com.school.exception.UserNotFoundException;
 import com.school.model.Likes;
 import com.school.model.Pics;
 import com.school.model.Sign;
@@ -84,7 +81,7 @@ public class LikesAndSignController {
             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         User user = userService.retrieveUserByToken();
         //获取当前用户所有的意向
-        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null, null);
+        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null);
         int size = likeService.count(user.getId(), null);
         List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
         List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);
@@ -107,7 +104,7 @@ public class LikesAndSignController {
         List<LikesWithMark> likesWithMarks = new LinkedList<>();
         for (Likes like : likes) {
             LikesWithMark likesWithMark = new LikesWithMark();
-            clean(like);
+//            clean(like);
             likesWithMark.setLikes(like);
             if (signedUserIds.contains(like.getLikeduserid())) {
                 likesWithMark.setSigned(true);
@@ -123,31 +120,31 @@ public class LikesAndSignController {
         //现在当前用户的意向以及签约都有了，就是整合在一起
     }
 
-    @ResponseBody
-    @GetMapping("/show/{signId}")
-    @ApiOperation(value = "我的意向及签约->签约证书查看", notes = "签约证书查看")
-    @PreAuthorize("hasRole('USER')")
-    public String show(@ApiParam(value = "签约证书的id", example = "1") @PathVariable("signId") Integer signId) throws UserNotFoundException {
-        Sign sign = signService.findById(signId);
-        if (sign == null) {
-            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
-        }
-        Certification certification = new Certification();
-        certification.setSignId(sign.getId());
-        certification.setWitness(springFilePath + witness);
-        certification.setSignUserDate(sign.getUpdateTime().toLocalDate().toString());
-        certification.setSignedUserDate(sign.getUpdateTime().toLocalDate().toString());
-        commonUtil.fill(certification, sign.getSignuserid(), sign.getSigneduserid());
-        return ResponseUtil.build(HttpStatus.OK.value(), "查看该则签约成功！",certification);
-    }
-
-    private void clean(Likes like) {
-        like.setAddTime(null);
-        like.setDeleted(null);
-        like.setLikeuserid(null);
-        like.setLikeschoolname(null);
-        like.setUpdateTime(null);
-    }
+//    @ResponseBody
+//    @GetMapping("/show/{signId}")
+//    @ApiOperation(value = "我的意向及签约->签约证书查看", notes = "签约证书查看")
+//    @PreAuthorize("hasRole('USER')")
+//    public String show(@ApiParam(value = "签约证书的id", example = "1") @PathVariable("signId") Integer signId) throws UserNotFoundException {
+//        Sign sign = signService.findById(signId);
+//        if (sign == null) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
+//        }
+//        Certification certification = new Certification();
+//        certification.setSignId(sign.getId());
+//        certification.setWitness(springFilePath + witness);
+//        certification.setSignUserDate(sign.getUpdateTime().toLocalDate().toString());
+//        certification.setSignedUserDate(sign.getUpdateTime().toLocalDate().toString());
+//        commonUtil.fill(certification, sign.getSignuserid(), sign.getSigneduserid());
+//        return ResponseUtil.build(HttpStatus.OK.value(), "查看该则签约成功！",certification);
+//    }
+//
+//    private void clean(Likes like) {
+//        like.setAddTime(null);
+//        like.setDeleted(null);
+//        like.setLikeuserid(null);
+//        like.setLikeschoolname(null);
+//        like.setUpdateTime(null);
+//    }		
 
 //    @ResponseBody
 //    @GetMapping("/download/{signId}")
@@ -352,7 +349,6 @@ public class LikesAndSignController {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-
         }
         msg = "success";
         code = "200";
@@ -361,45 +357,45 @@ public class LikesAndSignController {
         return result;
     }
 
-    @ResponseBody
-    @GetMapping("/select_likes")
-    @ApiOperation(value = "获取当前用户所有的意向列表,其他意向也可使用，",notes = "获取当前用户所有的意向列表，且返回对方是否喜欢自己")
-    public JSON select_sch(@ApiParam(example = "1", value = "当前用户id") Integer id) {
-        String msg = null;
-        String code = null;
-        int flag = 0;
-        JSONObject result = new JSONObject();
-        if (id == null) {
-            msg = "school_id missing";
-            code = "-1";
-            result.put("msg", msg);
-            result.put("code", code);
-            return result;
-        }
-        List<likelist> list = new ArrayList<likelist>();
-        try {
-            list = user_service.select_likes(id);
-        } catch (java.lang.NullPointerException e) {
-            e.printStackTrace();
-            msg = "null like";
-            code = "-2";
-            result.put("msg", msg);
-            result.put("code", code);
-            return result;
-        }
-        int len = list.size();
-        for (int i = 0; i < len; i++) {
-            if (user_service.select_both(list.get(i).getSch_name(), id)) {
-                list.get(i).setFlag(true);
-            }
-        }
-        msg = "success";
-        code = "200";
-        result.put("msg", msg);
-        result.put("code", code);
-        result.put("list", list);
-        return result;
-    }
+//    @ResponseBody
+//    @GetMapping("/select_likes")
+//    @ApiOperation(value = "获取当前用户所有的意向列表,其他意向也可使用，",notes = "获取当前用户所有的意向列表，且返回对方是否喜欢自己")
+//    public JSON select_sch(@ApiParam(example = "1", value = "当前用户id") Integer id) {
+//        String msg = null;
+//        String code = null;
+//        int flag = 0;
+//        JSONObject result = new JSONObject();
+//        if (id == null) {
+//            msg = "school_id missing";
+//            code = "-1";
+//            result.put("msg", msg);
+//            result.put("code", code);
+//            return result;
+//        }
+//        List<likelist> list = new ArrayList<likelist>();
+//        try {
+//            list = user_service.select_likes(id);
+//        } catch (java.lang.NullPointerException e) {
+//            e.printStackTrace();
+//            msg = "null like";
+//            code = "-2";
+//            result.put("msg", msg);
+//            result.put("code", code);
+//            return result;
+//        }
+//        int len = list.size();
+//        for (int i = 0; i < len; i++) {
+//            if (user_service.select_both(list.get(i).getSch_name(), id)) {
+//                list.get(i).setFlag(true);
+//            }
+//        }
+//        msg = "success";
+//        code = "200";
+//        result.put("msg", msg);
+//        result.put("code", code);
+//        result.put("list", list);
+//        return result;
+//    }
 
     @ResponseBody
     @GetMapping("/get_certi")
@@ -509,6 +505,9 @@ public class LikesAndSignController {
         result.put("AUDFLOGO", "http://175.24.4.196/images/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg");
         return result;
     }
+    
+    
+    
 }
 
 

@@ -141,11 +141,11 @@ public class AdminLikesController {
                          @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize,
                          @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        List<Likes> theUserThatILike = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, true, null);
-        int size = LikeServiceImpl.size;
-        List<AdvancedLikes> advancedLikes = likeService.retrieveAdvancedLikes(theUserThatILike);
-        SimplePage<List<AdvancedLikes>> listSimplePage = new SimplePage<>(size, advancedLikes);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取单项意向表成功！", listSimplePage);
+        List<Likes> likesList = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, true, null);
+        int count = this.likeService.count(null, likeSchoolName, null, true);
+        List<AdvancedLikes> advancedLikes = likeService.retrieveAdvancedLikes(likesList);
+        SimplePage<List<AdvancedLikes>> listSimplePage = new SimplePage<>(count, advancedLikes);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取签约结果意向表表成功！", listSimplePage);
     }
 
     @ApiOperation(
@@ -326,7 +326,7 @@ public class AdminLikesController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @PostMapping({"/remind"})
-    public String remindSchools(@ApiParam(example = "用户id数组", value = "[1,2,3]") @RequestParam(value = "userIds",required = false) Integer[] userIds) {
+    public String remindSchools(@ApiParam(example = "用户id数组", value = "[1,2,3]") @RequestParam(value = "userIds", required = false) Integer[] userIds) {
         List<User> users = null;
         if (userIds == null || userIds.length != 0) {
             users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);

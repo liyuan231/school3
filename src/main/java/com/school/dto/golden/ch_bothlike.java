@@ -1,18 +1,23 @@
 package com.school.dto.golden;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class ch_bothlike {
-    String sch_name;
-    Integer id;
-	public String getSch_name() {
-		return sch_name;
+    Integer host_id;
+    Integer liked_id;
+
+
+	public Integer getHost_id() {
+		return host_id;
 	}
-	public void setSch_name(String sch_name) {
-		this.sch_name = sch_name;
+	public void setHost_id(Integer host_id) {
+		this.host_id = host_id;
 	}
-	public Integer getId() {
-		return id;
+	public Integer getLiked_id() {
+		return liked_id;
 	}
-	public void setId(Integer id) {
-		this.id = id;
+	public void setLiked_id(Integer liked_id) {
+		this.liked_id = liked_id;
 	}
 }

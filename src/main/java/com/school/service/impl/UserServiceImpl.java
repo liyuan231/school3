@@ -125,7 +125,7 @@ public class UserServiceImpl implements UserDetailsService {
         }
     }
 
-    private void add(User user, Integer roleId) {
+    public void add(User user, Integer roleId) {
         user.setAddTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
         this.userMapper.insertSelective(user);
@@ -357,6 +357,10 @@ public class UserServiceImpl implements UserDetailsService {
         this.add(user, RoleEnum.USER.value());
     }
 
+    public void add(User user) {
+
+    }
+
     //    @Async
     public void importRegistrationForm(MultipartFile file) throws FileFormattingException, IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ExcelDataException, UsernameAlreadyExistException {
         String originalFilename = file.getOriginalFilename();
@@ -406,7 +410,7 @@ public class UserServiceImpl implements UserDetailsService {
                     try {
                         this.invokeValue(user, fieldName, fieldValue.getString());
                     } catch (NoSuchMethodException var21) {
-                        throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！->"+fieldName);
+                        throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！->" + fieldName);
                     }
                 }
                 //此时拼接完一个用户
@@ -461,7 +465,7 @@ public class UserServiceImpl implements UserDetailsService {
         return map;
     }
 
-    public Workbook exportRegistrationForm(List<User>users,Set<String> skipFieldsSet) throws IOException {
+    public Workbook exportRegistrationForm(List<User> users, Set<String> skipFieldsSet) throws IOException {
         Workbook workbook = new HSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         Row row = sheet.createRow(0);

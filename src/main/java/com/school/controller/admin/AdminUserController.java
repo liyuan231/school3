@@ -97,13 +97,13 @@ public class AdminUserController {
     )
     @GetMapping({"/exportRegistrationForm"})
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") Integer[] userIds, HttpServletResponse response) throws IOException {
+    public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") @RequestParam(value = "userIds",required = false) Integer[] userIds, HttpServletResponse response) throws IOException {
         List<User> users = null;
         if (userIds == null || userIds.length == 0) {
             users = userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         } else {
+            users = new LinkedList<>();
             for (Integer userId : userIds) {
-                users = new LinkedList<>();
                 try {
                     User user = userService.findById(userId);
                     users.add(user);

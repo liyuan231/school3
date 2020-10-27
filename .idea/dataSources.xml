@@ -13,5 +13,11 @@
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://175.24.4.196:3306/school?serverTimezone=UTC</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="school@124.156.153.105" uuid="ea714ac9-d12e-4652-a3dd-435b64d9dc22">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://124.156.153.105:3306/school?serverTimezone=UTC</jdbc-url>
+    </data-source>
   </component>
 </project>

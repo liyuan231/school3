@@ -11,7 +11,7 @@ public interface userdao {
 
 	List<likelist> select_likes(Integer id);
 
-	boolean select_both(String sch_name, Integer id);
+//	boolean select_both(String sch_name, Integer id);
 
 	User select_user(Integer user_id);
 

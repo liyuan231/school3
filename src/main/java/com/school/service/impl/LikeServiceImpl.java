@@ -10,6 +10,7 @@ import com.github.pagehelper.PageInfo;
 import com.school.dao.LikesMapper;
 import com.school.dto.AdvancedLikes;
 import com.school.dto.FullLikes;
+import com.school.dto.SimplePage;
 import com.school.exception.*;
 import com.school.model.*;
 import com.school.model.Likes.Column;
@@ -41,7 +42,6 @@ public class LikeServiceImpl {
 
     @Autowired
     PicsServiceImpl picsService;
-    public static int size = 0;
 
     public LikeServiceImpl() {
     }
@@ -97,13 +97,12 @@ public class LikeServiceImpl {
             likes = this.likesMapper.selectByExampleSelective(likeExample, new Column[0]);
         }
         PageInfo<Likes> pageInfo = new PageInfo(likes);
-        size = pageInfo.getSize();
         return pageInfo.getList();
     }
 
 
     public List<Likes> querySelective(Integer id, Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName, Integer page, Integer pageSize, String sort, String order, Boolean distinctByLikeSchoolName) {
-      return querySelective(id,likeUserId,likeSchoolName,likedUserId,likedSchoolName,page,pageSize,sort,order,distinctByLikeSchoolName,null);
+        return querySelective(id, likeUserId, likeSchoolName, likedUserId, likedSchoolName, page, pageSize, sort, order, distinctByLikeSchoolName, null);
     }
 
     public void add(Likes like) throws UserNotFoundException, LikesAlreadyExistException, UserNotCorrectException, UserLikesNotCorrespondException, LikesNotFoundException {
@@ -317,7 +316,7 @@ public class LikeServiceImpl {
             for (Likes likes1 : likesList) {
                 if (advancedLikes.get(i).getUserId().equals(likes1.getLikeuserid())) {
                     stringBuilder.append(likes1.getLikedschoolname()).append(",");
-                }else {
+                } else {
                     stringBuilder.append(likes1.getLikeschoolname()).append(",");
                 }
             }
@@ -423,6 +422,10 @@ public class LikeServiceImpl {
     }
 
     public int count(Integer userId, String schoolName, Integer year) {
+        return count(userId,schoolName,year,null);
+
+    }
+    public int count(Integer userId, String schoolName, Integer year, Boolean distinctByLikeSchoolName) {
         LikesExample likesExample = new LikesExample();
         Criteria criteria = likesExample.createCriteria();
         criteria.andDeletedEqualTo(false);
@@ -437,8 +440,17 @@ public class LikeServiceImpl {
             LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
             criteria.andUpdateTimeBetween(start, end);
         }
-        return (int) likesMapper.countByExample(likesExample);
+        int size=-1;
+        if (!StringUtils.isEmpty(distinctByLikeSchoolName) && distinctByLikeSchoolName) {
+            likesExample.setDistinct(true);
+//            likesMapper.countByExample(likesExample);
+            size = this.likesMapper.selectByExampleSelective(likesExample, new Column[]{Column.likeuserid, Column.likeschoolname}).size();
+        } else {
+            size = this.likesMapper.selectByExampleSelective(likesExample, new Column[0]).size();
+        }
+        return size;
     }
+
 
     public Workbook exportLikesFormSingle(List<Likes> likesList) {
         Workbook workbook = new HSSFWorkbook();
@@ -482,5 +494,61 @@ public class LikeServiceImpl {
         cell = row.createCell(2);
         cell.setCellValue("提出时间");
         cell.setCellStyle(cellStyle);
+    }
+
+    public SimplePage queryDistinct(Integer id, Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName, Integer page, Integer pageSize, String sort, String order, Boolean distinctByLikeSchoolName, Integer year) {
+        Integer size = null;
+        LikesExample likeExample = new LikesExample();
+        Criteria criteria = likeExample.createCriteria();
+        if (!StringUtils.isEmpty(id)) {
+            criteria.andIdEqualTo(id);
+        }
+
+        if (!StringUtils.isEmpty(likeUserId)) {
+            criteria.andLikeuseridEqualTo(likeUserId);
+        }
+
+        if (StringUtils.hasText(likeSchoolName)) {
+            criteria.andLikeschoolnameLike("%" + likeSchoolName + "%");
+        }
+
+        if (!StringUtils.isEmpty(likedUserId)) {
+            criteria.andLikeduseridEqualTo(likedUserId);
+        }
+
+        if (StringUtils.hasText(likedSchoolName)) {
+            criteria.andLikedschoolnameLike("%" + likedSchoolName + "%");
+        }
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            likeExample.setOrderByClause(sort + " " + order);
+        }
+
+        if (!StringUtils.isEmpty(year)) {
+            LocalDateTime end = LocalDateTime.of(year, 12, 31, 23, 59);
+            LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+            criteria.andUpdateTimeBetween(start, end);
+        }
+
+        if (page != null || pageSize != null) {
+            if (page == null) {
+                PageHelper.startPage(1, pageSize);
+            } else if (pageSize == null) {
+                PageHelper.startPage(page, 10);
+            } else {
+                PageHelper.startPage(page, pageSize);
+            }
+        }
+        List<Likes> likes = null;
+        criteria.andDeletedEqualTo(false);
+        if (!StringUtils.isEmpty(distinctByLikeSchoolName) && distinctByLikeSchoolName) {
+            likeExample.setDistinct(true);
+            likes = this.likesMapper.selectByExampleSelective(likeExample, new Column[]{Column.likeuserid, Column.likeschoolname});
+        } else {
+            likes = this.likesMapper.selectByExampleSelective(likeExample, new Column[0]);
+        }
+        PageInfo<Likes> pageInfo = new PageInfo(likes);
+        size = likes.size();
+        return new SimplePage(size,pageInfo.getList());
     }
 }
