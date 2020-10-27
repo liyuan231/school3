@@ -21,7 +21,6 @@ import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.CommonUtil;
-import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -85,7 +84,7 @@ public class LikesAndSignController {
             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         User user = userService.retrieveUserByToken();
         //获取当前用户所有的意向
-        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null);
+        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null, null);
         int size = likeService.count(user.getId(), null);
         List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
         List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);

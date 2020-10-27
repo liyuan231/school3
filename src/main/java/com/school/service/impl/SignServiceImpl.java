@@ -164,8 +164,8 @@ public class SignServiceImpl {
         this.update(sign);
     }
 
-    public Workbook exportSignForm() {
-        List<Sign> signs = this.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
+    public Workbook exportSignForm(List<Sign> signs) {
+//        List<Sign> signs = this.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
         Workbook workbook = new HSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         this.prepare(sheet);

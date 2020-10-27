@@ -69,6 +69,7 @@ public class UserServiceImpl implements UserDetailsService {
 
     @Value("${file.default.avatarUrl:default.jpg}")
     private String defaultAvatarUrl;
+
     public UserServiceImpl() {
     }
 
@@ -242,7 +243,7 @@ public class UserServiceImpl implements UserDetailsService {
 
     }
 
-    public User update(Integer userId, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession,String website) throws UserNotFoundException {
+    public User update(Integer userId, String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIP, LocalDateTime lastLoginTime, Boolean deleted, String avatarUrl, Integer accountStatus, String profession, String website) throws UserNotFoundException {
 //        List<User> users = this.findByUsername(username);
         //若同时传来用户名以及用户id，以用户id为准
         if (StringUtils.hasText(username) && Objects.nonNull(userId)) {
@@ -405,7 +406,7 @@ public class UserServiceImpl implements UserDetailsService {
                     try {
                         this.invokeValue(user, fieldName, fieldValue.getString());
                     } catch (NoSuchMethodException var21) {
-                        throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！");
+                        throw new ExcelDataException("Excel表中第一行字段与数据中的字段不对应！->"+fieldName);
                     }
                 }
                 //此时拼接完一个用户
@@ -415,7 +416,7 @@ public class UserServiceImpl implements UserDetailsService {
                 }
                 List<User> byUsername = this.findByUsername(user.getUsername());
                 if (byUsername.size() != 0) {
-                    logger.info("该用户名已经被注册过了->"+user.getUsername());
+                    logger.info("该用户名已经被注册过了->" + user.getUsername());
                     System.out.println("！");
                 } else {
                     String defaultPassword = this.generateDefaultPassword();
@@ -460,8 +461,7 @@ public class UserServiceImpl implements UserDetailsService {
         return map;
     }
 
-    public Workbook exportRegistrationForm() throws IOException {
-        List<User> users = this.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+    public Workbook exportRegistrationForm(List<User>users,Set<String> skipFieldsSet) throws IOException {
         Workbook workbook = new HSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         Row row = sheet.createRow(0);
@@ -474,6 +474,9 @@ public class UserServiceImpl implements UserDetailsService {
         for (int var10 = 0; var10 < var9; ++var10) {
             Field declaredField = var8[var10];
             String fieldName = declaredField.getName();
+            if (skipFieldsSet.contains(fieldName.toLowerCase())) {
+                continue;
+            }
             if (!fieldName.startsWith("IS_") && !fieldName.startsWith("NOT_")) {
                 map.put(fieldName, index);
                 Cell cell = row.createCell(index);
@@ -500,6 +503,7 @@ public class UserServiceImpl implements UserDetailsService {
 
         return workbook;
     }
+
 
     private Object valueInvoke(User user, String fieldName) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         fieldName = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);

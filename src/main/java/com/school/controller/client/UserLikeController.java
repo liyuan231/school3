@@ -9,7 +9,6 @@ import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +121,7 @@ public class UserLikeController {
     public Object matchILikesWho() {
         User curUser = userService.retrieveUserByToken();
         //我意向的所有的用户学校
-        List<Likes> theUserThatILikes = likeService.querySelective(null, curUser.getId(), null, null, null, null, null, null, null, null);
+        List<Likes> theUserThatILikes = likeService.querySelective(null, curUser.getId(), null, null, null, null, null, null, null, null, null);
         for (Likes theUserThatILike : theUserThatILikes) {
             clean(theUserThatILike);
         }

@@ -6,28 +6,35 @@ import com.school.model.Sign;
 import java.util.List;
 
 public class AdvancedLikes {
-    private Integer id;
+//    private Integer likeId;
+    private Integer userId;
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
     private String schoolname;
     private List<Sign> signList;
     private List<Likes> likesList;
+    private List<FullLikes> fullLikes;
+
+    private boolean hasLogo;
+    private boolean hasSignature;
 
 
-    public AdvancedLikes(Integer id, String schoolname, List<Sign> signList, List<Likes> likesList, List<FullLikes> fullLikes, boolean hasLogo, boolean hasSignature) {
-        this.id = id;
+    public AdvancedLikes(Integer userId, String schoolname, List<Sign> signList, List<Likes> likesList, List<FullLikes> fullLikes, boolean hasLogo, boolean hasSignature) {
+        this.userId = userId;
+//        this.likeId = likeId;
         this.schoolname = schoolname;
         this.signList = signList;
         this.likesList = likesList;
         this.fullLikes = fullLikes;
         this.hasLogo = hasLogo;
         this.hasSignature = hasSignature;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getSchoolname() {
@@ -38,10 +45,6 @@ public class AdvancedLikes {
         this.schoolname = schoolname;
     }
 
-    private List<FullLikes> fullLikes;
-
-    private boolean hasLogo;
-    private boolean hasSignature;
 
     public AdvancedLikes() {
     }

@@ -33,6 +33,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 @Api(
@@ -59,26 +60,26 @@ public class AdminSignController {
             notes = "签约公示->搜索/分页显示"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String search(@ApiParam(example = "schoolName", value = "schoolName") @RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        List<Sign> signs = this.signService.querySelective((Integer) null, (Integer) null, schoolName, (Integer) null, (String) null, year, page, pageSize, sort, order);
+    public String search(@ApiParam(example = "schoolName", value = "schoolname") @RequestParam(value = "schoolname", required = false) String schoolname, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
+        List<Sign> signs = this.signService.querySelective((Integer) null, (Integer) null, schoolname, (Integer) null, (String) null, year, page, pageSize, sort, order);
         for (Sign sign : signs) {
             sign.setAddTime(null);
             sign.setDeleted(null);
         }
-        Integer count = this.signService.count(null,schoolName, (String) null, year);
+        Integer count = this.signService.count(null, schoolname, (String) null, year);
         SimplePage<List<Sign>> result = new SimplePage(count, signs);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取该关键字学校的签约结果成功！", result);
     }
 
     @PostMapping("/changeStatus/{signId}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @ApiOperation(value = "修改签约状态，即是否公示",notes = "修改签约状态")
+    @ApiOperation(value = "修改签约状态，即是否公示", notes = "修改签约状态")
     public String switchSignId(@ApiParam(value = "该则签约的id", example = "1") @PathVariable("signId") Integer signId) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {
         Sign sign = signService.findById(signId);
         if (sign == null) {
             return ResponseUtil.build(HttpStatus.OK.value(), "该则签约不存在！");
         }
-        sign.setStatus(sign.getStatus()==Status.SIGN_SHOW?Status.SIGN_HIDDEN:Status.SIGN_SHOW);
+        sign.setStatus(sign.getStatus() == Status.SIGN_SHOW ? Status.SIGN_HIDDEN : Status.SIGN_SHOW);
         signService.update(sign);
         return ResponseUtil.build(HttpStatus.OK.value(), "修改该则签约状态成功！");
     }
@@ -90,8 +91,18 @@ public class AdminSignController {
     )
 //    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/exportSignForm"})
-    public void exportSignForm(HttpServletResponse response) throws IOException {
-        Workbook workbook = this.signService.exportSignForm();
+    public void exportSignForm(@ApiParam(value = "多则签约的id", example = "[1,2,3]") @RequestParam(value = "signIds",required = false) Integer[] signIds, HttpServletResponse response) throws IOException {
+        List<Sign> signs;
+        if (signIds == null || signIds.length == 0) {
+            signs = signService.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
+        } else {
+            signs = new LinkedList<>();
+            for (Integer signId : signIds) {
+                Sign sign = signService.findById(signId);
+                signs.add(sign);
+            }
+        }
+        Workbook workbook = this.signService.exportSignForm(signs);
         String fileName = Sign.class.getSimpleName() + ".xls";
         response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
         response.setContentType("application/vnd.ms-excel;charset=utf-8");
@@ -107,10 +118,24 @@ public class AdminSignController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @PostMapping({"/remind"})
-    public String remindSchools() {
-        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+    public String remindSchools(@ApiParam(example = "用户id数组", value = "[1,2,3]") @RequestParam("userIds") Integer[] userIds) {
+        List<User> users = null;
+        if (userIds == null || userIds.length != 0) {
+            users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+        } else {
+            users = new LinkedList<>();
+            for (Integer userId : userIds) {
+                try {
+                    User user = userService.findById(userId);
+                    users.add(user);
+                } catch (UserNotFoundException e) {
+                    logger.error("用户id不存在->" + userId);
+                }
+            }
+        }
+        List<User> finalUsers = users;
         new Thread(() -> {
-            Iterator var2 = users.iterator();
+            Iterator var2 = finalUsers.iterator();
             while (var2.hasNext()) {
                 User user = (User) var2.next();
                 try {

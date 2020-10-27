@@ -193,7 +193,7 @@ public class AdminSystemController {
         for (Pics pic : pics) {
             picsService.delete(pic);
         }
-        List<Likes> likes = likeService.querySelective(null, null, null, null, null, null, null, null, null, null);
+        List<Likes> likes = likeService.querySelective(null, null, null, null, null, null, null, null, null, null, null);
         for (Likes like : likes) {
             likeService.delete(like);
         }

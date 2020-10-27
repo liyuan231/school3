@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +37,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Api(
@@ -56,8 +60,36 @@ public class AdminUserController {
     @Autowired
     private EmailServiceImpl emailService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public AdminUserController() {
     }
+
+    private static Set<String> skipFieldSet;
+
+    static {
+        skipFieldSet = new HashSet<>();
+        skipFieldSet.add("password");
+        skipFieldSet.add("location");
+        skipFieldSet.add("add_time");
+        skipFieldSet.add("update_time");
+        skipFieldSet.add("lastloginip");
+        skipFieldSet.add("lastlogintime");
+        skipFieldSet.add("deleted");
+        skipFieldSet.add("avatarurl");
+        skipFieldSet.add("accountstatus");
+
+    }
+
+    @GetMapping("/checkPassword")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public Object checkPassword(@RequestParam(value = "password") String rawPassword) {
+        User user = userService.retrieveUserByToken();
+        boolean matches = passwordEncoder.matches(rawPassword, user.getPassword());
+        return ResponseUtil.build(HttpStatus.OK.value(), "匹配密码完成！", matches);
+    }
+
 
     @ApiOperation(
             value = "导出报名表",
@@ -65,8 +97,23 @@ public class AdminUserController {
     )
     @GetMapping({"/exportRegistrationForm"})
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public void exportRegistrationForm(HttpServletResponse response) throws IOException {
-        Workbook workbook = this.userService.exportRegistrationForm();
+    public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") Integer[] userIds, HttpServletResponse response) throws IOException {
+        List<User> users = null;
+        if (userIds == null || userIds.length == 0) {
+            users = userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+        } else {
+            for (Integer userId : userIds) {
+                users = new LinkedList<>();
+                try {
+                    User user = userService.findById(userId);
+                    users.add(user);
+                } catch (UserNotFoundException e) {
+//                    e.printStackTrace();
+                    logger.error("该用户id不存在->" + userId);
+                }
+            }
+        }
+        Workbook workbook = this.userService.exportRegistrationForm(users, skipFieldSet);
         String fileName = User.class.getSimpleName() + ".xls";
         response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
         response.setContentType("application/vnd.ms-excel;charset=utf-8");
@@ -90,7 +137,7 @@ public class AdminUserController {
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, limit, sort, order);
         Integer size = this.userService.count(schoolName);
-//        clean(users);
+        clean(users);
 //        List<SimpleUser> result = new LinkedList();
 //        Iterator var9 = users.iterator();
 //        while (var9.hasNext()) {
@@ -110,6 +157,9 @@ public class AdminUserController {
             user.setAvatarurl(null);
             user.setLastloginip(null);
             user.setLocation(null);
+            user.setAccountstatus(null);
+            user.setPassword(null);
+            user.setDeleted(null);
         }
     }
 
@@ -118,7 +168,7 @@ public class AdminUserController {
             value = "导入报名表",
             notes = "但对excel的字段名有严格要求，仅支持.xls以及.xlsx，请直接和我讨论这一块"
     )
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "文件不能为空！", (Object) null);
@@ -245,7 +295,7 @@ public class AdminUserController {
                          @ApiParam(example = "email", value = "用户名") @RequestParam(value = "username", required = false) String username,
                          @ApiParam(example = "profession", value = "职务") @RequestParam(value = "profession", required = false) String profession,
                          @ApiParam(example = "website", value = "网站") @RequestParam(value = "website", required = false) String website) throws UserNotFoundException {
-        User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) profession,website);
+        User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) profession, website);
         SimpleUser simpleUser = new SimpleUser();
         this.fill(update, simpleUser);
         return ResponseUtil.build(HttpStatus.OK.value(), "修改一个用户成功!", simpleUser);

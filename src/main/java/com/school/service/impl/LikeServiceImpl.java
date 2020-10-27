@@ -8,12 +8,13 @@ package com.school.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.school.dao.LikesMapper;
+import com.school.dto.AdvancedLikes;
+import com.school.dto.FullLikes;
 import com.school.exception.*;
-import com.school.model.Likes;
+import com.school.model.*;
 import com.school.model.Likes.Column;
-import com.school.model.LikesExample;
 import com.school.model.LikesExample.Criteria;
-import com.school.model.User;
+import com.school.utils.FileEnum;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.Map.Entry;
 
 @Service
 @Transactional
@@ -35,12 +35,18 @@ public class LikeServiceImpl {
     private UserServiceImpl userService;
     @Autowired
     private UserToRoleServiceImpl userToRoleService;
+
+    @Autowired
+    private SignServiceImpl signService;
+
+    @Autowired
+    PicsServiceImpl picsService;
     public static int size = 0;
 
     public LikeServiceImpl() {
     }
 
-    public List<Likes> querySelective(Integer id, Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName, Integer page, Integer pageSize, String sort, String order, Boolean distinctByLikeSchoolName) {
+    public List<Likes> querySelective(Integer id, Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName, Integer page, Integer pageSize, String sort, String order, Boolean distinctByLikeSchoolName, Integer year) {
         LikesExample likeExample = new LikesExample();
         Criteria criteria = likeExample.createCriteria();
         if (!StringUtils.isEmpty(id)) {
@@ -67,6 +73,12 @@ public class LikeServiceImpl {
             likeExample.setOrderByClause(sort + " " + order);
         }
 
+        if (!StringUtils.isEmpty(year)) {
+            LocalDateTime end = LocalDateTime.of(year, 12, 31, 23, 59);
+            LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+            criteria.andUpdateTimeBetween(start, end);
+        }
+
         if (page != null || pageSize != null) {
             if (page == null) {
                 PageHelper.startPage(1, pageSize);
@@ -89,6 +101,11 @@ public class LikeServiceImpl {
         return pageInfo.getList();
     }
 
+
+    public List<Likes> querySelective(Integer id, Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName, Integer page, Integer pageSize, String sort, String order, Boolean distinctByLikeSchoolName) {
+      return querySelective(id,likeUserId,likeSchoolName,likedUserId,likedSchoolName,page,pageSize,sort,order,distinctByLikeSchoolName,null);
+    }
+
     public void add(Likes like) throws UserNotFoundException, LikesAlreadyExistException, UserNotCorrectException, UserLikesNotCorrespondException, LikesNotFoundException {
         Integer likeUserId = like.getLikeuserid();
         Integer likedUserId = like.getLikeduserid();
@@ -96,9 +113,9 @@ public class LikeServiceImpl {
         if (byId == null) {
             throw new UserNotFoundException("用户不存在！");
         } else {
-            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, null, likedUserId, null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
+            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, null, likedUserId, null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null);
             if (likes1.size() >= 1) {
-                update(likes1.get(0).getId(),likeUserId,likedUserId,like.getLikeschoolname(),like.getLikedschoolname(),null);
+                update(likes1.get(0).getId(), likeUserId, likedUserId, like.getLikeschoolname(), like.getLikedschoolname(), null);
                 throw new LikesAlreadyExistException("已经和该用户表明过意向了!");
             } else if (likeUserId.equals(likedUserId)) {
                 throw new UserNotCorrectException("不能自己对自己有意向！");
@@ -123,7 +140,7 @@ public class LikeServiceImpl {
 
     //这是根据意向id更新每一则意向
     public Likes update(Likes like) throws LikesNotFoundException {
-        List<Likes> likes = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
+        List<Likes> likes = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null);
         if (likes.size() == 0) {
             throw new LikesNotFoundException("该则意向不存在，请检查id");
         } else {
@@ -131,7 +148,7 @@ public class LikeServiceImpl {
             like.setId(likeInDb.getId());
             like.setUpdateTime(LocalDateTime.now());
             this.likesMapper.updateByPrimaryKeySelective(like);
-            List<Likes> likesInDb = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
+            List<Likes> likesInDb = this.querySelective(like.getId(), (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null);
             return likesInDb.size() == 0 ? null : (Likes) likesInDb.get(0);
         }
     }
@@ -213,23 +230,71 @@ public class LikeServiceImpl {
         return result;
     }
 
-    public Workbook exportLikesForm() {
-        List<Likes> likes = this.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
-        Map<String, List<String>> map = new TreeMap();
-        Iterator var3 = likes.iterator();
-
-        while (var3.hasNext()) {
-            Likes like = (Likes) var3.next();
-            String likeSchoolName = like.getLikeschoolname();
-            String likedSchoolName = like.getLikedschoolname();
-            List<String> list = (List) map.get(likeSchoolName);
-            if (list == null) {
-                list = new LinkedList();
+    public List<AdvancedLikes> retrieveAdvancedLikes(List<Likes> theLikes) {
+        List<AdvancedLikes> advancedLikes = new LinkedList<>();
+        for (Likes like : theLikes) {
+            List<Likes> eachLikes = querySelective(null, like.getLikeuserid(), null, null, null, null, null, null, null, null, null);
+            List<Sign> signs = signService.querySelective(null, like.getLikeuserid(), null, null, null, null, null, null, null, null);
+            List<Sign> signs1 = signService.querySelective(null, null, null, like.getLikeuserid(), null, null, null, null, null, null);
+            signs.addAll(signs1);
+            List<Sign> finalSigns = new LinkedList<>();
+            for (Sign sign : signs) {
+//                Sign sign1 = new Sign();
+//                if (sign.getSignuserid().equals(like.getLikeuserid())) {
+//                    sign1.setSignuserid(sign.getSigneduserid());
+//                    sign1.setSignschoolname(sign.getSignedschoolname());
+//                    sign1.setSigneduserid(sign.getSignuserid());
+//                    sign1.setSignedschoolname(sign.getSignschoolname());
+//                } else {
+//                    sign1.setSignuserid(sign.getSignuserid());
+//                    sign1.setSignschoolname(sign.getSignschoolname());
+//                    sign1.setSigneduserid(sign.getSigneduserid());
+//                    sign1.setSignedschoolname(sign.getSignedschoolname());
+//                }
+                finalSigns.add(sign);
             }
 
-            ((List) list).add(likedSchoolName);
-            map.put(likeSchoolName, list);
+            Set<String> theUserThatIHaveSign = new HashSet<>();
+            for (Sign sign : signs) {
+                if (like.getLikeuserid().equals(sign.getSigneduserid())) {
+                    theUserThatIHaveSign.add(String.valueOf(sign.getSignuserid()));
+                } else {
+                    theUserThatIHaveSign.add(String.valueOf(sign.getSigneduserid()));
+                }
+            }
+            List<FullLikes> theUserThatLikesMeOrSigned = new LinkedList<>();
+            List<Likes> theUserThatLikesMe = querySelective((Integer) null, (Integer) null, null, like.getLikeuserid(), null, null, null, null, null, null, null);
+            for (Likes likes1 : theUserThatLikesMe) {
+                FullLikes fullLikes = new FullLikes();
+                fullLikes.setLikes(likes1);
+                //TODO contains中比价的为对象，不为值，若想比较某一值，需另想,初步想法是模仿String重写hashCode以及equals
+                //此时想到了另一种解法，因为String已经重写过这两个方法了，因此我们可以绕过这个问题
+                if ((likes1.getLikeuserid().equals(like.getLikeuserid()))) {
+                    if (theUserThatIHaveSign.contains(String.valueOf(likes1.getLikeduserid()))) {
+                        fullLikes.setSigned(true);
+                    }
+                }
+                if ((likes1.getLikeuserid().equals(like.getLikeduserid()))) {
+                    if (theUserThatIHaveSign.contains(String.valueOf(likes1.getLikeuserid()))) {
+                        fullLikes.setSigned(true);
+                    }
+                }
+                theUserThatLikesMeOrSigned.add(fullLikes);
+            }
+            List<Pics> logos = picsService.querySelective(null, like.getLikeuserid(), FileEnum.LOGO.value());
+            List<Pics> signatures = picsService.querySelective(null, like.getLikeuserid(), FileEnum.SIGNATURE.value());
+            AdvancedLikes advancedLike = new AdvancedLikes(like.getLikeuserid(), like.getLikeschoolname(), finalSigns, eachLikes, theUserThatLikesMeOrSigned, logos.size() > 0, signatures.size() > 0);
+            advancedLikes.add(advancedLike);
         }
+        return advancedLikes;
+    }
+
+
+    public Workbook exportLikesForm(List<Likes> likes) {
+//        List<Likes> likes = this.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null);
+//        Map<String, List<String>> map = new TreeMap();
+        List<AdvancedLikes> advancedLikes = retrieveAdvancedLikes(likes);
+//        Iterator var3 = advancedLikes.iterator();
 
         Workbook workbook = new HSSFWorkbook();
         CellStyle cellStyle = workbook.createCellStyle();
@@ -239,35 +304,101 @@ public class LikeServiceImpl {
         cellStyle.setFont(font);
         Sheet sheet = workbook.createSheet();
         this.prepare(cellStyle, sheet);
-        int i = 0;
+//        int i = 0;
 
-        for (Iterator var10 = map.entrySet().iterator(); var10.hasNext(); ++i) {
-            Entry<String, List<String>> entry = (Entry) var10.next();
+        for (int i = 0; i < advancedLikes.size(); i++) {
             Row row = sheet.createRow(i + 2);
             Cell cell = row.createCell(0);
-            cell.setCellValue((String) entry.getKey());
+            cell.setCellValue(advancedLikes.get(i).getSchoolname());
+
             cell = row.createCell(1);
-            StringBuilder s = new StringBuilder(Arrays.toString(((List) entry.getValue()).toArray()));
-            if (s.length() > 0) {
-                s.deleteCharAt(s.length() - 1);
-                s.deleteCharAt(0);
+            StringBuilder stringBuilder = new StringBuilder();
+            List<Likes> likesList = advancedLikes.get(i).getLikesList();
+            for (Likes likes1 : likesList) {
+                if (advancedLikes.get(i).getUserId().equals(likes1.getLikeuserid())) {
+                    stringBuilder.append(likes1.getLikedschoolname()).append(",");
+                }else {
+                    stringBuilder.append(likes1.getLikeschoolname()).append(",");
+                }
             }
+            deleteLastCharacter(stringBuilder);
+            cell.setCellValue(stringBuilder.toString());
 
-            cell.setCellValue(s.toString());
+            cell = row.createCell(2);
+            List<Sign> signList = advancedLikes.get(i).getSignList();
+            stringBuilder = new StringBuilder();
+            for (Sign sign : signList) {
+                if (advancedLikes.get(i).getUserId().equals(sign.getSignuserid())) {
+                    stringBuilder.append(sign.getSignedschoolname()).append(",");
+                } else {
+                    stringBuilder.append(sign.getSignschoolname()).append(",");
+                }
+            }
+            deleteLastCharacter(stringBuilder);
+            cell.setCellValue(stringBuilder.toString());
+
+            cell = row.createCell(3);
+            List<FullLikes> fullLikes = advancedLikes.get(i).getFullLikes();
+            stringBuilder = new StringBuilder();
+            for (FullLikes fullLike : fullLikes) {
+                Likes likes1 = fullLike.getLikes();
+                if (fullLike.isSigned()) {
+                    if (fullLike.getLikes().getLikeuserid().equals(advancedLikes.get(i).getUserId())) {
+                        stringBuilder.append(likes1.getLikedschoolname()).append("(已接受 ").append(likes1.getUpdateTime()).append(")").append(",");
+                    } else {
+                        stringBuilder.append(likes1.getLikeschoolname()).append("(已接受 ").append(likes1.getUpdateTime()).append(")").append(",");
+                    }
+                } else {
+                    if (fullLike.getLikes().getLikeuserid().equals(advancedLikes.get(i).getUserId())) {
+                        stringBuilder.append(likes1.getLikedschoolname()).append("(未接受)").append(",");
+                    } else {
+                        stringBuilder.append(likes1.getLikeschoolname()).append("(未接受)").append(",");
+                    }
+
+                }
+            }
+            deleteLastCharacter(stringBuilder);
+            cell.setCellValue(stringBuilder.toString());
+
+            cell = row.createCell(4);
+            if (advancedLikes.get(i).isHasLogo()) {
+                cell.setCellValue("已上传");
+            } else {
+                cell.setCellValue("未上传");
+            }
         }
-
         return workbook;
+    }
+
+    private void deleteLastCharacter(StringBuilder stringBuilder) {
+        if (stringBuilder.length() > 0) {
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
     }
 
     public void prepare(CellStyle cellStyle, Sheet sheet) {
         Row row = sheet.createRow(0);
         row.createCell(0).setCellValue("签约意向表");
         row = sheet.createRow(1);
+
         Cell cell = row.createCell(0);
         cell.setCellValue("学校名称");
         cell.setCellStyle(cellStyle);
+
         cell = row.createCell(1);
         cell.setCellValue("签约意向");
+        cell.setCellStyle(cellStyle);
+
+        cell = row.createCell(2);
+        cell.setCellValue("签约匹配高校");
+        cell.setCellStyle(cellStyle);
+
+        cell = row.createCell(3);
+        cell.setCellValue("被邀约情况");
+        cell.setCellStyle(cellStyle);
+
+        cell = row.createCell(4);
+        cell.setCellValue("学校logo");
         cell.setCellStyle(cellStyle);
     }
 
@@ -275,19 +406,81 @@ public class LikeServiceImpl {
         //当前用户的信息
         User likeUser = userService.retrieveUserByToken();
         User likedUser = userService.findById(likedUserId);
-        add(likeUser.getId(),likeUser.getSchoolname(),likedUserId, likedUser.getSchoolname());
+        add(likeUser.getId(), likeUser.getSchoolname(), likedUserId, likedUser.getSchoolname());
     }
 
     public int count(Integer userId, String schoolName) {
-        LikesExample likesExample =new LikesExample();
+        LikesExample likesExample = new LikesExample();
         Criteria criteria = likesExample.createCriteria();
         criteria.andDeletedEqualTo(false);
-        if(!StringUtils.isEmpty(userId)){
+        if (!StringUtils.isEmpty(userId)) {
             criteria.andLikeuseridEqualTo(userId);
         }
-        if(StringUtils.hasText(schoolName)){
-            criteria.andLikeschoolnameLike("%"+schoolName+"%");
+        if (StringUtils.hasText(schoolName)) {
+            criteria.andLikeschoolnameLike("%" + schoolName + "%");
         }
         return (int) likesMapper.countByExample(likesExample);
+    }
+
+    public int count(Integer userId, String schoolName, Integer year) {
+        LikesExample likesExample = new LikesExample();
+        Criteria criteria = likesExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        if (!StringUtils.isEmpty(userId)) {
+            criteria.andLikeuseridEqualTo(userId);
+        }
+        if (StringUtils.hasText(schoolName)) {
+            criteria.andLikeschoolnameLike("%" + schoolName + "%");
+        }
+        if (!StringUtils.isEmpty(year)) {
+            LocalDateTime end = LocalDateTime.of(year, 12, 31, 23, 59);
+            LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+            criteria.andUpdateTimeBetween(start, end);
+        }
+        return (int) likesMapper.countByExample(likesExample);
+    }
+
+    public Workbook exportLikesFormSingle(List<Likes> likesList) {
+        Workbook workbook = new HSSFWorkbook();
+        CellStyle cellStyle = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setFontName("IMPACT");
+        font.setBold(true);
+        cellStyle.setFont(font);
+        Sheet sheet = workbook.createSheet();
+        this.prepareSingle(cellStyle, sheet);
+        int k = 0;
+        for (Likes likes : likesList) {
+            Row row = sheet.createRow(k + 2);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(likes.getLikeschoolname());
+
+            cell = row.createCell(1);
+            cell.setCellValue(likes.getLikedschoolname());
+
+            cell = row.createCell(2);
+            cell.setCellValue(likes.getAddTime().toString());
+            k++;
+        }
+        return workbook;
+
+    }
+
+    private void prepareSingle(CellStyle cellStyle, Sheet sheet) {
+        Row row = sheet.createRow(0);
+        row.createCell(0).setCellValue("单项意向表");
+        row = sheet.createRow(1);
+
+        Cell cell = row.createCell(0);
+        cell.setCellValue("学校名称");
+        cell.setCellStyle(cellStyle);
+
+        cell = row.createCell(1);
+        cell.setCellValue("意向高校");
+        cell.setCellStyle(cellStyle);
+
+        cell = row.createCell(2);
+        cell.setCellValue("提出时间");
+        cell.setCellStyle(cellStyle);
     }
 }
