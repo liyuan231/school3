@@ -82,6 +82,9 @@ public class AdminUserController {
         skipFieldSet.add("deleted");
         skipFieldSet.add("avatarurl");
         skipFieldSet.add("accountstatus");
+        skipFieldSet.add("updatetime");
+        skipFieldSet.add("addtime");
+        skipFieldSet.add("id");
 
     }
 
@@ -115,7 +118,7 @@ public class AdminUserController {
             notes = "导出报名表(swagger-bootstarp无法下载，会直接显示内容，因此要测试可以直接浏览器访问该地址)"
     )
     @GetMapping({"/exportRegistrationForm"})
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") @RequestParam(value = "userIds", required = false) Integer[] userIds, HttpServletResponse response) throws IOException {
         List<User> users = null;
         if (userIds == null || userIds.length == 0) {
@@ -210,7 +213,8 @@ public class AdminUserController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String show(@PathVariable("userId") Integer id) throws UserNotFoundException {
-        User user = this.userService.findById(id);
+//        User user = this.userService.findById(id);
+        User user = this.userService.queryById(id, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.profession, User.Column.address, User.Column.telephone, User.Column.username, User.Column.address, User.Column.website);
         List<Pics> logos = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.LOGO.value());
         String logo = logos.size() == 0 ? null : this.springFilePath + ((Pics) logos.get(0)).getLocation();
         List<Pics> signatures = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.SIGNATURE.value());
@@ -219,10 +223,6 @@ public class AdminUserController {
         fullUser.setUser(user);
         fullUser.setSignature(signature);
         fullUser.setLogo(logo);
-//        SimpleUser simpleUser = new SimpleUser();
-//        this.fill(user, simpleUser);
-//        simpleUser.setLogo(logo);
-//        simpleUser.setSignature(signature);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", fullUser);
     }
 
@@ -392,4 +392,6 @@ public class AdminUserController {
         SimplePage simplePage = new SimplePage(size, users);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取高校信息成功！", simplePage);
     }
+
+
 }

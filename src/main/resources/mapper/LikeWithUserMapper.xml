@@ -45,12 +45,11 @@
 
     <select id="querySelectiveDistinct" resultType="com.school.dto.LikeWithUser">
         select distinct
---         l.id as likeId,
+
         l.like_user_id as likeUserId,
---         l.liked_user_id as likedUserId,
+
         u1.school_name as likeSchoolName
---         u2.school_name as likedSchoolName,
---         l.add_time as addTime
+
         from likes as l,
         user as u1,user as u2
         where
@@ -64,7 +63,7 @@
             and u1.school_name like '%${schoolName}%'
         </if>
         <if test="sort!=null and order!=null">
-            order by l.${sort} ${order}
+            order by u1.school_name ${order}
         </if>
 
         <if test="page!=null and pageSize!=null">

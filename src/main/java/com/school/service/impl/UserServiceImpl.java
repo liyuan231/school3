@@ -593,4 +593,13 @@ public class UserServiceImpl implements UserDetailsService {
         PageInfo<User> pageInfo = new PageInfo(users);
         return pageInfo.getList();
     }
+    //-----//------------------
+        public User queryById(Integer id, User.Column... columns) {
+            UserExample userExample = new UserExample();
+            UserExample.Criteria criteria = userExample.createCriteria();
+            criteria.andIdEqualTo(id);
+            criteria.andDeletedEqualTo(false);
+            List<User> users = userMapper.selectByExampleSelective(userExample, columns);
+            return users.size() == 0 ? null : users.get(0);
+        }
 }
