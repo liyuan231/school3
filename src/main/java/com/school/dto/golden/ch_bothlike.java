@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 public class ch_bothlike {
     Integer host_id;
     Integer liked_id;
+    
 
 
 	public Integer getHost_id() {

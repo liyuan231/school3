@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface Pics_2 {
 	List<Pics> select_pics(Integer user_id);
+
+	String get_logo(Integer user_id);
 }

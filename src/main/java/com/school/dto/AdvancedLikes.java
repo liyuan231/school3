@@ -17,7 +17,7 @@ public class AdvancedLikes {
         this.userId = userId;
     }
 
-    private String schoolname;
+    private String schoolName;
     private List<Sign> signList;
     private List<Likes> likesList;
     private List<FullLikes> fullLikes;
@@ -29,7 +29,7 @@ public class AdvancedLikes {
     public AdvancedLikes(Integer userId, String schoolname, List<Sign> signList, List<Likes> likesList, List<FullLikes> fullLikes, boolean hasLogo, boolean hasSignature) {
         this.userId = userId;
 //        this.likeId = likeId;
-        this.schoolname = schoolname;
+        this.schoolName = schoolname;
         this.signList = signList;
         this.likesList = likesList;
         this.fullLikes = fullLikes;
@@ -37,12 +37,12 @@ public class AdvancedLikes {
         this.hasSignature = hasSignature;
     }
 
-    public String getSchoolname() {
-        return schoolname;
+    public String getSchoolName() {
+        return schoolName;
     }
 
-    public void setSchoolname(String schoolname) {
-        this.schoolname = schoolname;
+    public void setSchoolName(String schoolName) {
+        this.schoolName = schoolName;
     }
 
 

@@ -7,13 +7,14 @@ package com.school.service.impl;
 
 import com.school.dao.UsertoroleMapper;
 import com.school.model.Usertorole;
-import com.school.model.UsertoroleExample;
 import com.school.model.Usertorole.Column;
+import com.school.model.UsertoroleExample;
 import com.school.model.UsertoroleExample.Criteria;
-import java.util.List;
-import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class UserToRoleServiceImpl {
@@ -31,11 +32,11 @@ public class UserToRoleServiceImpl {
         }
 
         if (!StringUtils.isEmpty(userId)) {
-            criteria.andUseridEqualTo(userId);
+            criteria.andUserIdEqualTo(userId);
         }
 
         if (!StringUtils.isEmpty(roleId)) {
-            criteria.andRoleidEqualTo(roleId);
+            criteria.andRoleIdEqualTo(roleId);
         }
 
         return this.usertoroleMapper.selectByExampleSelective(usertoroleExample, new Column[0]);
@@ -44,23 +45,23 @@ public class UserToRoleServiceImpl {
     public void updateByUserId(Integer userId, Integer level) {
         UsertoroleExample usertoroleExample = new UsertoroleExample();
         Criteria criteria = usertoroleExample.createCriteria();
-        criteria.andUseridEqualTo(userId);
+        criteria.andUserIdEqualTo(userId);
         Usertorole usertorole = new Usertorole();
-        usertorole.setRoleid(level);
+        usertorole.setRoleId(level);
         this.usertoroleMapper.updateByExampleSelective(usertorole, usertoroleExample);
     }
 
     public List<Usertorole> getUserToRoleByUserId(Integer userId) {
         UsertoroleExample usertoroleExample = new UsertoroleExample();
         Criteria criteria = usertoroleExample.createCriteria();
-        criteria.andUseridEqualTo(userId);
+        criteria.andUserIdEqualTo(userId);
         return this.usertoroleMapper.selectByExample(usertoroleExample);
     }
 
     public void add(Integer userId, Integer roleId) {
         Usertorole usertorole = new Usertorole();
-        usertorole.setUserid(userId);
-        usertorole.setRoleid(roleId);
+        usertorole.setUserId(userId);
+        usertorole.setRoleId(roleId);
         this.usertoroleMapper.insertSelective(usertorole);
     }
 }

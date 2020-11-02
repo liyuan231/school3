@@ -34,7 +34,7 @@ public class CommonUtil {
         User signUser = userService.findById(signUserId);
         certification.setSignUserCountry(signUser.getCountry());
         certification.setSignUserProfession(signUser.getProfession());
-        certification.setSignUserSchoolName(signUser.getSchoolname());
+        certification.setSignUserSchoolName(signUser.getSchoolName());
         List<Pics> logos = picsService.querySelective(null, signUserId, FileEnum.LOGO.value());
         if (logos.size() == 0) {
             throw new NullPointerException("当前用户尚未上传logo！");
@@ -52,7 +52,7 @@ public class CommonUtil {
         User signedUser = userService.findById(signedUserId);
         certification.setSignedUserCountry(signedUser.getCountry());
         certification.setSignedUserProfession(signedUser.getProfession());
-        certification.setSignedUserSchoolName(signedUser.getSchoolname());
+        certification.setSignedUserSchoolName(signedUser.getSchoolName());
         List<Pics> signedUserlogos = picsService.querySelective(null, signedUserId, FileEnum.LOGO.value());
         if (signedUserlogos.size() == 0) {
             throw new NullPointerException("当前用户尚未上传logo！");

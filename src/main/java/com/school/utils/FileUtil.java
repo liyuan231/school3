@@ -9,15 +9,16 @@ import com.school.model.Sign;
 import com.school.model.User;
 import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.UserServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,9 +26,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Component
 public class FileUtil {
+    private static Logger logger = LoggerFactory.getLogger(FileUtil.class);
 
     @Autowired
     private UserServiceImpl userService;
@@ -36,62 +40,65 @@ public class FileUtil {
 
     @Value("${file.path}")
     private String filePath;
+    @Value("${file.certifications.tmp}")
+    private String fileCertificationsTmp;
 
     @Value("${file.name.witness}")
     private String witnessFileName;
 
     public String downloadCertification(HttpServletResponse response, Sign sign) throws UserNotFoundException {
-        List<Pics> userLogos = picsService.querySelective(null, sign.getSignuserid(), FileEnum.LOGO.value());
+        List<Pics> userLogos = picsService.querySelective(null, sign.getSignUserId(), FileEnum.LOGO.value());
         if (userLogos.size() == 0) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "还未上传学校logo！");
         }
-        List<Pics> userSignatures = picsService.querySelective(null, sign.getSignuserid(), FileEnum.SIGNATURE.value());
+        List<Pics> userSignatures = picsService.querySelective(null, sign.getSignUserId(), FileEnum.SIGNATURE.value());
         if (userSignatures.size() == 0) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "还未上传学校校长签章！");
         }
-        List<Pics> useredLogos = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.LOGO.value());
+        List<Pics> useredLogos = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.LOGO.value());
         if (useredLogos.size() == 0) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校logo！");
         }
-        List<Pics> useredSignatures = picsService.querySelective(null, sign.getSigneduserid(), FileEnum.SIGNATURE.value());
+        List<Pics> useredSignatures = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.SIGNATURE.value());
         if (useredSignatures.size() == 0) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "目标学校还未上传学校校长签章！");
         }
-
 //        List<Pics> witnesses = picsService.querySelective(null, null, FileEnum.WITNESS_LOGO.value());
 //        if (witnesses.size() == 0) {
 //            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "见证人的logo不存在！");
 //        }
-        User user = userService.findById(sign.getSignuserid());
-        User usered = userService.findById(sign.getSigneduserid());
+        User user = userService.findById(sign.getSignUserId());
+        User usered = userService.findById(sign.getSignedUserId());
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         String country1 = user.getCountry();
         String logo1 = filePath + userLogos.get(0).getLocation();
         String signature1 = filePath + userSignatures.get(0).getLocation();
-        String school1 = user.getSchoolname();
+        String school1 = user.getSchoolName();
         String job1 = user.getProfession();
         String time1 = dateTimeFormatter.format(LocalDateTime.now());
+//        String name1 = user.getContact();
 
         String country2 = usered.getCountry();
         String logo2 = filePath + useredLogos.get(0).getLocation();
         String signature2 = filePath + useredSignatures.get(0).getLocation();
-        String school2 = usered.getSchoolname();
+        String school2 = usered.getSchoolName();
         String job2 = usered.getProfession();
         String time2 = dateTimeFormatter.format(LocalDateTime.now());
+//        String name2 = usered.getContact();
 
 //        String witness = filePath + witnesses.get(witnesses.size() - 1).getLocation();
-        String witness = filePath + witnessFileName;
+//        String witness = filePath + witnessFileName;
 
-        File file = new File(witness);
-        if (!file.exists()) {
-            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "见证者的logo未上传，且需命名为${file.name.witness}！");
-        }
+//        File file = new File(witness);
+//        if (!file.exists()) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "见证者的logo未上传，且需命名为${file.name.witness}！");
+//        }
         Map<String, Object> datas = fillData(
                 country1, logo1, school1, job1, time1, signature1,
                 country2, logo2, school2, job2, time2, signature2,
-                witness
+                null
         );
         try {
             render(datas, response);
@@ -102,15 +109,20 @@ public class FileUtil {
     }
 
     private void render(Map<String, Object> datas, HttpServletResponse response) throws IOException, NullPointerException {
-        List<Pics> templates = picsService.querySelective(null, null, FileEnum.TEMPLATE.value(), null, null);
-        if (templates.size() == 0) {
-            throw new NullPointerException("管理员尚未上传签约证书模板！");
-        }
-        Pics theTemplate = templates.get(0);
-        String templateLocation = filePath + theTemplate.getLocation();
-        XWPFTemplate template = XWPFTemplate.compile(templateLocation)
+//        List<Pics> templates = picsService.querySelective(null, null, FileEnum.TEMPLATE.value(), null, null);
+
+//        if (templates.size() == 0) {
+//            throw new NullPointerException("管理员尚未上传签约证书模板！");
+//        }
+//        Pics theTemplate = templates.get(0);
+        String templateLocation = filePath + "tmp.docx";
+        XWPFTemplate template = XWPFTemplate.compile(new File(templateLocation))
                 .render(datas);
-        response.setHeader("Content-disposition", String.format("attachment;filename=\"%s\"", System.currentTimeMillis() + ".docx"));
+
+        String school1 = (String) datas.get("school1");
+        String school2 = (String) datas.get("school2");
+        String name = "签约证书(" + school1 + "-" + school2 + ")";
+        response.setHeader("Content-disposition", "attachment;filename=" + new String(name.getBytes(StandardCharsets.UTF_8), "ISO8859-1") + ".docx");
         response.setContentType("multipart/form-data");
         response.setCharacterEncoding("UTF-8");
         BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
@@ -131,23 +143,139 @@ public class FileUtil {
                 put("job1", job1);
                 put("job2", job2);
 
-                put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo1))));
 
+                put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo1))));
                 put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo2))));
 
                 //最顶部公用的图片
-                put("witness", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo3))));
-                put("signature1", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature1))));
-                put("signature2", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature2))));
+                put("name1", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature1))));
+                put("name2", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature2))));
 
+//                put("logo3", "http://124.156.153.105/files/AUPFLOGO_1.jpg");
                 Date date = new Date();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 String time = sdf.format(date);
                 put("date1", time);
                 put("date2", time);
+                put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(filePath + "AUPFLOGO_1.jpg"))));
+                put("logo4", new PictureRenderData(520, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(filePath + "AUPFLOGO_2.jpg"))));
+//
+//                put("name1", name1);
+//                put("name2", name2);
             }
         };
         return datas;
     }
 
+
+    //此方法其实和上面那个作用差不多，但由于若抽取处相同的方法，会使得不知道如何处理上述的弱智异常判断，不信自己试试，我也了解得到了，要多抛异常，少自己判断，学到了！！！
+    public void downloadCertification(Sign sign) throws IllegalArgumentException, UserNotFoundException, IOException {
+        List<Pics> userLogos = picsService.querySelective(null, sign.getSignUserId(), FileEnum.LOGO.value());
+        if (userLogos.size() == 0) {
+            throw new IllegalArgumentException("主动签约方未上传学校logo");
+        }
+        List<Pics> userSignatures = picsService.querySelective(null, sign.getSignUserId(), FileEnum.SIGNATURE.value());
+        if (userSignatures.size() == 0) {
+            throw new IllegalArgumentException("还未上传学校校长签章");
+        }
+        List<Pics> useredLogos = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.LOGO.value());
+        if (useredLogos.size() == 0) {
+            throw new IllegalArgumentException("目标学校还未上传学校logo");
+        }
+        List<Pics> useredSignatures = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.SIGNATURE.value());
+        if (useredSignatures.size() == 0) {
+            throw new IllegalArgumentException("目标学校还未上传学校校长签章");
+        }
+        User user = userService.findById(sign.getSignUserId());
+        User usered = userService.findById(sign.getSignedUserId());
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        String country1 = user.getCountry();
+        String logo1 = filePath + userLogos.get(0).getLocation();
+        String signature1 = filePath + userSignatures.get(0).getLocation();
+        String school1 = user.getSchoolName();
+        String job1 = user.getProfession();
+        String time1 = dateTimeFormatter.format(LocalDateTime.now());
+//        String name1 = user.getContact();
+
+        String country2 = usered.getCountry();
+        String logo2 = filePath + useredLogos.get(0).getLocation();
+        String signature2 = filePath + useredSignatures.get(0).getLocation();
+        String school2 = usered.getSchoolName();
+        String job2 = usered.getProfession();
+        String time2 = dateTimeFormatter.format(LocalDateTime.now());
+//        String name2 = usered.getContact();
+
+//        String witness = filePath + witnesses.get(witnesses.size() - 1).getLocation();
+//        String witness = filePath + witnessFileName;
+
+//        File file = new File(witness);
+//        if (!file.exists()) {
+//            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "见证者的logo未上传，且需命名为${file.name.witness}！");
+//        }
+        Map<String, Object> datas = fillData(
+                country1, logo1, school1, job1, time1, signature1,
+                country2, logo2, school2, job2, time2, signature2,
+                null
+        );
+
+        String templateLocation = filePath + "tmp.docx";
+        XWPFTemplate template = XWPFTemplate.compile(new File(templateLocation))
+                .render(datas);
+
+        String name = "签约证书(" + school1 + "-" + school2 + ")";
+        //写到本地中
+        String directory = filePath + fileCertificationsTmp;
+        File file = new File(directory);
+        if (!file.exists()) {
+            file.mkdir();
+        }
+        BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(filePath + fileCertificationsTmp + name + ".docx")));
+        template.write(outputStream);
+//        BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
+//        template.write(outputStream);
+        template.close();
+        outputStream.close();
+    }
+
+    public static String folderToZip(String src, String fileName, String target) throws IOException {
+        File srcFile = new File(src);
+        if (!srcFile.exists()) {
+            logger.error(src + "不存在！");
+            throw new FileNotFoundException(src + "->文件不存在！");
+        }
+        File[] files = srcFile.listFiles();
+        assert files != null;
+        if (files.length == 0) {
+            logger.error(src + "文件夹中内容为空！");
+            throw new FileNotFoundException(src + "->文件夹内容为空");
+        }
+        File zipFile = new File(target + fileName + ".zip");
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)))) {
+            compress(zipOutputStream, srcFile, srcFile.getName());
+        }
+        return zipFile.getAbsolutePath();
+    }
+
+    private static void compress(ZipOutputStream zipOutputStream, File srcFile, String base) throws IOException {
+        if (srcFile.isDirectory()) {
+            File[] files = srcFile.listFiles();
+            if (files.length == 0) {
+                zipOutputStream.putNextEntry(new ZipEntry(base));
+            } else {
+                for (File file : files) {
+                    compress(zipOutputStream, file, base + "/" + file.getName());
+                }
+            }
+        } else {
+            zipOutputStream.putNextEntry(new ZipEntry(base));
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(srcFile));
+            byte[]bytes = new byte[1024*2];
+            while (bufferedInputStream.read(bytes,0 ,bytes.length) != -1) {
+                zipOutputStream.write(bytes);
+            }
+            bufferedInputStream.close();
+        }
+    }
 }

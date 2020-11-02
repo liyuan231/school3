@@ -1,10 +1,14 @@
 package com.school.controller.client;
 
+import com.school.dao.UserMapper;
 import com.school.dto.SimplePage;
 import com.school.dto.SimpleUser;
+import com.school.dto.UserPro;
 import com.school.exception.*;
 import com.school.model.Pics;
 import com.school.model.User;
+import com.school.model.UserExample;
+import com.school.service.golden.userservice;
 import com.school.service.impl.EmailServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.UserServiceImpl;
@@ -21,9 +25,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Iterator;
@@ -48,6 +54,12 @@ public class UserController {
     private PicsServiceImpl picsService;
     @Value("${spring.file.path}")
     private String springFilePath;
+    @Resource
+    private UserMapper userMapper;
+
+    @Autowired
+    userservice user_service;
+    String springFiles = "/home/springboot/files/";
 
     /**
      * 依据 retrieveVerificationCode发过去的验证码重新设置密码
@@ -93,7 +105,8 @@ public class UserController {
         List<User> result = new LinkedList();
         Iterator var9 = users.iterator();
         while (var9.hasNext()) {
-            User user = (User) var9.next();
+            UserPro user = (UserPro) var9.next();
+            user.setLogo(springFiles + user_service.get_logo(user.getId()));
 //            SimpleUser simpleUser = new SimpleUser();
 //            fill(user, simpleUser);
             clean(user);
@@ -104,15 +117,15 @@ public class UserController {
     }
 
     private void clean(User user) {
-        user.setAccountstatus(null);
+        user.setAccountStatus(null);
 //        user.setUsername(null);
         user.setPassword(null);
         user.setUpdateTime(null);
         user.setLocation(null);
         user.setAddTime(null);
-        user.setLastloginip(null);
-        user.setLastlogintime(null);
-        user.setAvatarurl(null);
+        user.setLastLoginIp(null);
+        user.setLastLoginTime(null);
+//        user.setAvatarurl(null);
         user.setDeleted(null);
     }
 
@@ -121,7 +134,7 @@ public class UserController {
 //        simpleUser.setAddress(user.getAddress());
         simpleUser.setContact(user.getContact());
         simpleUser.setId(user.getId());
-        simpleUser.setSchoolName(user.getSchoolname());
+        simpleUser.setSchoolName(user.getSchoolName());
         simpleUser.setProfession(user.getProfession());
 //        simpleUser.setTelephone(user.getTelephone());
     }
@@ -183,11 +196,10 @@ public class UserController {
     @GetMapping("/retrieveUserInfo")
     public Object retrieveUserInfo() {
         User user = userService.retrieveUserByToken();
-        user.setAvatarurl(springFilePath + user.getAvatarurl());
 
-        List<Pics> logos = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.LOGO.value());
+        List<Pics> logos = this.picsService.querySelective(null,user.getId(), FileEnum.LOGO.value());
         String logo = logos.size() == 0 ? null : this.springFilePath + ((Pics) logos.get(0)).getLocation();
-        List<Pics> signatures = this.picsService.querySelective((Integer) null, user.getId(), FileEnum.SIGNATURE.value());
+        List<Pics> signatures = this.picsService.querySelective(null,user.getId(), FileEnum.SIGNATURE.value());
         String signature = signatures.size() == 0 ? null : this.springFilePath + ((Pics) signatures.get(0)).getLocation();
         SimpleUser simpleUser = new SimpleUser();
 
@@ -196,12 +208,15 @@ public class UserController {
         simpleUser.setSignature(signature);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", simpleUser);
     }
+
+
     private void fillNexessaryUserInfo(User user, SimpleUser simpleUser) {
+        simpleUser.setProfession(user.getProfession());
         simpleUser.setUsername(user.getUsername());
         simpleUser.setAddress(user.getAddress());
         simpleUser.setContact(user.getContact());
         simpleUser.setId(user.getId());
-        simpleUser.setSchoolName(user.getSchoolname());
+        simpleUser.setSchoolName(user.getSchoolName());
         simpleUser.setTelephone(user.getTelephone());
     }
 
@@ -221,11 +236,21 @@ public class UserController {
 //        }
 //    }
 
-//    private void clearPassword(List<User> users) {
+    //    private void clearPassword(List<User> users) {
 //        for (User user : users) {
 //            user.setPassword("[PASSWORD]");
 //        }
 //    }
+    //-------------------------------
+    public Integer count(String schoolName) {
+        UserExample userExample = new UserExample();
+        UserExample.Criteria criteria = userExample.createCriteria();
+        if (StringUtils.hasText(schoolName)) {
+            criteria.andSchoolNameLike("%" + schoolName + "%");
+        }
+
+        return Math.toIntExact(this.userMapper.countByExample(userExample));
+    }
 
 
 }

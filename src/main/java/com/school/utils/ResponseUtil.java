@@ -8,8 +8,8 @@ package com.school.utils;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +37,23 @@ public class ResponseUtil {
         printWriter.println(build);
 //        printWriter.flush();
         printWriter.close();
-
     }
+
+    public static void export(File file, HttpServletResponse response) throws IOException {
+        String name = file.getName();
+//        String suffix = file.getName().split("\\.")[1];
+        response.setHeader("Content-disposition", "attachment;filename=" + new String(name.getBytes(StandardCharsets.UTF_8), "ISO8859-1"));
+        response.setContentType("application/x-download");
+        response.setCharacterEncoding("UTF-8");
+        try (BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());) {
+            try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));) {
+                byte[] buf = new byte[1024 * 2];
+                int len;
+                while ((len=bufferedInputStream.read(buf, 0, buf.length)) != -1) {
+                    outputStream.write(buf,0,len);
+                }
+            }
+        }
+    }
+
 }

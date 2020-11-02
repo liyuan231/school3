@@ -1,26 +1,6 @@
 package com.school.controller.client;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.graphbuilder.math.func.SignFunction;
-import com.school.exception.LikesAlreadyExistException;
-import com.school.exception.LikesNotFoundException;
-import com.school.exception.UserLikesNotCorrespondException;
-import com.school.exception.UserNotCorrectException;
-import com.school.exception.UserNotFoundException;
+import com.school.exception.*;
 import com.school.model.Likes;
 import com.school.model.User;
 import com.school.service.golden.userservice;
@@ -28,9 +8,18 @@ import com.school.service.impl.LikeServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/client/like")
@@ -56,7 +45,7 @@ public class UserLikeController {
     @PreAuthorize("hasAnyRole('USER')")
     @ApiOperation(value = "选择签约->勾选参会学校->提交，若对方已选择自己为意向签约目标，系统自动匹配签约", notes = "批量表明意向并且自动匹配签约")
     @PostMapping("/batchLike")
-    public Object batchSign(@RequestParam(value="被喜欢用户的数组") Integer[] likedUserIds) {
+    public Object batchSign(@RequestParam(value="likedUserIds") Integer[] likedUserIds) {
     	Integer host_id = userService.retrieveUserByToken().getId();
     	Integer batch_sign[] = new Integer[likedUserIds.length+1];
     	int i=0;
@@ -156,7 +145,7 @@ public class UserLikeController {
         List<Likes> matchs = likeService.matchByLikedUserId();
         List<User> users = new LinkedList<>();
         for (Likes match : matchs) {
-            User user = userService.findById(match.getLikeuserid());
+            User user = userService.findById(match.getLikeUserId());
             users.add(user);
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功！", users);
@@ -168,7 +157,7 @@ public class UserLikeController {
     public Object matchILikesWho() {
         User curUser = userService.retrieveUserByToken();
         //我意向的所有的用户学校
-        List<Likes> theUserThatILikes = likeService.querySelective(null, curUser.getId(), null, null, null, null, null, null, null, null);
+        List<Likes> theUserThatILikes = likeService.querySelective(null, curUser.getId(), null, null, null, null, null, null, null, null).getList();
         for (Likes theUserThatILike : theUserThatILikes) {
             clean(theUserThatILike);
         }
@@ -176,8 +165,8 @@ public class UserLikeController {
     }
 
     private void clean(Likes theUserThatILikes) {
-        theUserThatILikes.setLikeuserid(null);
-        theUserThatILikes.setLikeschoolname(null);
+        theUserThatILikes.setLikeUserId(null);
+        theUserThatILikes.setLikeSchoolName(null);
         theUserThatILikes.setAddTime(null);
         theUserThatILikes.setUpdateTime(null);
         theUserThatILikes.setDeleted(null);

@@ -40,9 +40,9 @@ public class EmailServiceImpl {
     public EmailServiceImpl() {
     }
 
-    public void sendVerificationCode(String subject, String message, String username, Integer duration, TimeUnit timeUnit) throws MailException{
+    public void sendVerificationCode(String subject, String message, String username, Integer duration, TimeUnit timeUnit) throws MailException {
         String code = this.generateCode();
-        this.usernameToCodeMap.put(username, code, (long)duration, timeUnit);
+        this.usernameToCodeMap.put(username, code, (long) duration, timeUnit);
         StringBuilder context = new StringBuilder();
         context.append(message).append(code);
         this.send(username, subject, context.toString());
@@ -50,19 +50,27 @@ public class EmailServiceImpl {
 
     private String generateCode() {
         StringBuilder code = new StringBuilder();
-        for(int i = 0; i < 4; ++i) {
-            code.append((int)(Math.random() * 10.0D));
+        for (int i = 0; i < 4; ++i) {
+            code.append((int) (Math.random() * 10.0D));
         }
 
         return code.toString();
     }
 
     public void resetPassword(String username, String code, String newPassword) throws EmailVerificationCodeNullPointerException, EmailVerificationCodeIllegalArgumentException, UserNotFoundException {
-        String codeInCache = (String)this.usernameToCodeMap.get(username);
+        String codeInCache = (String) this.usernameToCodeMap.get(username);
         AssertUtil.emailVerificationCodeNotNull(codeInCache, "验证码不存在！");
         AssertUtil.emailVerificationCodeEquals(code.trim().equals(codeInCache), "验证码错误！");
-        this.userService.update((Integer)null, username, newPassword, (String)null, (String)null, (String)null, (String)null, (String)null, (String)null, (String)null, (LocalDateTime)null, (Boolean)null, (String)null, (Integer)null, (String)null,null);
+        this.userService.update((Integer) null, username, newPassword, (String) null, (String) null, (String) null, (String) null, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) null, null);
         this.usernameToCodeMap.remove(username);
+    }
+
+    public boolean checkVertificationCode(String username, String code) throws EmailVerificationCodeNullPointerException, EmailVerificationCodeIllegalArgumentException {
+        String codeInCache = (String) this.usernameToCodeMap.get(username);
+        AssertUtil.emailVerificationCodeNotNull(codeInCache, "验证码不存在！");
+        AssertUtil.emailVerificationCodeEquals(code.trim().equals(codeInCache), "验证码错误！");
+        this.usernameToCodeMap.remove(username);
+        return true;
     }
 
     public void modifySystemEmail(String username, String mailAuthorizationCode) {
@@ -109,9 +117,11 @@ public class EmailServiceImpl {
     public EmailInfo retrieveSystemEmailInfo() {
         String username = this.mailProperties.getUsername();
         String password = this.mailProperties.getPassword();
-        return new EmailInfo(username,password);
+        return new EmailInfo(username, password);
     }
-    public  static class EmailInfo{
+
+
+    public static class EmailInfo {
         public EmailInfo() {
         }
 

@@ -42,7 +42,7 @@ public class PicsServiceImpl {
 
     public void insert(Integer userId, String fileName, int type) {
         Pics pics = new Pics();
-        pics.setUserid(userId);
+        pics.setUserId(userId);
         pics.setLocation(fileName);
         pics.setType(type);
         pics.setAddTime(LocalDateTime.now());
@@ -65,7 +65,7 @@ public class PicsServiceImpl {
         }
 
         if (!StringUtils.isEmpty(userId)) {
-            criteria.andUseridEqualTo(userId);
+            criteria.andUserIdEqualTo(userId);
         }
 
         if (!StringUtils.isEmpty(type)) {
@@ -77,7 +77,7 @@ public class PicsServiceImpl {
 
     public void add(User user, String location, Integer type) throws IOException, UserNotFoundException {
         if (type == FileEnum.AVATAR_URL.value()) {
-            user.setAvatarurl(location);
+//            user.setAvatarurl(location);
             this.userService.update(user);
         } else {
             this.add(user.getId(), location, type);
@@ -98,7 +98,7 @@ public class PicsServiceImpl {
 
     private void add(Integer userId, String fileName, Integer type) throws IOException, UserNotFoundException {
         Pics pics = new Pics();
-        pics.setUserid(userId);
+        pics.setUserId(userId);
         pics.setLocation(fileName);
         pics.setType(type);
         this.add(pics);
@@ -113,7 +113,7 @@ public class PicsServiceImpl {
     public Pics update(Integer id, Integer userId, String location, Integer type, Boolean deleted) {
         Pics pics = new Pics();
         pics.setId(id);
-        pics.setUserid(userId);
+        pics.setUserId(userId);
         pics.setLocation(location);
         pics.setType(type);
         pics.setDeleted(deleted);
@@ -133,8 +133,9 @@ public class PicsServiceImpl {
     }
 
     public void delete(Pics pics) {
-        pics.setDeleted(true);
-        this.update(pics);
+        picsMapper.deleteByPrimaryKey(pics.getId());
+//        pics.setDeleted(true);
+//        this.update(pics);
     }
 
     public Pics upload(Integer userId, Integer type, MultipartFile file) throws IOException, UserNotFoundException {

@@ -46,6 +46,4 @@ public class CertificationDownloadController {
 //        }
         return fileUtil.downloadCertification(response, sign);
     }
-
-
 }

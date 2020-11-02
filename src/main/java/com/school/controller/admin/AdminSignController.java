@@ -5,6 +5,7 @@
 
 package com.school.controller.admin;
 
+import com.school.dto.SignWithUser;
 import com.school.dto.SimplePage;
 import com.school.exception.SignNotFoundException;
 import com.school.exception.UserNotFoundException;
@@ -54,20 +55,33 @@ public class AdminSignController {
     public AdminSignController() {
     }
 
+//    @GetMapping({"/listSearch"})
+//    @ApiOperation(
+//            value = "高校信息管理/签约公示->搜索/分页显示",
+//            notes = "签约公示->搜索/分页显示"
+//    )
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+//    public String search(@ApiParam(example = "schoolName", value = "schoolname") @RequestParam(value = "schoolname", required = false) String schoolname, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
+//        List<Sign> signs = this.signService.querySelective((Integer) null, (Integer) null, schoolname, (Integer) null, (String) null, year, page, pageSize, sort, order);
+//        for (Sign sign : signs) {
+//            sign.setAddTime(null);
+//            sign.setDeleted(null);
+//        }
+//        Integer count = this.signService.count(null, schoolname, (String) null, year);
+//        SimplePage<List<Sign>> result = new SimplePage(count, signs);
+//        return ResponseUtil.build(HttpStatus.OK.value(), "获取该关键字学校的签约结果成功！", result);
+//    }
+
     @GetMapping({"/listSearch"})
     @ApiOperation(
             value = "高校信息管理/签约公示->搜索/分页显示",
             notes = "签约公示->搜索/分页显示"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String search(@ApiParam(example = "schoolName", value = "schoolname") @RequestParam(value = "schoolname", required = false) String schoolname, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        List<Sign> signs = this.signService.querySelective((Integer) null, (Integer) null, schoolname, (Integer) null, (String) null, year, page, pageSize, sort, order);
-        for (Sign sign : signs) {
-            sign.setAddTime(null);
-            sign.setDeleted(null);
-        }
-        Integer count = this.signService.count(null, schoolname, (String) null, year);
-        SimplePage<List<Sign>> result = new SimplePage(count, signs);
+    public String search(@ApiParam(example = "schoolName", value = "schoolname") @RequestParam(value = "schoolname", required = false) String schoolname, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "add_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
+        List<SignWithUser> signWithUsers = this.signService.querySelective(year, schoolname, page, pageSize, sort, order);
+        int count = this.signService.count(year, schoolname);
+        SimplePage<List<Sign>> result = new SimplePage(count, signWithUsers);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取该关键字学校的签约结果成功！", result);
     }
 
@@ -89,9 +103,9 @@ public class AdminSignController {
             value = "签约公示->导出签约名单",
             notes = "签约公示->导出签约名单"
     )
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/exportSignForm"})
-    public void exportSignForm(@ApiParam(value = "多则签约的id", example = "[1,2,3]") @RequestParam(value = "signIds",required = false) Integer[] signIds, HttpServletResponse response) throws IOException {
+    public void exportSignForm(@ApiParam(value = "多则签约的id", example = "[1,2,3]") @RequestParam(value = "signIds", required = false) Integer[] signIds, HttpServletResponse response) throws IOException {
         List<Sign> signs;
         if (signIds == null || signIds.length == 0) {
             signs = signService.querySelective((Integer) null, (Integer) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);

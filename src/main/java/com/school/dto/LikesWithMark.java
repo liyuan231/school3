@@ -6,6 +6,8 @@ public class LikesWithMark {
     private Likes likes;
     private Boolean signed;
     private Integer signId;
+    private String logo1;
+    private String logo2;
 
     public Integer getSignId() {
         return signId;
@@ -30,4 +32,21 @@ public class LikesWithMark {
     public void setSigned(Boolean signed) {
         this.signed = signed;
     }
+
+	public String getLogo1() {
+		return logo1;
+	}
+
+	public void setLogo1(String logo1) {
+		this.logo1 = logo1;
+	}
+
+	public String getLogo2() {
+		return logo2;
+	}
+
+	public void setLogo2(String logo2) {
+		this.logo2 = logo2;
+	}
+    
 }

@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,7 +33,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/certification")
 public class AdminCertificationController {
-    private  final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private SignServiceImpl signService;
@@ -57,7 +59,7 @@ public class AdminCertificationController {
             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) throws UserNotFoundException {
 
         List<Sign> signs = signService.querySelective(null, null, schoolName, null, null, null, page, pageSize, sort, order);
-        Integer count = signService.count(null,schoolName, null, null);
+        Integer count = signService.count(null, schoolName, null, null);
         List<Certification> certifications = new LinkedList<>();
         for (Sign sign : signs) {
             Certification certification = new Certification();
@@ -66,7 +68,7 @@ public class AdminCertificationController {
             certification.setSignUserDate(sign.getUpdateTime().toLocalDate().toString());
             certification.setSignedUserDate(sign.getUpdateTime().toLocalDate().toString());
             try {
-                commonUtil.fill(certification, sign.getSignuserid(), sign.getSigneduserid());
+                commonUtil.fill(certification, sign.getSignUserId(), sign.getSignedUserId());
             } catch (NullPointerException e) {
                 System.out.println("当前用户未上传logo或signature");
                 continue;
@@ -77,27 +79,35 @@ public class AdminCertificationController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取签约证书信息成功!", simplePage);
     }
 
+    @Value("${file.certifications.tmp}")
+    private String fileCertificationsTmp;
+
+    @Value("${file.path}")
+    private String filePath;
 
     @GetMapping("/downloadAll")
-    @ApiOperation(value = "签约证书下载->下载所有证书", notes = "下载所有证书")
+    @ApiOperation(value = "返回了压缩包，前端记得接收下 xxx.zip文件签约证书下载->下载所有证书", notes = "下载所有证书")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String download(HttpServletResponse response) {
         List<Sign> signs = signService.querySelective(null, null, null, null, null, null, null, null, null, null);
         //多线程方式会报错，之后再弄，先暂时这样
+        //将所有的签约证书下载至本地
         for (Sign sign : signs) {
-//            System.out.println(sign.getId());
-//            new Thread(() -> {
             try {
-                return fileUtil.downloadCertification(response, sign);
-            } catch (Throwable e) {
-                logger.warn(e.getMessage());
-                //                return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+                fileUtil.downloadCertification(sign);
+            } catch (Exception | UserNotFoundException e) {
+                logger.error(e.getMessage());
             }
-//            }).start();
+        }
+        String directory = filePath + fileCertificationsTmp;
+        try {
+            String zipPath = FileUtil.folderToZip(directory, "签约证书", filePath);
+            ResponseUtil.export(new File(zipPath), response);
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "下载全部合法的签约证书成功!");
     }
-
 }
 
 

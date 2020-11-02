@@ -5,10 +5,8 @@
 
 package com.school.controller.admin;
 
-import com.school.dto.AdvancedLikes;
-import com.school.dto.SimplePage;
-import com.school.dto.SimpleUser;
-import com.school.dto.SimpleUserLikes;
+import com.github.pagehelper.PageInfo;
+import com.school.dto.*;
 import com.school.exception.*;
 import com.school.model.Likes;
 import com.school.model.Sign;
@@ -31,9 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @RestController("adminLikeController")
 @RequestMapping({"/api/admin/like"})
@@ -54,62 +50,60 @@ public class AdminLikesController {
     @Autowired
     private PicsServiceImpl picsService;
 
-    public AdminLikesController() {
+    @GetMapping({"/listSearch"})
+    @ApiOperation(
+            value = "搜索/分页显示",
+            notes = "输入高校名进行搜索"
+    )
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public Object search(@RequestParam(value = "schoolName", required = false) String likeSchoolName,
+                         @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page,
+                         @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize,
+                         @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "1", required = false) String sort,
+                         @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
+        PageInfo<Likes> likesPageInfo = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, true);
+        List<Likes> list = likesPageInfo.getList();
+        int size = (int) likesPageInfo.getTotal();
+        LikeServiceImpl var10000 = this.likeService;
+        LinkedHashMap<Likes, List<String>> result = new LinkedHashMap();
+        Iterator var9 = list.iterator();
+        Map<String, Object> map = new HashMap<>();
+        while (var9.hasNext()) {
+            Likes like = (Likes) var9.next();
+            Integer likeuserid = like.getLikeUserId();
+            List<Likes> tmpList = this.likeService.querySelective((Integer) null, likeuserid, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, false).getList();
+            List<String> strings = (List) result.get(like);
+            if (strings == null) {
+                strings = new LinkedList();
+            }
+            Iterator var14 = tmpList.iterator();
+            while (var14.hasNext()) {
+                Likes item = (Likes) var14.next();
+                ((List) strings).add(item.getLikedSchoolName());
+            }
+            result.put(like, strings);
+        }
+        List<SimpleLikes> simpleLikes = new LinkedList<>();
+        for (Map.Entry<Likes, List<String>> entry : result.entrySet()) {
+            //每一个均为一条记录
+            SimpleLikes simpleLike = new SimpleLikes();
+            if (simpleLike.getLikeSchoolName() == null && simpleLike.getLikeUserId() == null) {
+                Likes likes = entry.getKey();
+                simpleLike.setLikeUserId(likes.getLikeUserId());
+                simpleLike.setLikeSchoolName(likes.getLikeSchoolName());
+                Integer count1 = signService.count(likes.getLikeUserId(), null, null, null);
+                Integer count2 = signService.countByLikedUserId(likes.getLikeUserId(), null, null, null);
+                simpleLike.setNumOfSigns(count1 + count2);
+                simpleLike.setNumOfLikes(entry.getValue().size());
+            }
+            List<String> likeds = entry.getValue();
+            List<String> linkedList = new LinkedList<>(likeds);
+            simpleLike.setLikedSchoolNames(linkedList);
+            simpleLikes.add(simpleLike);
+        }
+        SimplePage simplePage = new SimplePage(size, simpleLikes);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取高校签约意向成功！", simplePage);
     }
-
-//    @GetMapping({"/listSearch"})
-//    @ApiOperation(
-//            value = "搜索/分页显示",
-//            notes = "输入高校名进行搜索"
-//    )
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
-//    public Object search(@RequestParam(value = "schoolName", required = false) String likeSchoolName,
-//                         @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page,
-//                         @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize,
-//                         @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
-//                         @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-//        List<Likes> list = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, true);
-//        int size = LikeServiceImpl.size;
-//        LikeServiceImpl var10000 = this.likeService;
-//        LinkedHashMap<Likes, List<String>> result = new LinkedHashMap();
-//        Iterator var9 = list.iterator();
-//        Map<String, Object> map = new HashMap<>();
-//        while (var9.hasNext()) {
-//            Likes like = (Likes) var9.next();
-//            Integer likeuserid = like.getLikeuserid();
-//            List<Likes> tmpList = this.likeService.querySelective((Integer) null, likeuserid, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, false);
-//            List<String> strings = (List) result.get(like);
-//            if (strings == null) {
-//                strings = new LinkedList();
-//            }
-//            Iterator var14 = tmpList.iterator();
-//            while (var14.hasNext()) {
-//                Likes item = (Likes) var14.next();
-//                ((List) strings).add(item.getLikedschoolname());
-//            }
-//            result.put(like, strings);
-//        }
-//        List<SimpleLikes> simpleLikes = new LinkedList<>();
-//        for (Map.Entry<Likes, List<String>> entry : result.entrySet()) {
-//            //每一个均为一条记录
-//            SimpleLikes simpleLike = new SimpleLikes();
-//            if (simpleLike.getLikeSchoolName() == null && simpleLike.getLikeUserId() == null) {
-//                Likes likes = entry.getKey();
-//                simpleLike.setLikeUserId(likes.getLikeuserid());
-//                simpleLike.setLikeSchoolName(likes.getLikeschoolname());
-//                Integer count1 = signService.count(likes.getLikeuserid(), null, null, null);
-//                Integer count2 = signService.countByLikedUserId(likes.getLikeuserid(), null, null, null);
-//                simpleLike.setNumOfSigns(count1 + count2);
-//                simpleLike.setNumOfLikes(entry.getValue().size());
-//            }
-//            List<String> likeds = entry.getValue();
-//            List<String> linkedList = new LinkedList<>(likeds);
-//            simpleLike.setLikedSchoolNames(linkedList);
-//            simpleLikes.add(simpleLike);
-//        }
-//        SimplePage simplePage = new SimplePage(size, simpleLikes);
-//        return ResponseUtil.build(HttpStatus.OK.value(), "获取高校签约意向成功！", simplePage);
-//    }
 
     @GetMapping({"/listSearchSingle"})
     @ApiOperation(
@@ -123,30 +117,38 @@ public class AdminLikesController {
                                @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
                                @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order,
                                @ApiParam(example = "2020", value = "year") @RequestParam(required = false, value = "year") Integer year) {
-        List<Likes> likes = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, null, year);
-        int size = likeService.count(null, likeSchoolName, year);
-        SimplePage<List<Likes>> listSimplePage = new SimplePage<>(size, likes);
+        PageInfo likeWithUserPageInfo = this.likeService.querySelective(year, likeSchoolName, page, pageSize, sort, order);
+        int count = likeService.countByYearAndLikeSchoolName(year, likeSchoolName);
+        SimplePage<List<LikeWithUser>> listSimplePage = new SimplePage<List<LikeWithUser>>(count, likeWithUserPageInfo.getList());
         return ResponseUtil.build(HttpStatus.OK.value(), "获取单项意向表 成功！", listSimplePage);
     }
 
-
-    @GetMapping({"/listSearch"})
-    @ApiOperation(
-            value = "搜索/分页显示",
-            notes = "输入高校名进行搜索"
-    )
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public Object search(@RequestParam(value = "schoolname", required = false) String likeSchoolName,
-                         @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page,
-                         @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize,
-                         @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
-                         @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        List<Likes> likesList = this.likeService.querySelective((Integer) null, (Integer) null, likeSchoolName, (Integer) null, (String) null, page, pageSize, sort, order, true, null);
-        int count = this.likeService.count(null, likeSchoolName, null, true);
-        List<AdvancedLikes> advancedLikes = likeService.retrieveAdvancedLikes(likesList);
-        SimplePage<List<AdvancedLikes>> listSimplePage = new SimplePage<>(count, advancedLikes);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取签约结果意向表表成功！", listSimplePage);
-    }
+//    @GetMapping({"/listSearch"})
+//    @ApiOperation(
+//            value = "搜索/分页显示",
+//            notes = "输入高校名进行搜索"
+//    )
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+//    public Object search(@RequestParam(value = "schoolname", required = false) String likeSchoolName,
+//                         @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page,
+//                         @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize,
+//                         @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
+//                         @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order,
+//                         @ApiParam(example = "2020", value = "year") @RequestParam(defaultValue = "2020", required = false) Integer year) {
+//        List<LikeWithUser> likesList = this.likeService.querySelectiveDistinct(year, likeSchoolName, page, pageSize, sort, order);
+//        int count = this.likeService.countDistinct(year, likeSchoolName);
+//        List<Likes> likesList1 = new LinkedList<>();
+//        for (LikeWithUser likeWithUser : likesList) {
+//            Likes likes = new Likes();
+//            likes.setId(likeWithUser.getLikeId());
+//            likes.setLikeUserId(likeWithUser.getLikeUserId());
+//            likes.setLikedUserId(likeWithUser.getLikedUserId());
+//            likesList1.add(likes);
+//        }
+//        List<AdvancedLikes> advancedLikes = likeService.retrieveAdvancedLikes(likesList1);
+//        SimplePage<List<AdvancedLikes>> listSimplePage = new SimplePage<>(count, advancedLikes);
+//        return ResponseUtil.build(HttpStatus.OK.value(), "获取签约结果意向表表成功！", listSimplePage);
+//    }
 
     @ApiOperation(
             value = "导出单项签约意向表",
@@ -166,11 +168,11 @@ public class AdminLikesController {
                     null,
                     null,
                     null,
-                    null, null);
+                    null, null).getList();
         } else {
             likesList = new LinkedList<>();
             for (Integer likeId : likeIds) {
-                likesList.addAll(likeService.querySelective(likeId, null, null, null, null, null, null, null, null, null, null));
+                likesList.addAll(likeService.querySelective(likeId, null, null, null, null, null, null, null, null, null, null).getList());
             }
         }
         Workbook workbook = this.likeService.exportLikesFormSingle(likesList);
@@ -202,11 +204,11 @@ public class AdminLikesController {
                     null,
                     null,
                     null,
-                    null, null);
+                    null, null).getList();
         } else {
             likesList = new LinkedList<>();
             for (Integer userId : userIds) {
-                likesList.addAll(likeService.querySelective(null, userId, null, null, null, null, null, null, null, null, null));
+                likesList.addAll(likeService.querySelective(null, userId, null, null, null, null, null, null, null, null, null).getList());
             }
         }
         Workbook workbook = this.likeService.exportLikesForm(likesList);
@@ -226,16 +228,14 @@ public class AdminLikesController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object list(@PathVariable("userId") Integer likeUserId) {
-        List<Likes> likes = this.likeService.querySelective((Integer) null, likeUserId, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null);
+        List<Likes> likes = this.likeService.querySelective((Integer) null, likeUserId, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null).getList();
         SimpleUserLikes simpleUserLikes = new SimpleUserLikes();
         List<Likes> likesList = new LinkedList<>();
         for (Likes like : likes) {
             if (simpleUserLikes.getUserId() == null) {
-                simpleUserLikes.setUserId(like.getLikeuserid());
-                simpleUserLikes.setSchoolName(like.getLikeschoolname());
+                simpleUserLikes.setUserId(like.getLikeUserId());
             }
-            like.setLikeuserid(null);
-            like.setLikeschoolname(null);
+            like.setLikeUserId(null);
             like.setAddTime(null);
             like.setUpdateTime(null);
             like.setDeleted(null);
@@ -268,10 +268,8 @@ public class AdminLikesController {
                     } else {
                         User likedUser = users.get(0);
                         Likes like = new Likes();
-                        like.setLikeuserid(likeUser.getId());
-                        like.setLikeschoolname(likeUser.getSchoolname());
-                        like.setLikeduserid(likedUser.getId());
-                        like.setLikedschoolname(likedUser.getSchoolname());
+                        like.setLikeUserId(likeUser.getId());
+                        like.setLikedUserId(likedUser.getId());
                         this.likeService.add(like);
                         checkIfNeedSign(like);
                     }
@@ -284,20 +282,20 @@ public class AdminLikesController {
     }
 
     private void checkIfNeedSign(Likes like) {
-        List<Likes> likesList = likeService.querySelective(null, like.getLikeduserid(), null, like.getLikeuserid(), null, null, null, null, null, null, null);
+        List<Likes> likesList = likeService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null, null).getList();
         //管理端添加一则意向，若这则意向的likeUserId->likedUserId 对应的意向 likedUserId->likeUserId在意向表中已经存在了，说明可实行自动签约
         if (likesList.size() > 0) {
-            List<Sign> signs1 = signService.querySelective(null, like.getLikeuserid(), null, like.getLikeduserid(), null, null, null, null, null, null);
-            List<Sign> signs2 = signService.querySelective(null, like.getLikeduserid(), null, like.getLikeuserid(), null, null, null, null, null, null);
+            List<Sign> signs1 = signService.querySelective(null, like.getLikeUserId(), null, like.getLikedUserId(), null, null, null, null, null, null);
+            List<Sign> signs2 = signService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null);
             //说明该则意向已经有对应
             if (signs1.size() + signs2.size() > 0) {
                 return;
             }
             Sign sign = new Sign();
-            sign.setSignuserid(like.getLikeuserid());
-            sign.setSignschoolname(like.getLikeschoolname());
-            sign.setSigneduserid(like.getLikeduserid());
-            sign.setSignedschoolname(like.getLikedschoolname());
+            sign.setSignedUserId(like.getLikeUserId());
+            sign.setSignSchoolName(like.getLikeSchoolName());
+            sign.setSignedUserId(like.getLikedUserId());
+            sign.setSignedSchoolName(like.getLikedSchoolName());
             signService.add(sign);
         }
 
@@ -380,6 +378,6 @@ public class AdminLikesController {
 
     private void fill(User user, SimpleUser simpleUser) {
         simpleUser.setId(user.getId());
-        simpleUser.setSchoolName(user.getSchoolname());
+        simpleUser.setSchoolName(user.getSchoolName());
     }
 }

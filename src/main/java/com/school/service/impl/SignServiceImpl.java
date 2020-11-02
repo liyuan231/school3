@@ -8,6 +8,8 @@ package com.school.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.school.dao.SignMapper;
+import com.school.dao.SignWithUserMapper;
+import com.school.dto.SignWithUser;
 import com.school.exception.*;
 import com.school.model.Sign;
 import com.school.model.Sign.Column;
@@ -38,6 +40,8 @@ public class SignServiceImpl {
     private UserServiceImpl userService;
     @Autowired
     private UserToRoleServiceImpl userToRoleService;
+    @Resource
+    private SignWithUserMapper signWithUserMapper;
 
     public SignServiceImpl() {
     }
@@ -53,7 +57,7 @@ public class SignServiceImpl {
             List<Sign> signs1 = this.querySelective((Integer) null, signUser.getId(), (String) null, signedUser.getId(), (String) null, (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
             List<Sign> signs2 = this.querySelective((Integer) null, signedUser.getId(), (String) null, signUser.getId(), (String) null, (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
             if (signs1.size() < 1 && signs2.size() < 1) {
-                this.add(signUser.getId(), signUser.getSchoolname(), signedUserId, signedUser.getSchoolname());
+                this.add(signUser.getId(), signUser.getSchoolName(), signedUserId, signedUser.getSchoolName());
             } else {
                 throw new SignAlreadyExistException("已经和该用户签约过了！！");
             }
@@ -62,15 +66,15 @@ public class SignServiceImpl {
 
     public void add(Integer signUserId, String signUserSchoolName, Integer signedUserId, String signedUserSchoolName) {
         Sign sign = new Sign();
-        sign.setSignuserid(signUserId);
-        sign.setSignschoolname(signUserSchoolName);
-        sign.setSigneduserid(signedUserId);
-        sign.setSignedschoolname(signedUserSchoolName);
+        sign.setSignUserId(signUserId);
+        sign.setSignSchoolName(signUserSchoolName);
+        sign.setSignedUserId(signedUserId);
+        sign.setSignedSchoolName(signedUserSchoolName);
         this.add(sign);
     }
 
     private List<Sign> querySelective(Sign sign) {
-        return this.querySelective(sign.getId(), sign.getSignuserid(), sign.getSignschoolname(), sign.getSigneduserid(), sign.getSignedschoolname(), (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
+        return this.querySelective(sign.getId(), sign.getSignUserId(), sign.getSignSchoolName(), sign.getSignedUserId(), sign.getSignedSchoolName(), (Integer) null, (Integer) null, (Integer) null, (String) null, (String) null);
     }
 
     public List<Sign> querySelective(Integer id, Integer signUserId, String signSchoolName, Integer signedUserId, String signedSchoolName, Integer year, Integer page, Integer limit, String sort, String order) {
@@ -81,19 +85,19 @@ public class SignServiceImpl {
         }
 
         if (!StringUtils.isEmpty(signUserId)) {
-            criteria.andSignuseridEqualTo(signUserId);
+            criteria.andSignUserIdEqualTo(signUserId);
         }
 
         if (StringUtils.hasText(signSchoolName)) {
-            criteria.andSignschoolnameLike("%" + signSchoolName + "%");
+            criteria.andSignSchoolNameLike("%" + signSchoolName + "%");
         }
 
         if (!StringUtils.isEmpty(signedUserId)) {
-            criteria.andSigneduseridEqualTo(signedUserId);
+            criteria.andSignedUserIdEqualTo(signedUserId);
         }
 
         if (StringUtils.hasText(signedSchoolName)) {
-            criteria.andSignedschoolnameLike("%" + signedSchoolName + "%");
+            criteria.andSignedSchoolNameLike("%" + signedSchoolName + "%");
         }
 
         if (StringUtils.hasText(sort) && StringUtils.hasText(order)) {
@@ -145,23 +149,25 @@ public class SignServiceImpl {
     public void update(Integer id, Integer signUserId, String signUserSchoolName, Integer signedUserId, String signedUserSchoolName, Integer status) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {
         Sign sign = new Sign();
         sign.setId(id);
-        sign.setSignuserid(signUserId);
-        sign.setSignschoolname(signUserSchoolName);
-        sign.setSigneduserid(signedUserId);
-        sign.setSignedschoolname(signedUserSchoolName);
+        sign.setSignUserId(signUserId);
+        sign.setSignSchoolName(signUserSchoolName);
+        sign.setSignedUserId(signedUserId);
+        sign.setSignedSchoolName(signedUserSchoolName);
         sign.setStatus(status);
         this.update(sign);
     }
 
     public void deleteById(Integer id) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {
-        Sign sign = new Sign();
-        sign.setId(id);
-        delete(sign);
+        this.signMapper.deleteByPrimaryKey(id);
+//        Sign sign = new Sign();
+//        sign.setId(id);
+//        delete(sign);
     }
 
     public void delete(Sign sign) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {
-        sign.setDeleted(true);
-        this.update(sign);
+        deleteById(sign.getId());
+//        sign.setDeleted(true);
+//        this.update(sign);
     }
 
     public Workbook exportSignForm(List<Sign> signs) {
@@ -173,9 +179,9 @@ public class SignServiceImpl {
             Sign sign = (Sign) signs.get(i);
             Row row = sheet.createRow(i + 2);
             Cell cell0 = row.createCell(0);
-            cell0.setCellValue(sign.getSignschoolname());
+            cell0.setCellValue(sign.getSignSchoolName());
             Cell cell1 = row.createCell(1);
-            cell1.setCellValue(sign.getSignedschoolname());
+            cell1.setCellValue(sign.getSignedSchoolName());
             Cell cell2 = row.createCell(2);
             LocalDateTime signTime = sign.getUpdateTime();
             int year = signTime.getYear();
@@ -205,14 +211,14 @@ public class SignServiceImpl {
         SignExample signExample = new SignExample();
         Criteria criteria = signExample.createCriteria();
         if (Objects.nonNull(likeUserId)) {
-            criteria.andSignuseridEqualTo(likeUserId);
+            criteria.andSignUserIdEqualTo(likeUserId);
         }
         if (StringUtils.hasText(signedSchoolName)) {
-            criteria.andSignedschoolnameLike("%" + signedSchoolName + "%");
+            criteria.andSignedSchoolNameLike("%" + signedSchoolName + "%");
         }
 
         if (StringUtils.hasText(signSchoolName)) {
-            criteria.andSignschoolnameLike("%" + signSchoolName + "%");
+            criteria.andSignSchoolNameLike("%" + signSchoolName + "%");
         }
 
         if (!StringUtils.isEmpty(year)) {
@@ -229,14 +235,14 @@ public class SignServiceImpl {
         SignExample signExample = new SignExample();
         Criteria criteria = signExample.createCriteria();
         if (Objects.nonNull(likedUserId)) {
-            criteria.andSigneduseridEqualTo(likedUserId);
+            criteria.andSignedUserIdEqualTo(likedUserId);
         }
         if (StringUtils.hasText(signedSchoolName)) {
-            criteria.andSignedschoolnameLike("%" + signedSchoolName + "%");
+            criteria.andSignedSchoolNameLike("%" + signedSchoolName + "%");
         }
 
         if (StringUtils.hasText(signSchoolName)) {
-            criteria.andSignschoolnameLike("%" + signSchoolName + "%");
+            criteria.andSignSchoolNameLike("%" + signSchoolName + "%");
         }
 
         if (!StringUtils.isEmpty(year)) {
@@ -248,4 +254,53 @@ public class SignServiceImpl {
         long l = this.signMapper.countByExample(signExample);
         return Math.toIntExact(l);
     }
+
+    public void updateSchoolName(Integer userId, String schoolName) {
+        Sign sign = new Sign();
+        sign.setSignUserId(userId);
+        sign.setSignSchoolName(schoolName);
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andSignUserIdEqualTo(userId);
+        signMapper.updateByExampleSelective(sign, signExample);
+
+        sign = new Sign();
+        sign.setSignedUserId(userId);
+        sign.setSignedSchoolName(schoolName);
+        signExample = new SignExample();
+        criteria = signExample.createCriteria();
+        criteria.andSignedUserIdEqualTo(userId);
+        signMapper.updateByExampleSelective(sign, signExample);
+    }
+
+    public void deleteByUser(Integer userId) {
+//        Sign sign = new Sign();
+//        sign.setSignUserId(userId);
+//        sign.setDeleted(true);
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andSignUserIdEqualTo(userId);
+//        signMapper.updateByExampleSelective(sign, signExample);
+        signMapper.deleteByExample(signExample);
+
+//        sign = new Sign();
+//        sign.setSignedUserId(userId);
+//        sign.setDeleted(true);
+        signExample = new SignExample();
+        criteria = signExample.createCriteria();
+        criteria.andSignedUserIdEqualTo(userId);
+//        signMapper.updateByExampleSelective(sign, signExample);
+        signMapper.deleteByExample(signExample);
+    }
+    //-------------------------------
+    public List<SignWithUser> querySelective(Integer year, String schoolName, Integer page, Integer pageSize, String sort, String order) {
+        List<SignWithUser> signWithUsers = signWithUserMapper.querySelective(year, schoolName, page, pageSize, sort, order);
+        return signWithUsers;
+    }
+
+
+    public Integer count(Integer year, String schoolName) {
+        return signWithUserMapper.count(year, schoolName);
+    }
+
 }

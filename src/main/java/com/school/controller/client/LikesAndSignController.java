@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.PictureRenderData;
 import com.deepoove.poi.util.BytePictureUtils;
+import com.school.dao.LikesMapper;
+import com.school.dao.UserMapper;
 import com.school.dto.LikesWithMark;
 import com.school.dto.SimplePage;
 import com.school.dto.golden.picture;
@@ -29,6 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
@@ -68,6 +71,12 @@ public class LikesAndSignController {
     private String witness;
     @Autowired
     private CommonUtil commonUtil;
+    @Resource
+    private UserMapper usermapper; 
+    @Resource
+    private LikesMapper likesmapper;
+    
+    
 
 
     @ResponseBody
@@ -81,45 +90,152 @@ public class LikesAndSignController {
             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         User user = userService.retrieveUserByToken();
         //获取当前用户所有的意向
-        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null);
+        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null).getList();
         int size = likeService.count(user.getId(), null);
         List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
         List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);
         signs.addAll(signs_);
+        String springFile = "/home/springboot/files/";
 
 
         //userId->signId
         HashMap<Integer, Integer> map = new HashMap<>();
         HashSet<Integer> signedUserIds = new HashSet<>();
         for (Sign sign : signs) {
-            if (sign.getSigneduserid().equals(user.getId())) {
-                signedUserIds.add(sign.getSignuserid());
-                map.put(sign.getSignuserid(), sign.getId());
-            } else {
-                signedUserIds.add(sign.getSigneduserid());
-                map.put(sign.getSigneduserid(), sign.getId());
 
+            if (sign.getSignedUserId().equals(user.getId())) {
+                signedUserIds.add(sign.getSignUserId());
+                map.put(sign.getSignUserId(), sign.getId());
+            } else {
+                signedUserIds.add(sign.getSignedUserId());
+                map.put(sign.getSignedUserId(), sign.getId());
+                
             }
         }
         List<LikesWithMark> likesWithMarks = new LinkedList<>();
+        int total_sign=0;
         for (Likes like : likes) {
             LikesWithMark likesWithMark = new LikesWithMark();
 //            clean(like);
             likesWithMark.setLikes(like);
-            if (signedUserIds.contains(like.getLikeduserid())) {
+            likesWithMark.setLogo1(springFile+user_service.get_logo(like.getLikeUserId()));
+            likesWithMark.setLogo2(springFile+user_service.get_logo(like.getLikedUserId()));
+            if (signedUserIds.contains(like.getLikedUserId())) {
+            	total_sign++;
                 likesWithMark.setSigned(true);
-                likesWithMark.setSignId(map.get(like.getLikeduserid()));
+                likesWithMark.setSignId(map.get(like.getLikedUserId()));
             } else {
                 likesWithMark.setSigned(false);
             }
             likesWithMarks.add(likesWithMark);
         }
-        SimplePage simplePage = new SimplePage(size, likesWithMarks);
-        return ResponseUtil.build(HttpStatus.OK.value(), "我的意向及签约列表成功!", simplePage);
+        
+        SimplePage simplePage = new SimplePage(size, likesWithMarks,total_sign);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向及签约列表成功!", simplePage);
 
         //现在当前用户的意向以及签约都有了，就是整合在一起
     }
 
+    
+    
+    @ResponseBody
+    @GetMapping("/unchoosed")
+    @ApiOperation(value = "获取当前用户未选意向未签约列表", notes = "未选意向未签约列表")
+    @PreAuthorize("hasRole('USER')")
+    public JSON get_not_like() {
+    	JSONObject result = new JSONObject();
+    	String msg = null;
+    	String code = null;
+    	User user = userService.retrieveUserByToken();
+    	List<User> user_list = new ArrayList<User>();
+    	List<Likes> like_list = new ArrayList<Likes>();
+    	user_list=user_service.get_all_user(user.getId());
+    	like_list=user_service.get_all_likes(user.getId());    	
+    	try {
+    		int len_1 = user_list.size();
+        	int len_2 = like_list.size();
+        	int flag=0;
+    	for(int i =0;i<len_1-flag;i++) {
+    		user_list.get(i).setPassword(null);
+    		for(int j=0;j<len_2;j++) {
+//    			System.out.println(i);
+    			if(user_list.get(i).getId().equals(like_list.get(j).getLikedUserId())) {
+    				user_list.remove(i);
+    				flag++;//长度减一
+    				i--;//下标减一
+    				break;
+    			}
+    		}		
+    	}
+    	}
+    	catch(Exception e) {
+    		e.printStackTrace();
+    		msg="未知错误，请联系服务器管理员";
+    		code="-1";
+    		result.put("msg",msg);
+    		result.put("code",code);
+    	}
+    	msg = "success";
+    	code = "200";
+    	result.put("msg",msg);
+    	result.put("code",code);
+    	result.put("data",user_list);
+    	return result;
+    }
+    
+    
+    
+    @ResponseBody
+    @GetMapping("/choosedme")
+    @ApiOperation(value = "获取已选当前用户但是当前用户未选该校的列表", notes = "获取已选当前用户但是当前用户未选该校的列表")
+    @PreAuthorize("hasRole('USER')")
+    public JSON choosedme() {
+    	String msg=null;
+    	String code=null;
+    	JSONObject result = new JSONObject();
+    	User user = userService.retrieveUserByToken();
+    	List<Likes> my_like = new ArrayList<Likes>();
+    	List<Likes> like_me = new ArrayList<Likes>();
+    	try {
+    	my_like=user_service.get_all_likes(user.getId());
+    	like_me = user_service.get_like_me(user.getId());
+    	int len_1=like_me.size();
+    	int len_2=my_like.size();
+    	System.out.println(len_1);
+    	System.out.println(len_2);
+    	int flag = 0;
+    	for(int i=0;i<len_1-flag;i++) {
+    		for(int j=0;j<len_2;j++) {
+    			if(like_me.get(i).getLikeUserId().equals(my_like.get(j).getLikedUserId())) {
+    		//		System.out.println(like_me.get(i).getLikeuserid().equals(my_like.get(j).getLikeduserid()));
+    	//			System.out.println(like_me.get(i).getLikeuserid());
+    //				System.out.println(my_like.get(j).getLikeduserid());
+    				like_me.remove(i);
+  //  				System.out.println(flag);
+    				flag++;//移除后list长度-1
+    				i--;//移除后后面元素下标-1
+    				break;
+    			}
+    		}
+    	}
+    }
+    	catch(Exception e) {
+    		msg="未知错误，请联系服务器管理员";
+    		code="-1";
+    		result.put("msg",msg);
+    		result.put("code", code);
+    		e.printStackTrace();
+    		return result;
+    	}
+    	msg="success";
+		code="200";
+		result.put("msg",msg);
+		result.put("code", code);
+		result.put("data", like_me);
+		return result;
+    }
+    
+    
 //    @ResponseBody
 //    @GetMapping("/show/{signId}")
 //    @ApiOperation(value = "我的意向及签约->签约证书查看", notes = "签约证书查看")
@@ -210,6 +326,7 @@ public class LikesAndSignController {
 
 
     @ResponseBody
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/get_Word")
     @ApiOperation(value = "下载签约证书",notes = "下载签约证书")
     public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户logo访问地址") String logo1,
@@ -231,6 +348,8 @@ public class LikesAndSignController {
         String path = request.getServletContext().getRealPath("");//��ȡ��Ŀ��̬����·��
         System.out.println(path);
         String wordtmp = filePath + "tmp.docx";//TODO
+//        String wordtmp = "d:/tmp.docx";//TODO
+
         if (logo1 == null || logo1.equals("")) {
             msg = "logo1 missing";
             code = "-1";
@@ -304,7 +423,8 @@ public class LikesAndSignController {
 
         //协会的图片logo
         //TODO 改正ip 以及 images,  files
-        String logo3 = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg";
+        String logo3 = "http://124.156.153.105/files/AUPFLOGO_1.jpg";
+        String logo4 = "http://124.156.153.105/files/AUPFLOGO_2.jpg";
         Map<String, Object> datas = new HashMap<String, Object>() {
             {
                 //����ͼƬ
@@ -318,6 +438,7 @@ public class LikesAndSignController {
                 put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo1)));
                 put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo2)));
                 put("logo3", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getUrlByteArray(logo3)));
+                put("logo4", new PictureRenderData(520, 70, ".jpg", BytePictureUtils.getUrlByteArray(logo4)));
                 put("name1", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name1)));
                 put("name2", new PictureRenderData(100, 50, ".jpg", BytePictureUtils.getUrlByteArray(name2)));
                 Date date = new Date();
@@ -398,6 +519,7 @@ public class LikesAndSignController {
 //    }
 
     @ResponseBody
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/get_certi")
     @ApiOperation(value = "在线查看签约证书",notes = "在线查看签约证书")
     public JSON get_certi(@ApiParam(example = "1", value = "当前用户id") Integer host_id,
@@ -419,7 +541,7 @@ public class LikesAndSignController {
         try {
             user_1 = user_service.select_user(host_id);
             user_2 = user_service.select_user(liked_id);
-        } catch (java.lang.NullPointerException e) {
+        } catch (NullPointerException e) {
             e.printStackTrace();
             msg = "null user";
             code = "-2";
@@ -432,7 +554,7 @@ public class LikesAndSignController {
         try {
             pic_1 = user_service.select_pic(host_id);
             pic_2 = user_service.select_pic(liked_id);
-        } catch (java.lang.NullPointerException e) {
+        } catch (NullPointerException e) {
             e.printStackTrace();
             msg = "null picture";
             code = "-3";
@@ -456,7 +578,7 @@ public class LikesAndSignController {
                         springFilePath +
                         "/" + pic_1.get(0).getLocation();
             }
-        } catch (java.lang.IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
             msg = "logo or signature picture missing";
             code = "-4";
@@ -480,7 +602,7 @@ public class LikesAndSignController {
                         springFilePath +
                         "/" + pic_2.get(0).getLocation();
             }
-        } catch (java.lang.IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
             msg = "logo or signature picture missing";
             code = "-4";

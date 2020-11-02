@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserDetailsService {
             Role role;
             while (var6.hasNext()) {
                 Usertorole usertorole = (Usertorole) var6.next();
-                role = this.roleService.querySelective(usertorole.getRoleid(), (String) null);
+                role = this.roleService.querySelective(usertorole.getRoleId(), (String) null);
                 roles.add(role);
             }
             Collection<GrantedAuthority> roles_ = new HashSet();
@@ -111,11 +111,6 @@ public class UserServiceImpl implements UserDetailsService {
         return this.querySelectiveLike((Integer) null, username, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
     }
 
-    public void delete(User user) throws UserNotFoundException {
-        user.setDeleted(true);
-        this.update(user);
-    }
-
     public User findById(Integer id) throws UserNotFoundException {
         List<User> users = this.querySelectiveLike(id, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         if (users.size() == 0) {
@@ -123,6 +118,12 @@ public class UserServiceImpl implements UserDetailsService {
         } else {
             return (User) users.get(0);
         }
+    }
+
+    public void delete(User user) throws UserNotFoundException {
+        this.deleteById(user.getId());
+//        user.setDeleted(true);
+//        this.update(user);
     }
 
     public void add(User user, Integer roleId) {
@@ -139,17 +140,15 @@ public class UserServiceImpl implements UserDetailsService {
         if (StringUtils.hasText(sort) && StringUtils.hasText(order)) {
             userExample.setOrderByClause(sort + " " + order);
         }
-
         if (!StringUtils.isEmpty(userId)) {
             criteria.andIdEqualTo(userId);
         }
-
         if (StringUtils.hasText(username)) {
             criteria.andUsernameEqualTo(username);
         }
 
         if (StringUtils.hasText(schoolName)) {
-            criteria.andSchoolnameLike("%" + schoolName + "%");
+            criteria.andSchoolNameLike("%" + schoolName + "%");
         }
 
         if (StringUtils.hasText(contact)) {
@@ -173,7 +172,7 @@ public class UserServiceImpl implements UserDetailsService {
         }
 
         if (StringUtils.hasText(schoolCode)) {
-            criteria.andSchoolcodeLike("%" + schoolCode + "%");
+            criteria.andSchoolCodeLike("%" + schoolCode + "%");
         }
 
         if (StringUtils.hasText(location)) {
@@ -187,11 +186,11 @@ public class UserServiceImpl implements UserDetailsService {
         }
 
         if (StringUtils.hasText(lastLoginIp)) {
-            criteria.andLastloginipLike("%" + lastLoginIp + "%");
+            criteria.andLastLoginIpLike("%" + lastLoginIp + "%");
         }
 
         if (!StringUtils.isEmpty(accountStatus)) {
-            criteria.andAccountstatusEqualTo(accountStatus);
+            criteria.andAccountStatusEqualTo(accountStatus);
         }
 
         if (StringUtils.hasText(profession)) {
@@ -219,10 +218,11 @@ public class UserServiceImpl implements UserDetailsService {
 //    }
 
     public void deleteById(Integer id) throws UserNotFoundException {
-        User user = new User();
-        user.setId(id);
-        user.setDeleted(true);
-        this.delete(user);
+        this.userMapper.deleteByPrimaryKey(id);
+//        User user = new User();
+//        user.setId(id);
+//        user.setDeleted(true);
+//        this.delete(user);
     }
 
     public User retrieveUserByToken() {
@@ -263,7 +263,7 @@ public class UserServiceImpl implements UserDetailsService {
             }
 
             if (StringUtils.hasText(schoolName)) {
-                user.setSchoolname(schoolName);
+                user.setSchoolName(schoolName);
             }
 
             if (StringUtils.hasText(contact)) {
@@ -279,7 +279,7 @@ public class UserServiceImpl implements UserDetailsService {
             }
 
             if (StringUtils.hasText(schoolCode)) {
-                user.setSchoolcode(schoolCode);
+                user.setSchoolCode(schoolCode);
             }
 
             if (StringUtils.hasText(location)) {
@@ -287,19 +287,19 @@ public class UserServiceImpl implements UserDetailsService {
             }
 
             if (StringUtils.hasText(lastLoginIP)) {
-                user.setLastloginip(lastLoginIP);
+                user.setLastLoginIp(lastLoginIP);
             }
 
             if (!StringUtils.isEmpty(deleted)) {
                 user.setDeleted(deleted);
             }
 
-            if (StringUtils.hasText(avatarUrl)) {
-                user.setAvatarurl(avatarUrl);
-            }
+//            if (StringUtils.hasText(avatarUrl)) {
+//                user.setAvatarurl(avatarUrl);
+//            }
 
             if (!StringUtils.isEmpty(accountStatus)) {
-                user.setAccountstatus(accountStatus);
+                user.setAccountStatus(accountStatus);
             }
 
             if (StringUtils.hasText(profession)) {
@@ -311,7 +311,7 @@ public class UserServiceImpl implements UserDetailsService {
             }
 
             if (!StringUtils.isEmpty(lastLoginTime)) {
-                user.setLastlogintime(lastLoginTime);
+                user.setLastLoginTime(lastLoginTime);
             }
             return this.update(user);
         }
@@ -330,30 +330,35 @@ public class UserServiceImpl implements UserDetailsService {
         Iterator var2 = users.iterator();
         while (var2.hasNext()) {
             User user = (User) var2.next();
-            user.setAccountstatus(1);
+            user.setAccountStatus(1);
             this.update(user);
         }
-
     }
 
     public void add(String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIp, LocalDateTime lastLoginTime, String avatarUrl, String profession, Integer accountStatus) throws UsernameAlreadyExistException {
+        add(username, password, schoolName, contact, address, telephone, schoolCode, location, lastLoginIp, lastLoginTime, avatarUrl, profession, 1, null);
+    }
+
+
+    public void add(String username, String password, String schoolName, String contact, String address, String telephone, String schoolCode, String location, String lastLoginIp, LocalDateTime lastLoginTime, String avatarUrl, String profession, Integer accountStatus, String website) throws UsernameAlreadyExistException {
         User user = new User();
         user.setUsername(username);
         user.setPassword(this.bCryptPasswordEncoder.encode(password));
-        user.setSchoolname(schoolName);
+        user.setSchoolName(schoolName);
         user.setContact(contact);
         user.setAddress(address);
         user.setTelephone(telephone);
-        user.setSchoolcode(schoolCode);
-        user.setAvatarurl(avatarUrl);
+        user.setSchoolCode(schoolCode);
+//        user.setAvatarurl(avatarUrl);
         user.setProfession(profession);
         user.setLocation(location);
-        user.setLastloginip(lastLoginIp);
-        user.setLastlogintime(lastLoginTime);
+        user.setLastLoginIp(lastLoginIp);
+        user.setLastLoginTime(lastLoginTime);
         user.setUpdateTime(LocalDateTime.now());
         user.setAddTime(LocalDateTime.now());
         user.setDeleted(false);
-        user.setAccountstatus(accountStatus);
+        user.setAccountStatus(accountStatus);
+        user.setWebsite(website);
         this.add(user, RoleEnum.USER.value());
     }
 
@@ -425,14 +430,14 @@ public class UserServiceImpl implements UserDetailsService {
                 } else {
                     String defaultPassword = this.generateDefaultPassword();
                     user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
-                    user.setAvatarurl(defaultAvatarUrl);
+//                    user.setAvatarurl(defaultAvatarUrl);
                     try {
                         this.emailService.sendVerificationCode("签约系统临时授权码", "签约系统临时授权码(3天内有效，请尽快重设您的密码)", user.getUsername(), 3, TimeUnit.DAYS);
                     } catch (MailException var22) {
                         this.logger.warn("邮箱号有误,无法发送邮件到指定用户:" + user.getUsername());
                         continue;
                     }
-                    user.setAccountstatus(Status.LOGIN_NOT_ALLOWED);
+                    user.setAccountStatus(Status.LOGIN_NOT_ALLOWED);
                     this.add(user, RoleEnum.USER.value());
                     System.out.println(user.toString());
                 }
@@ -523,7 +528,7 @@ public class UserServiceImpl implements UserDetailsService {
         UserExample userExample = new UserExample();
         Criteria criteria = userExample.createCriteria();
         if (StringUtils.hasText(schoolName)) {
-            criteria.andSchoolnameLike("%" + schoolName + "%");
+            criteria.andSchoolNameLike("%" + schoolName + "%");
         }
 
         return Math.toIntExact(this.userMapper.countByExample(userExample));
@@ -554,7 +559,7 @@ public class UserServiceImpl implements UserDetailsService {
         new UserExample();
         UserExample userExample5 = new UserExample();
         userExample1.createCriteria().andTelephoneLike("%" + name + "%");
-        userExample2.createCriteria().andSchoolnameLike("%" + name + "%");
+        userExample2.createCriteria().andSchoolNameLike("%" + name + "%");
         userExample3.createCriteria().andContactLike("%" + name + "%");
         userExample5.createCriteria().andAddressLike("%" + name + "%");
         List<User> user1 = this.userMapper.selectByExampleSelective(userExample1, new Column[0]);
@@ -573,7 +578,7 @@ public class UserServiceImpl implements UserDetailsService {
 
     public List<User> querySelectiveBySchoolnameDim(String schoolname, Integer page, Integer limit) {
         UserExample userExample = new UserExample();
-        userExample.createCriteria().andSchoolnameLike("%" + schoolname + "%");
+        userExample.createCriteria().andSchoolNameLike("%" + schoolname + "%");
         if (page != null || limit != null) {
             if (page == null) {
                 PageHelper.startPage(1, limit);

@@ -179,7 +179,7 @@ public class AdminSystemController {
             List<Usertorole> usertoroles = userToRoleService.querySelective(null, user.getId(), null);
             if (usertoroles.size() != 0) {
                 Usertorole usertorole = usertoroles.get(0);
-                if (usertorole.getRoleid().equals(RoleEnum.ADMINISTRATOR.value())) {
+                if (usertorole.getRoleId().equals(RoleEnum.ADMINISTRATOR.value())) {
                     continue;
                 }
             }
@@ -193,7 +193,7 @@ public class AdminSystemController {
         for (Pics pic : pics) {
             picsService.delete(pic);
         }
-        List<Likes> likes = likeService.querySelective(null, null, null, null, null, null, null, null, null, null, null);
+        List<Likes> likes = likeService.querySelective(null, null, null, null, null, null, null, null, null, null, null).getList();
         for (Likes like : likes) {
             likeService.delete(like);
         }

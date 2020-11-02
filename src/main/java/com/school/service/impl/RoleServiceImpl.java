@@ -7,12 +7,13 @@ package com.school.service.impl;
 
 import com.school.dao.RoleMapper;
 import com.school.model.Role;
-import com.school.model.RoleExample;
 import com.school.model.Role.Column;
+import com.school.model.RoleExample;
 import com.school.model.RoleExample.Criteria;
-import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import javax.annotation.Resource;
 
 @Service
 public class RoleServiceImpl {
@@ -32,7 +33,6 @@ public class RoleServiceImpl {
         if (StringUtils.hasText(name)) {
             criteria.andNameEqualTo(name);
         }
-
         return this.roleMapper.selectOneByExampleSelective(roleExample, new Column[0]);
     }
 }

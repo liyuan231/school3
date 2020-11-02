@@ -1,11 +1,9 @@
 package com.school.service.golden;
 
-import com.school.dao.Likes_1;
-import com.school.dao.Pics_2;
-import com.school.dao.UserMapper;
-import com.school.dao.golden.userdao;
+import com.school.dao.*;
 import com.school.dto.golden.ch_bothlike;
 import com.school.dto.golden.likelist;
+import com.school.model.Likes;
 import com.school.model.Pics;
 import com.school.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +27,9 @@ public class userserviceimpl implements userservice{
     
     @Autowired
     Pics_2 pics;
+    
+    @Autowired
+    User_1 user;
 
 
     public Object select_sch(Integer id) {
@@ -69,5 +70,39 @@ public class userserviceimpl implements userservice{
         // TODO Auto-generated method stub
         return pics.select_pics(user_id);
     }
+
+
+	public List<User> get_all_user(Integer id) {
+		// TODO Auto-generated method stub
+		return user.get_all_user(id);
+	}
+
+
+	public List<Likes> get_all_likes(Integer id) {
+		// TODO Auto-generated method stub
+		return likes_1.get_all_likes(id);
+	}
+
+
+	public List<Likes> get_like_me(Integer id) {
+		// TODO Auto-generated method stub
+		return likes_1.get_like_me(id);
+	}
+
+
+	public String get_logo(Integer likeUserId) {
+		// TODO Auto-generated method stub
+		return pics.get_logo(likeUserId);
+	}
+
+
+
+
+
+//	@Override
+//	public List<User> get_not_like() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 }

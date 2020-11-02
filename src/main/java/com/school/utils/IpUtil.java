@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
+import java.util.Map;
 
 public class IpUtil {
     private static final String key = "P5EBZ-ITH3I-5A3GT-5QIXG-36QW5-O2FS7";
@@ -27,13 +28,16 @@ public class IpUtil {
         JSONObject body = responseEntity.getBody();
         assert body != null;
         Integer status = body.getInteger("status");
-        String city = null;
+        String location = null;
         if (status == 0) {
-            //正常
+            String  country = (String) ((Map) ((Map) body.get("result")).get("ad_info")).get("nation");
+            String province = (String) ((Map) ((Map) body.get("result")).get("ad_info")).get("province");
+            String city = (String) ((Map)((Map) body.get("result")).get("ad_info")).get("city");
+            location = country+" "+province+" "+city;
         } else {
-            city = body.getString("message");
+            location = body.getString("message");
         }
-        return city;
+        return location;
     }
 
     public static String retrieveIp(HttpServletRequest request) {

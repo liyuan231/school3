@@ -32,7 +32,7 @@ public class RoleToAuthoritiesServiceImpl {
         }
 
         if (!StringUtils.isEmpty(roleId)) {
-            criteria.andRoleidEqualTo(roleId);
+            criteria.andRoleIdEqualTo(roleId);
         }
 
         if (StringUtils.hasText(authority)) {
@@ -44,7 +44,7 @@ public class RoleToAuthoritiesServiceImpl {
 
     private void add(int roleId, String authority) {
         Roletoauthorities roletoauthorities = new Roletoauthorities();
-        roletoauthorities.setRoleid(roleId);
+        roletoauthorities.setRoleId(roleId);
         roletoauthorities.setAuthority(authority);
         this.roletoauthoritiesMapper.insertSelective(roletoauthorities);
     }
@@ -52,7 +52,7 @@ public class RoleToAuthoritiesServiceImpl {
     private void removeAuthority(int roleId, String authority) {
         RoletoauthoritiesExample roletoauthoritiesExample = new RoletoauthoritiesExample();
         Criteria criteria = roletoauthoritiesExample.createCriteria();
-        criteria.andRoleidEqualTo(roleId).andAuthorityEqualTo(authority);
+        criteria.andRoleIdEqualTo(roleId).andAuthorityEqualTo(authority);
         this.roletoauthoritiesMapper.deleteByExample(roletoauthoritiesExample);
     }
 

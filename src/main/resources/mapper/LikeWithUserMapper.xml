@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.school.dao.LikeWithUserMapper">
+    <select id="querySelective" resultType="com.school.dto.LikeWithUser">
+        select l.id as likeId,
+        l.like_user_id as likeUserId,
+        l.liked_user_id as likedUserId,
+        u1.school_name as likeSchoolName,
+        u2.school_name as likedSchoolName,
+        l.add_time as addTime
+        from likes as l,
+        user as u1,user as u2
+        where
+        <if test="year!=null">
+            (l.add_time between '${year}-1-1 00:00:00' and '${year}-12-31 23:59:00') and
+        </if>
+        ((l.like_user_id = u1.id)
+        and (l.liked_user_id = u2.id))
+        <if test="schoolName!=null">
+            and u1.school_name like '%${schoolName}%'
+        </if>
+        order by l.${sort} ${order}
+        <if test="page!=null and pageSize!=null">
+            limit ${page},${pageSize}
+        </if>
+
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        select count(*) from likes as l,
+        user as u1,user as u2
+        where
+        <if test="year!=null">
+            (l.add_time between '${year}-1-1 00:00:00' and '${year}-12-31 23:59:00') and
+        </if>
+
+        ((l.like_user_id = u1.id)
+        and (l.liked_user_id = u2.id))
+        <if test="schoolName!=null">
+            and u1.school_name like '%${schoolName}%'
+        </if>
+    </select>
+
+
+    <select id="querySelectiveDistinct" resultType="com.school.dto.LikeWithUser">
+        select distinct
+--         l.id as likeId,
+        l.like_user_id as likeUserId,
+--         l.liked_user_id as likedUserId,
+        u1.school_name as likeSchoolName
+--         u2.school_name as likedSchoolName,
+--         l.add_time as addTime
+        from likes as l,
+        user as u1,user as u2
+        where
+        <if test="year!=null">
+            (l.add_time between '${year}-1-1 00:00:00' and '${year}-12-31 23:59:00') and
+        </if>
+
+        ((l.like_user_id = u1.id)
+        and (l.liked_user_id = u2.id))
+        <if test="schoolName!=null">
+            and u1.school_name like '%${schoolName}%'
+        </if>
+        <if test="sort!=null and order!=null">
+            order by l.${sort} ${order}
+        </if>
+
+        <if test="page!=null and pageSize!=null">
+            limit ${page},${pageSize}
+        </if>
+    </select>
+
+    <select id="countDistinct" resultType="java.lang.Integer">
+        select distinct count(*) from likes as l,
+        user as u1,user as u2
+        where
+        <if test="year!=null">
+            (l.add_time between '${year}-1-1 00:00:00' and '${year}-12-31 23:59:00') and
+        </if>
+        ((l.like_user_id = u1.id)
+        and (l.liked_user_id = u2.id))
+        <if test="schoolName!=null">
+            and u1.school_name like '%${schoolName}%'
+        </if>
+    </select>
+
+
+</mapper>

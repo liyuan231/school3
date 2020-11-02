@@ -64,23 +64,23 @@ public class JwtConfiguration {
                 if (level == null) {
                     level = request.getParameter("level");
                 }
-                if (level == null || !usertorole.getRoleid().toString().equals(level.trim())) {
+                if (level == null || !usertorole.getRoleId().toString().equals(level.trim())) {
                     String build = ResponseUtil.build(HttpStatus.BAD_GATEWAY.value(), "用户名登录错地方！", (Object) null);
                     ResponseUtil.printlnInfo(response, build);
                 } else {
-                    if(user.getAccountstatus().equals(Status.LOGIN_NOT_ALLOWED)){
+                    if(user.getAccountStatus().equals(Status.LOGIN_NOT_ALLOWED)){
                         String build = ResponseUtil.build(HttpStatus.BAD_GATEWAY.value(), "还没开始登录呢~", (Object) null);
                         ResponseUtil.printlnInfo(response, build);
                     }
-                    user.setLastloginip(request.getRemoteAddr());
+                    user.setLastLoginIp(request.getRemoteAddr());
 
 //                    String remoteAddr = request.getRemoteAddr();
 //                    String remoteUser = request.getRemoteUser();
 //                    String remoteHost = request.getRemoteHost();
 //                    int remotePort = request.getRemotePort();
 
-                    user.setLastlogintime(LocalDateTime.now());
-                    user.setLocation(IpUtil.retrieveCity(user.getLastloginip()));
+                    user.setLastLoginTime(LocalDateTime.now());
+                    user.setLocation(IpUtil.retrieveCity(user.getLastLoginIp()));
                     user.setPassword((String) null);
                     this.userService.update(user);
                     JwtTokenPair jwtTokenPair = jwtTokenGenerator.jwtTokenPair(principal.getUsername(), principal.getAuthorities(), (Map) null);

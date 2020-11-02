@@ -11,9 +11,7 @@ import com.school.dto.SimpleUser;
 import com.school.exception.*;
 import com.school.model.Pics;
 import com.school.model.User;
-import com.school.service.impl.EmailServiceImpl;
-import com.school.service.impl.PicsServiceImpl;
-import com.school.service.impl.UserServiceImpl;
+import com.school.service.impl.*;
 import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
@@ -27,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,6 +58,10 @@ public class AdminUserController {
     private String springFilePath;
     @Autowired
     private EmailServiceImpl emailService;
+    @Autowired
+    private LikeServiceImpl likeService;
+    @Autowired
+    private SignServiceImpl signService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -90,6 +93,22 @@ public class AdminUserController {
         return ResponseUtil.build(HttpStatus.OK.value(), "匹配密码完成！", matches);
     }
 
+    @GetMapping("/sendVertificationCode")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
+    public Object sendVertificationCode() {
+        User user = userService.retrieveUserByToken();
+        emailService.sendVerificationCode("pop3临时授权码", "获取查看pop3临时授权码成功(3分钟内有效)>", user.getUsername(), 3, TimeUnit.MINUTES);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取查看pop3临时授权码成功！", null);
+    }
+
+    @GetMapping("/checkVertificationCode")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
+    public Object checkVertificationCode(@RequestParam("code") String code) throws EmailVerificationCodeIllegalArgumentException, EmailVerificationCodeNullPointerException {
+        User user = userService.retrieveUserByToken();
+        boolean b = emailService.checkVertificationCode(user.getUsername(), code);
+        return ResponseUtil.build(HttpStatus.OK.value(), "检验查看pop3时授权码成功！", b);
+    }
+
 
     @ApiOperation(
             value = "导出报名表",
@@ -97,7 +116,7 @@ public class AdminUserController {
     )
     @GetMapping({"/exportRegistrationForm"})
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") @RequestParam(value = "userIds",required = false) Integer[] userIds, HttpServletResponse response) throws IOException {
+    public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") @RequestParam(value = "userIds", required = false) Integer[] userIds, HttpServletResponse response) throws IOException {
         List<User> users = null;
         if (userIds == null || userIds.length == 0) {
             users = userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
@@ -154,10 +173,10 @@ public class AdminUserController {
         for (User user : users) {
             user.setUpdateTime(null);
             user.setUpdateTime(null);
-            user.setAvatarurl(null);
-            user.setLastloginip(null);
+//            user.setAvatarurl(null);
+            user.setLastLoginIp(null);
             user.setLocation(null);
-            user.setAccountstatus(null);
+            user.setAccountStatus(null);
             user.setPassword(null);
             user.setDeleted(null);
         }
@@ -168,7 +187,7 @@ public class AdminUserController {
             value = "导入报名表",
             notes = "但对excel的字段名有严格要求，仅支持.xls以及.xlsx，请直接和我讨论这一块"
     )
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "文件不能为空！", (Object) null);
@@ -212,7 +231,7 @@ public class AdminUserController {
         simpleUser.setAddress(user.getAddress());
         simpleUser.setContact(user.getContact());
         simpleUser.setId(user.getId());
-        simpleUser.setSchoolName(user.getSchoolname());
+        simpleUser.setSchoolName(user.getSchoolName());
         simpleUser.setTelephone(user.getTelephone());
     }
 
@@ -258,13 +277,14 @@ public class AdminUserController {
                          @ApiParam(example = "地址", value = "学校详细地址") @RequestParam(value = "address", required = false) String address,
                          @ApiParam(example = "111", value = "电话号码") @RequestParam(value = "telephone", required = false) String telephone,
                          @ApiParam(example = "111", value = "学校代码") @RequestParam(value = "schoolCode", required = false) String schoolCode,
-                         @ApiParam(example = "XXX主任", value = "职务") @RequestParam(value = "profession", required = false) String profession) throws UsernameAlreadyExistException, EmailNotFoundException {
+                         @ApiParam(example = "XXX主任", value = "职务") @RequestParam(value = "profession", required = false) String profession,
+                         @ApiParam(example = "website", value = "website") @RequestParam(value = "website", required = false) String website) throws UsernameAlreadyExistException, EmailNotFoundException {
         String password = String.valueOf(System.currentTimeMillis());
         List<User> users = userService.querySelectiveLike(null, username, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         if (users.size() > 0) {
             throw new UsernameAlreadyExistException("用户名已存在!");
         }
-        this.userService.add(username, password, schoolName, contact, address, telephone, schoolCode, (String) null, (String) null, (LocalDateTime) null, "default.png", profession, 1);
+        this.userService.add(username, password, schoolName, contact, address, telephone, schoolCode, (String) null, (String) null, (LocalDateTime) null, "default.png", profession, 1, website);
         this.emailService.sendVerificationCode("签约系统", "用户临时授权码(三天内有效,如果过期了可以直接点击忘记密码重置密码~)", username, 3, TimeUnit.DAYS);
         return ResponseUtil.build(HttpStatus.OK.value(), "添加一个用户成功!", (Object) null);
     }
@@ -278,6 +298,8 @@ public class AdminUserController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object delete(@PathVariable("id") Integer id) throws UserNotFoundException {
         this.userService.deleteById(id);
+        this.likeService.deleteByUser(id);
+        this.signService.deleteByUser(id);
         return ResponseUtil.build(HttpStatus.OK.value(), "删除一个用户成功!");
     }
 
@@ -294,9 +316,21 @@ public class AdminUserController {
                          @ApiParam(example = "电话", value = "电话") @RequestParam(value = "telephone", required = false) String telephone,
                          @ApiParam(example = "email", value = "用户名") @RequestParam(value = "username", required = false) String username,
                          @ApiParam(example = "profession", value = "职务") @RequestParam(value = "profession", required = false) String profession,
-                         @ApiParam(example = "website", value = "网站") @RequestParam(value = "website", required = false) String website) throws UserNotFoundException {
+                         @ApiParam(example = "website", value = "网站") @RequestParam(value = "website", required = false) String website,
+                         @ApiParam(example = "logo", value = "logo") @RequestParam(value = "logo", required = false) String logo,
+                         @ApiParam(example = "signdature", value = "signature") @RequestParam(value = "signature", required = false) String signature) throws UserNotFoundException, UserLikesNotCorrespondException, LikesNotFoundException {
+        User oldUser = this.userService.findById(id);
+        //由于前期工作没做好，这里只能先这样处理，用户更新用户信息，signs表以及likes表也要变
+        if (StringUtils.hasText(schoolName) && !oldUser.getSchoolName().equals(schoolName)) {
+            likeService.updateSchoolName(oldUser.getId(), schoolName);
+            signService.updateSchoolName(oldUser.getId(), schoolName);
+        }
+
         User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) profession, website);
+
         SimpleUser simpleUser = new SimpleUser();
+        simpleUser.setLogo(logo);
+        simpleUser.setSignature(signature);
         this.fill(update, simpleUser);
         return ResponseUtil.build(HttpStatus.OK.value(), "修改一个用户成功!", simpleUser);
     }
@@ -348,12 +382,12 @@ public class AdminUserController {
             user.setPassword(null);
             user.setAddTime(null);
             user.setUpdateTime(null);
-            user.setAvatarurl(null);
+//            user.setAvatarurl(null);
             user.setTelephone(null);
             user.setAddress(null);
             user.setDeleted(null);
             user.setContact(null);
-            user.setAccountstatus(null);
+            user.setAccountStatus(null);
         }
         SimplePage simplePage = new SimplePage(size, users);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取高校信息成功！", simplePage);
