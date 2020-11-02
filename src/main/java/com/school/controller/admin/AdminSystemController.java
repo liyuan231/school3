@@ -185,18 +185,6 @@ public class AdminSystemController {
             }
             userService.delete(user);
         }
-        List<Sign> signs = signService.querySelective(null, null, null, null, null, null, null, null, null, null);
-        for (Sign sign : signs) {
-            signService.delete(sign);
-        }
-        List<Pics> pics = picsService.querySelective(null, null, null);
-        for (Pics pic : pics) {
-            picsService.delete(pic);
-        }
-        List<Likes> likes = likeService.querySelective(null, null, null, null, null, null, null, null, null, null, null).getList();
-        for (Likes like : likes) {
-            likeService.delete(like);
-        }
         return ResponseUtil.build(HttpStatus.OK.value(), "删除所有数据成功！");
 
     }

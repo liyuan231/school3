@@ -292,15 +292,64 @@ public class SignServiceImpl {
 //        signMapper.updateByExampleSelective(sign, signExample);
         signMapper.deleteByExample(signExample);
     }
-    //-------------------------------
+
+    //APPENDIX-------------------------------
     public List<SignWithUser> querySelective(Integer year, String schoolName, Integer page, Integer pageSize, String sort, String order) {
         List<SignWithUser> signWithUsers = signWithUserMapper.querySelective(year, schoolName, page, pageSize, sort, order);
         return signWithUsers;
     }
 
-
     public Integer count(Integer year, String schoolName) {
         return signWithUserMapper.count(year, schoolName);
+    }
+
+    public Sign queryById(Integer signId) {
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        criteria.andIdEqualTo(signId);
+        List<Sign> signs = signMapper.selectByExampleSelective(signExample);
+        return signs.size() == 0 ? null : signs.get(0);
+    }
+
+    public int updateByIdSelective(Sign sign) {
+        sign.setUpdateTime(LocalDateTime.now());
+        SignExample signExample = new SignExample();
+        return signMapper.updateByPrimaryKeySelective(sign);
+    }
+
+    public List<Sign> querySelective(Sign.Column... columns) {
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        List<Sign> signs = this.signMapper.selectByExampleSelective(signExample, columns);
+        PageInfo<Sign> signPageInfo = new PageInfo(signs);
+        return signPageInfo.getList();
+    }
+
+    public List<Sign> queryBySignUserId(Integer likeUserId) {
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        criteria.andSignUserIdEqualTo(likeUserId);
+        return signMapper.selectByExampleSelective(signExample);
+    }
+
+    public List<Sign> queryBySignedUserId(Integer likedUserId) {
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        criteria.andSignedUserIdEqualTo(likedUserId);
+        return signMapper.selectByExampleSelective(signExample);
+    }
+
+    public List<Sign> queryBySignUserAndSignedUserId(Integer likeUserId, Integer likedUserId) {
+        SignExample signExample = new SignExample();
+        SignExample.Criteria criteria = signExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        criteria.andSignedUserIdEqualTo(likedUserId);
+        criteria.andSignUserIdEqualTo(likeUserId);
+        return signMapper.selectByExampleSelective(signExample);
     }
 
 }

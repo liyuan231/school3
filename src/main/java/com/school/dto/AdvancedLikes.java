@@ -1,13 +1,24 @@
 package com.school.dto;
 
-import com.school.model.Likes;
-import com.school.model.Sign;
-
 import java.util.List;
 
 public class AdvancedLikes {
-//    private Integer likeId;
+    //    private Integer likeId;
     private Integer userId;
+    private String schoolName;
+    private List<String> likesList;
+    private List<String> signList;
+    private List<StringLikesWithMark> fullLikes;
+    private boolean hasLogo;
+    private boolean hasSignature;
+
+    public List<StringLikesWithMark> getFullLikes() {
+        return fullLikes;
+    }
+
+    public void setFullLikes(List<StringLikesWithMark> fullLikes) {
+        this.fullLikes = fullLikes;
+    }
 
     public Integer getUserId() {
         return userId;
@@ -17,25 +28,6 @@ public class AdvancedLikes {
         this.userId = userId;
     }
 
-    private String schoolName;
-    private List<Sign> signList;
-    private List<Likes> likesList;
-    private List<FullLikes> fullLikes;
-
-    private boolean hasLogo;
-    private boolean hasSignature;
-
-
-    public AdvancedLikes(Integer userId, String schoolname, List<Sign> signList, List<Likes> likesList, List<FullLikes> fullLikes, boolean hasLogo, boolean hasSignature) {
-        this.userId = userId;
-//        this.likeId = likeId;
-        this.schoolName = schoolname;
-        this.signList = signList;
-        this.likesList = likesList;
-        this.fullLikes = fullLikes;
-        this.hasLogo = hasLogo;
-        this.hasSignature = hasSignature;
-    }
 
     public String getSchoolName() {
         return schoolName;
@@ -45,42 +37,22 @@ public class AdvancedLikes {
         this.schoolName = schoolName;
     }
 
-
-    public AdvancedLikes() {
-    }
-
-
-    public List<Likes> getLikesList() {
+    public List<String> getLikesList() {
         return likesList;
     }
 
-    public void setLikesList(List<Likes> likesList) {
+    public void setLikesList(List<String> likesList) {
         this.likesList = likesList;
     }
 
-    public AdvancedLikes(List<Sign> signList, List<Likes> likesList, List<FullLikes> fullLikes, boolean hasLogo, boolean hasSignature) {
-        this.signList = signList;
-        this.likesList = likesList;
-        this.fullLikes = fullLikes;
-        this.hasLogo = hasLogo;
-        this.hasSignature = hasSignature;
-    }
-
-    public List<Sign> getSignList() {
+    public List<String> getSignList() {
         return signList;
     }
 
-    public void setSignList(List<Sign> signList) {
+    public void setSignList(List<String> signList) {
         this.signList = signList;
     }
 
-    public List<FullLikes> getFullLikes() {
-        return fullLikes;
-    }
-
-    public void setFullLikes(List<FullLikes> fullLikes) {
-        this.fullLikes = fullLikes;
-    }
 
     public boolean isHasLogo() {
         return hasLogo;

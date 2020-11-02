@@ -29,9 +29,9 @@ public class UserLikeController {
     private LikeServiceImpl likeService;
     @Autowired
     private userservice user_service;
-    
+
     @Autowired
-    UserSignController usersign; 
+    UserSignController usersign;
 
     @Autowired
     private UserServiceImpl userService;
@@ -45,46 +45,41 @@ public class UserLikeController {
     @PreAuthorize("hasAnyRole('USER')")
     @ApiOperation(value = "选择签约->勾选参会学校->提交，若对方已选择自己为意向签约目标，系统自动匹配签约", notes = "批量表明意向并且自动匹配签约")
     @PostMapping("/batchLike")
-    public Object batchSign(@RequestParam(value="likedUserIds") Integer[] likedUserIds) {
-    	Integer host_id = userService.retrieveUserByToken().getId();
-    	Integer batch_sign[] = new Integer[likedUserIds.length+1];
-    	int i=0;
-    	for (Integer likedUserId : likedUserIds) {
+    public Object batchSign(@RequestParam(value = "likedUserIds") Integer[] likedUserIds) {
+        Integer host_id = userService.retrieveUserByToken().getId();
+        Integer batch_sign[] = new Integer[likedUserIds.length + 1];
+        int i = 0;
+        for (Integer likedUserId : likedUserIds) {
             try {
                 likeService.like(likedUserId);
-            } catch (UserLikesNotCorrespondException | LikesNotFoundException|UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
-                logger.warn(e.getMessage()+"->"+ likedUserId);
+            } catch (UserLikesNotCorrespondException | LikesNotFoundException | UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
+                logger.warn(e.getMessage() + "->" + likedUserId);
 //                e.printStackTrace();
             }
             try {
-            	if(user_service.select_both(host_id, likedUserId)) {
-            	    batch_sign[i] =	likedUserId;
-            	    i++;
-            	}
+                if (user_service.select_both(host_id, likedUserId)) {
+                    batch_sign[i] = likedUserId;
+                    i++;
+                }
+            } catch (Exception e) {
+                logger.warn(e.getMessage() + "->" + likedUserId);
             }
-            catch(Exception e) {
-            	logger.warn(e.getMessage()+"->"+ likedUserId);
-            }
-        }  	
-    	Integer sign[] = new Integer[likedUserIds.length+1];
+        }
+        Integer sign[] = new Integer[likedUserIds.length + 1];
 
-    	System.out.println(i);
-    	if(i!=0) {
-    		sign = Arrays.copyOfRange(batch_sign, 0, i);
-    		System.out.println(sign);
-    	try {
-               usersign.batchSign(sign);
-           }
-           catch(Exception e) {
-               logger.warn(e.getMessage());
-           }
-    	}
+        System.out.println(i);
+        if (i != 0) {
+            sign = Arrays.copyOfRange(batch_sign, 0, i);
+            System.out.println(sign);
+            try {
+                usersign.batchSign(sign);
+            } catch (Exception e) {
+                logger.warn(e.getMessage());
+            }
+        }
         return ResponseUtil.build(HttpStatus.OK.value(), "用户批量表明意向成功！签约已实时更新");
     }
 
-    
-    
-    
 
 //    /**
 //     * 传入当前用户喜欢的一方的userId
@@ -142,11 +137,12 @@ public class UserLikeController {
     @GetMapping("/matchWhoLikesMe")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
     public Object matchWhoLikesMe() throws UserNotFoundException {
-        List<Likes> matchs = likeService.matchByLikedUserId();
+        User user = this.userService.retrieveUserByToken();
+        List<Likes> matchs = likeService.matchByLikedUserId(user);
         List<User> users = new LinkedList<>();
         for (Likes match : matchs) {
-            User user = userService.findById(match.getLikeUserId());
-            users.add(user);
+            User user1 = userService.queryById(match.getLikeUserId(), User.Column.id, User.Column.schoolName);
+            users.add(user1);
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功！", users);
     }
@@ -158,10 +154,11 @@ public class UserLikeController {
         User curUser = userService.retrieveUserByToken();
         //我意向的所有的用户学校
         List<Likes> theUserThatILikes = likeService.querySelective(null, curUser.getId(), null, null, null, null, null, null, null, null).getList();
+        List<User> users = new LinkedList<>();
         for (Likes theUserThatILike : theUserThatILikes) {
-            clean(theUserThatILike);
+            users.add(userService.queryById(theUserThatILike.getLikedUserId(), User.Column.id, User.Column.schoolName));
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取我有意向的用户成功！", theUserThatILikes);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我有意向的用户成功！", users);
     }
 
     private void clean(Likes theUserThatILikes) {

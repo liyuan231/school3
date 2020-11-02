@@ -5,6 +5,7 @@
 
 package com.school.service.impl;
 
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.school.dao.UserMapper;
@@ -593,13 +594,95 @@ public class UserServiceImpl implements UserDetailsService {
         PageInfo<User> pageInfo = new PageInfo(users);
         return pageInfo.getList();
     }
+
     //-----//------------------
-        public User queryById(Integer id, User.Column... columns) {
-            UserExample userExample = new UserExample();
-            UserExample.Criteria criteria = userExample.createCriteria();
-            criteria.andIdEqualTo(id);
-            criteria.andDeletedEqualTo(false);
-            List<User> users = userMapper.selectByExampleSelective(userExample, columns);
-            return users.size() == 0 ? null : users.get(0);
+    public User queryById(Integer id, User.Column... columns) {
+        UserExample userExample = new UserExample();
+        UserExample.Criteria criteria = userExample.createCriteria();
+        criteria.andIdEqualTo(id);
+        criteria.andDeletedEqualTo(false);
+        List<User> users = userMapper.selectByExampleSelective(userExample, columns);
+        return users.size() == 0 ? null : users.get(0);
+    }
+
+    public PageInfo<User> querySelective(Integer page, Integer pageSize, String sort, String order, User.Column... columns) {
+        return querySelective(null, page, pageSize, sort, order, columns);
+    }
+
+    public PageInfo<User> querySelective(User.Column... columns) {
+        return querySelective(null, null, null, null, columns);
+    }
+
+    public PageInfo<User> querySelective(String schoolName, Integer page, Integer pageSize, String sort, String order, User.Column... columns) {
+        return querySelective(schoolName, null, null, null, null, null, null, null, null, page, pageSize, sort, order, columns);
+    }
+    public PageInfo<User> querySelective(String schoolName,
+                                         String contact,
+                                         String address,
+                                         String phone,
+                                         String schoolCode,
+                                         String location,
+                                         String profession,
+                                         String country,
+                                         Integer addYear,
+                                         Integer page,
+                                         Integer pageSize,
+                                         String sort,
+                                         String order,
+                                         User.Column... columns) {
+        UserExample userExample = new UserExample();
+        UserExample.Criteria criteria = userExample.createCriteria();
+        criteria.andDeletedEqualTo(false);
+        if (StringUtils.hasText(sort) && StringUtils.hasText(order)) {
+            userExample.setOrderByClause(sort + " " + order);
         }
+        if (StringUtils.hasText(schoolName)) {
+            criteria.andSchoolNameLike("%" + schoolName + "%");
+        }
+
+        if (StringUtils.hasText(contact)) {
+            criteria.andContactLike("%" + contact + "%");
+        }
+
+        if (StringUtils.hasText(address)) {
+            criteria.andAddressLike("%" + address + "%");
+        }
+
+        if (StringUtils.hasText(phone)) {
+            criteria.andTelephoneLike("%" + phone + "%");
+        }
+        if (!StringUtils.isEmpty(addYear)) {
+            LocalDateTime end = LocalDateTime.of(addYear, 12, 31, 23, 59);
+            LocalDateTime start = LocalDateTime.of(addYear, 1, 1, 0, 0);
+            criteria.andAddTimeBetween(start, end);
+        }
+
+        if (StringUtils.hasText(schoolCode)) {
+            criteria.andSchoolCodeLike("%" + schoolCode + "%");
+        }
+
+        if (StringUtils.hasText(location)) {
+            criteria.andLocationLike("%" + location + "%");
+        }
+        if (StringUtils.hasText(profession)) {
+            criteria.andProfessionLike("%" + profession + "%");
+        }
+        if (StringUtils.hasText(country)) {
+            criteria.andCountryLike("%" + profession + "%");
+        }
+        if (page != null && pageSize != null) {
+            //此时就已经拦截了sql语句执行完毕了；
+            Page<User> users = PageHelper.startPage(page, pageSize);
+            System.out.println(users);
+        }
+        List<User> users = null;
+        if (columns.length != 0) {
+            users = this.userMapper.selectByExampleSelective(userExample, columns);
+        } else {
+            users = this.userMapper.selectByExampleSelective(userExample);
+        }
+        return (PageInfo<User>) new PageInfo(users);
+    }
+
+
 }

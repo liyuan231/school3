@@ -3,6 +3,8 @@ package com.school.controller.client;
 import com.school.exception.SignAlreadyExistException;
 import com.school.exception.SignNotCorrectException;
 import com.school.exception.UserNotFoundException;
+import com.school.model.Sign;
+import com.school.model.User;
 import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
@@ -18,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedList;
+import java.util.List;
+
 @Api(tags = {"选择签约"}, value = "选择签约->确认签约")
 @RestController
 @RequestMapping("/api/client/sign")
@@ -25,8 +30,11 @@ public class UserSignController {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired
     private SignServiceImpl signService;
+    @Autowired
+    private UserServiceImpl userService;
 
 
+    //贵校已于20个高校达成合作意向。
 //    /**
 //     * 传入被签约一方的userId
 //     *
@@ -54,6 +62,28 @@ public class UserSignController {
             }
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "批量签约用户成功！");
+    }
+
+    @PreAuthorize("hasAnyRole('USER')")
+    @ApiOperation(value = "与我达成合作的高校", notes = "与我达成合作的高校")
+    @GetMapping("/list")
+    public String signList() {
+        User user = userService.retrieveUserByToken();
+        List<Sign> signs = signService.queryBySignUserId(user.getId());
+        List<Sign> signs1 = signService.queryBySignedUserId(user.getId());
+        signs.addAll(signs1);
+        List<User> users = new LinkedList<>();
+        for (Sign sign : signs) {
+            //当前用户为主动签约
+            if (sign.getSignUserId().equals(user.getId())) {
+                User user1 = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+                users.add(user1);
+            } else {
+                User user1 = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
+                users.add(user1);
+            }
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "与我达成合作的高校", users);
     }
 
 
@@ -124,4 +154,13 @@ public class UserSignController {
 //        }
 //        return ResponseUtil.build(HttpStatus.OK.value(), "查询主动和我签约的用户成功！", users);
 //    }
+
+    @GetMapping("/countSigns")
+    public String countSigns() {
+        User user = userService.retrieveUserByToken();
+        List<Sign> signs1 = signService.queryBySignUserId(user.getId());
+        List<Sign> signs = signService.queryBySignedUserId(user.getId());
+        return ResponseUtil.build(HttpStatus.OK.value(), "贵校已于n个高校达成合作意向！", signs1.size() + signs.size());
+    }
+
 }

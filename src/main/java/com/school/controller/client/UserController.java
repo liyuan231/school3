@@ -90,6 +90,7 @@ public class UserController {
     }
 
 
+    //TODO golden1 ->com.school.model.User cannot be cast to com.school.dto.UserPro
     @GetMapping("/listSearch")
     @ApiOperation(
             value = "参会学校->所有参会学校",
@@ -103,12 +104,10 @@ public class UserController {
         List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
         Integer size = this.userService.count(schoolName);
         List<User> result = new LinkedList();
-        Iterator var9 = users.iterator();
+        Iterator<User> var9 = users.iterator();
         while (var9.hasNext()) {
             UserPro user = (UserPro) var9.next();
             user.setLogo(springFiles + user_service.get_logo(user.getId()));
-//            SimpleUser simpleUser = new SimpleUser();
-//            fill(user, simpleUser);
             clean(user);
             result.add(user);
         }
@@ -129,15 +128,7 @@ public class UserController {
         user.setDeleted(null);
     }
 
-    private void fill(User user, SimpleUser simpleUser) {
-//        simpleUser.setUsername(user.getUsername());
-//        simpleUser.setAddress(user.getAddress());
-        simpleUser.setContact(user.getContact());
-        simpleUser.setId(user.getId());
-        simpleUser.setSchoolName(user.getSchoolName());
-        simpleUser.setProfession(user.getProfession());
-//        simpleUser.setTelephone(user.getTelephone());
-    }
+
 
 //    @PostMapping("/upload")
 //    @PreAuthorize("hasAnyRole('USER')")

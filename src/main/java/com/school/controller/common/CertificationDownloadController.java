@@ -9,7 +9,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +29,7 @@ public class CertificationDownloadController {
 
 
     @GetMapping("/download/{signId}")
-    @PreAuthorize("hasAnyRole('USER','ADMINISTRATOR')")
+//    @PreAuthorize("hasAnyRole('USER','ADMINISTRATOR')")
     @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
     public String downloadCertification(@PathVariable("signId") Integer signId,
                                         HttpServletResponse response) throws UserNotFoundException {

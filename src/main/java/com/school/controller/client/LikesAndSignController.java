@@ -72,11 +72,9 @@ public class LikesAndSignController {
     @Autowired
     private CommonUtil commonUtil;
     @Resource
-    private UserMapper usermapper; 
+    private UserMapper usermapper;
     @Resource
     private LikesMapper likesmapper;
-    
-    
 
 
     @ResponseBody
@@ -95,8 +93,7 @@ public class LikesAndSignController {
         List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
         List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);
         signs.addAll(signs_);
-        String springFile = "/home/springboot/files/";
-
+        String springFile = springFilePath;
 
         //userId->signId
         HashMap<Integer, Integer> map = new HashMap<>();
@@ -109,19 +106,19 @@ public class LikesAndSignController {
             } else {
                 signedUserIds.add(sign.getSignedUserId());
                 map.put(sign.getSignedUserId(), sign.getId());
-                
+
             }
         }
         List<LikesWithMark> likesWithMarks = new LinkedList<>();
-        int total_sign=0;
+        int total_sign = 0;
         for (Likes like : likes) {
             LikesWithMark likesWithMark = new LikesWithMark();
 //            clean(like);
             likesWithMark.setLikes(like);
-            likesWithMark.setLogo1(springFile+user_service.get_logo(like.getLikeUserId()));
-            likesWithMark.setLogo2(springFile+user_service.get_logo(like.getLikedUserId()));
+            likesWithMark.setLogo1(springFile + user_service.get_logo(like.getLikeUserId()));
+            likesWithMark.setLogo2(springFile + user_service.get_logo(like.getLikedUserId()));
             if (signedUserIds.contains(like.getLikedUserId())) {
-            	total_sign++;
+                total_sign++;
                 likesWithMark.setSigned(true);
                 likesWithMark.setSignId(map.get(like.getLikedUserId()));
             } else {
@@ -129,113 +126,109 @@ public class LikesAndSignController {
             }
             likesWithMarks.add(likesWithMark);
         }
-        
-        SimplePage simplePage = new SimplePage(size, likesWithMarks,total_sign);
+
+        SimplePage simplePage = new SimplePage(size, likesWithMarks, total_sign);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向及签约列表成功!", simplePage);
 
         //现在当前用户的意向以及签约都有了，就是整合在一起
     }
 
-    
-    
+
     @ResponseBody
     @GetMapping("/unchoosed")
     @ApiOperation(value = "获取当前用户未选意向未签约列表", notes = "未选意向未签约列表")
     @PreAuthorize("hasRole('USER')")
     public JSON get_not_like() {
-    	JSONObject result = new JSONObject();
-    	String msg = null;
-    	String code = null;
-    	User user = userService.retrieveUserByToken();
-    	List<User> user_list = new ArrayList<User>();
-    	List<Likes> like_list = new ArrayList<Likes>();
-    	user_list=user_service.get_all_user(user.getId());
-    	like_list=user_service.get_all_likes(user.getId());    	
-    	try {
-    		int len_1 = user_list.size();
-        	int len_2 = like_list.size();
-        	int flag=0;
-    	for(int i =0;i<len_1-flag;i++) {
-    		user_list.get(i).setPassword(null);
-    		for(int j=0;j<len_2;j++) {
+        JSONObject result = new JSONObject();
+        String msg = null;
+        String code = null;
+        User user = userService.retrieveUserByToken();
+        List<User> user_list = new ArrayList<User>();
+        List<Likes> like_list = new ArrayList<Likes>();
+        user_list = user_service.get_all_user(user.getId());
+        like_list = user_service.get_all_likes(user.getId());
+        try {
+            int len_1 = user_list.size();
+            int len_2 = like_list.size();
+            int flag = 0;
+            for (int i = 0; i < len_1 - flag; i++) {
+                user_list.get(i).setPassword(null);
+                for (int j = 0; j < len_2; j++) {
 //    			System.out.println(i);
-    			if(user_list.get(i).getId().equals(like_list.get(j).getLikedUserId())) {
-    				user_list.remove(i);
-    				flag++;//长度减一
-    				i--;//下标减一
-    				break;
-    			}
-    		}		
-    	}
-    	}
-    	catch(Exception e) {
-    		e.printStackTrace();
-    		msg="未知错误，请联系服务器管理员";
-    		code="-1";
-    		result.put("msg",msg);
-    		result.put("code",code);
-    	}
-    	msg = "success";
-    	code = "200";
-    	result.put("msg",msg);
-    	result.put("code",code);
-    	result.put("data",user_list);
-    	return result;
+                    if (user_list.get(i).getId().equals(like_list.get(j).getLikedUserId())) {
+                        user_list.remove(i);
+                        flag++;//长度减一
+                        i--;//下标减一
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            msg = "未知错误，请联系服务器管理员";
+            code = "-1";
+            result.put("msg", msg);
+            result.put("code", code);
+        }
+        msg = "success";
+        code = "200";
+        result.put("msg", msg);
+        result.put("code", code);
+        result.put("data", user_list);
+        return result;
     }
-    
-    
-    
+
+
     @ResponseBody
     @GetMapping("/choosedme")
     @ApiOperation(value = "获取已选当前用户但是当前用户未选该校的列表", notes = "获取已选当前用户但是当前用户未选该校的列表")
     @PreAuthorize("hasRole('USER')")
     public JSON choosedme() {
-    	String msg=null;
-    	String code=null;
-    	JSONObject result = new JSONObject();
-    	User user = userService.retrieveUserByToken();
-    	List<Likes> my_like = new ArrayList<Likes>();
-    	List<Likes> like_me = new ArrayList<Likes>();
-    	try {
-    	my_like=user_service.get_all_likes(user.getId());
-    	like_me = user_service.get_like_me(user.getId());
-    	int len_1=like_me.size();
-    	int len_2=my_like.size();
-    	System.out.println(len_1);
-    	System.out.println(len_2);
-    	int flag = 0;
-    	for(int i=0;i<len_1-flag;i++) {
-    		for(int j=0;j<len_2;j++) {
-    			if(like_me.get(i).getLikeUserId().equals(my_like.get(j).getLikedUserId())) {
-    		//		System.out.println(like_me.get(i).getLikeuserid().equals(my_like.get(j).getLikeduserid()));
-    	//			System.out.println(like_me.get(i).getLikeuserid());
-    //				System.out.println(my_like.get(j).getLikeduserid());
-    				like_me.remove(i);
-  //  				System.out.println(flag);
-    				flag++;//移除后list长度-1
-    				i--;//移除后后面元素下标-1
-    				break;
-    			}
-    		}
-    	}
+        String msg = null;
+        String code = null;
+        JSONObject result = new JSONObject();
+        User user = userService.retrieveUserByToken();
+        List<Likes> my_like = new ArrayList<Likes>();
+        List<Likes> like_me = new ArrayList<Likes>();
+        try {
+            my_like = user_service.get_all_likes(user.getId());
+            like_me = user_service.get_like_me(user.getId());
+            int len_1 = like_me.size();
+            int len_2 = my_like.size();
+            System.out.println(len_1);
+            System.out.println(len_2);
+            int flag = 0;
+            for (int i = 0; i < len_1 - flag; i++) {
+                for (int j = 0; j < len_2; j++) {
+                    if (like_me.get(i).getLikeUserId().equals(my_like.get(j).getLikedUserId())) {
+                        //		System.out.println(like_me.get(i).getLikeuserid().equals(my_like.get(j).getLikeduserid()));
+                        //			System.out.println(like_me.get(i).getLikeuserid());
+                        //				System.out.println(my_like.get(j).getLikeduserid());
+                        like_me.remove(i);
+                        //  				System.out.println(flag);
+                        flag++;//移除后list长度-1
+                        i--;//移除后后面元素下标-1
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            msg = "未知错误，请联系服务器管理员";
+            code = "-1";
+            result.put("msg", msg);
+            result.put("code", code);
+            e.printStackTrace();
+            return result;
+        }
+        msg = "success";
+        code = "200";
+        result.put("msg", msg);
+        result.put("code", code);
+        result.put("data", like_me);
+        return result;
     }
-    	catch(Exception e) {
-    		msg="未知错误，请联系服务器管理员";
-    		code="-1";
-    		result.put("msg",msg);
-    		result.put("code", code);
-    		e.printStackTrace();
-    		return result;
-    	}
-    	msg="success";
-		code="200";
-		result.put("msg",msg);
-		result.put("code", code);
-		result.put("data", like_me);
-		return result;
-    }
-    
-    
+
+
 //    @ResponseBody
 //    @GetMapping("/show/{signId}")
 //    @ApiOperation(value = "我的意向及签约->签约证书查看", notes = "签约证书查看")
@@ -328,7 +321,7 @@ public class LikesAndSignController {
     @ResponseBody
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/get_Word")
-    @ApiOperation(value = "下载签约证书",notes = "下载签约证书")
+    @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
     public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户logo访问地址") String logo1,
                              @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户logo访问地址") String logo2,
                              @ApiParam(example = "GDUFS", value = "当前用户学校名称") String school1,
@@ -521,7 +514,7 @@ public class LikesAndSignController {
     @ResponseBody
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/get_certi")
-    @ApiOperation(value = "在线查看签约证书",notes = "在线查看签约证书")
+    @ApiOperation(value = "在线查看签约证书", notes = "在线查看签约证书")
     public JSON get_certi(@ApiParam(example = "1", value = "当前用户id") Integer host_id,
                           @ApiParam(example = "2", value = "被签约用户的id") Integer liked_id) throws UnknownHostException {
         String msg = null;
@@ -627,9 +620,8 @@ public class LikesAndSignController {
         result.put("AUDFLOGO", "http://175.24.4.196/images/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg");
         return result;
     }
-    
-    
-    
+
+
 }
 
 

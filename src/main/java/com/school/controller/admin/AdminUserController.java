@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -118,7 +117,7 @@ public class AdminUserController {
             notes = "导出报名表(swagger-bootstarp无法下载，会直接显示内容，因此要测试可以直接浏览器访问该地址)"
     )
     @GetMapping({"/exportRegistrationForm"})
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public void exportRegistrationForm(@ApiParam(example = "[1,2,3,4]", value = "多个用户的id数组") @RequestParam(value = "userIds", required = false) Integer[] userIds, HttpServletResponse response) throws IOException {
         List<User> users = null;
         if (userIds == null || userIds.length == 0) {
@@ -271,7 +270,7 @@ public class AdminUserController {
             notes = "后台手动添加一个用户"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public Object create(@ApiParam(example = "123@qq.com", value = "用户名即为邮箱号") @RequestParam("username") String username,
+    public String create(@ApiParam(example = "123@qq.com", value = "用户名即为邮箱号") @RequestParam("username") String username,
                          @ApiParam(example = "GDUFS", value = "学校名") @RequestParam(value = "schoolName", required = false) String schoolName,
                          @ApiParam(example = "人名", value = "联系人") @RequestParam(value = "contact", required = false) String contact,
                          @ApiParam(example = "地址", value = "学校详细地址") @RequestParam(value = "address", required = false) String address,
@@ -285,8 +284,8 @@ public class AdminUserController {
             throw new UsernameAlreadyExistException("用户名已存在!");
         }
         this.userService.add(username, password, schoolName, contact, address, telephone, schoolCode, (String) null, (String) null, (LocalDateTime) null, "default.png", profession, 1, website);
-        this.emailService.sendVerificationCode("签约系统", "用户临时授权码(三天内有效,如果过期了可以直接点击忘记密码重置密码~)", username, 3, TimeUnit.DAYS);
-        return ResponseUtil.build(HttpStatus.OK.value(), "添加一个用户成功!", (Object) null);
+        this.emailService.send(username, "签约系统", "注册账号成功！记得及时点击忘记密码激活账号~");
+        return ResponseUtil.build(HttpStatus.OK.value(), "添加一个用户成功!");
     }
 
 
@@ -318,14 +317,8 @@ public class AdminUserController {
                          @ApiParam(example = "profession", value = "职务") @RequestParam(value = "profession", required = false) String profession,
                          @ApiParam(example = "website", value = "网站") @RequestParam(value = "website", required = false) String website,
                          @ApiParam(example = "logo", value = "logo") @RequestParam(value = "logo", required = false) String logo,
-                         @ApiParam(example = "signdature", value = "signature") @RequestParam(value = "signature", required = false) String signature) throws UserNotFoundException, UserLikesNotCorrespondException, LikesNotFoundException {
+                         @ApiParam(example = "signature", value = "signature") @RequestParam(value = "signature", required = false) String signature) throws UserNotFoundException, UserLikesNotCorrespondException, LikesNotFoundException {
         User oldUser = this.userService.findById(id);
-        //由于前期工作没做好，这里只能先这样处理，用户更新用户信息，signs表以及likes表也要变
-        if (StringUtils.hasText(schoolName) && !oldUser.getSchoolName().equals(schoolName)) {
-            likeService.updateSchoolName(oldUser.getId(), schoolName);
-            signService.updateSchoolName(oldUser.getId(), schoolName);
-        }
-
         User update = this.userService.update(id, username, (String) null, schoolName, contact, address, telephone, (String) null, (String) null, (String) null, (LocalDateTime) null, (Boolean) null, (String) null, (Integer) null, (String) profession, website);
 
         SimpleUser simpleUser = new SimpleUser();
