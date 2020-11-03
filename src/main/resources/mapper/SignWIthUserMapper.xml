@@ -5,9 +5,9 @@
     <select id="querySelective" resultType="com.school.dto.SignWithUser">
         select l.id as signId,
         l.sign_user_id as signUserId,
-        l.signed_user_id as signUserId,
+        l.signed_user_id as signedUserId,
         u1.school_name as signSchoolName,
-        u2.school_name as signSchoolName,
+        u2.school_name as signedSchoolName,
         l.add_time as addTime
         from sign as l,
         user as u1,user as u2

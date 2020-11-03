@@ -103,7 +103,7 @@ public class AdminSignController {
             value = "签约公示->导出签约名单",
             notes = "签约公示->导出签约名单"
     )
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/exportSignForm"})
     public void exportSignForm(@ApiParam(value = "多则签约的id", example = "[1,2,3]") @RequestParam(value = "signIds", required = false) Integer[] signIds, HttpServletResponse response) throws IOException {
         List<Sign> signs;

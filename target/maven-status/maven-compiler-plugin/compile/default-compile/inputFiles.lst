@@ -1,8 +1,9 @@
-C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\golden\userdao.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SignWithUser.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\EmailExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\ExcelDataException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\SpringMvcConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\Application.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\SignWithUserMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\SignMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\RoleServiceImpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserSignCorrespondException.java
@@ -42,6 +43,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\AssertUtil
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\CommonUtil.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\security\SimpleAccessDeniedHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\RoleToAuthoritiesServiceImpl.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimpleLikeUser.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\SignNotFoundException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\LikesMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Role.java
@@ -52,6 +54,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserLi
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\Signature.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\golden\picture.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\golden\userservice.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\userdaoimpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\UsertoroleMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailWrongFormatException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\PicsExample.java
@@ -61,6 +64,8 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\FileUtil.j
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\RoletoauthoritiesExample.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\SignNotCorrectException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserSignController.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\userdao.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimpleLike.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\User.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\FullLikes.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\LikesNotFoundException.java
@@ -74,13 +79,16 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailN
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\FullUser.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\LikesAndSignController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\InvalidTokenException.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimpleSign.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\EmailVerificationCodeIllegalArgumentException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\Status.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\LikeWithUserMapper.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\UserPro.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\ResponseUtil.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\golden\ch_bothlike.java
-C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\golden\userdaoimpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UsernameNullPointerException.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\LikeWithUser.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\security\JwtAuthenticationFilter.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\PicsMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimpleUserLikes.java
@@ -90,7 +98,6 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\Pic
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\SpringSecurityConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SimplePage.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\limit\RequestLimitApplicationListener.java
-C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\client\UserAllController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\SignExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\SwaggerConfiguration.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\limit\RequestLimitController.java
@@ -100,6 +107,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\Jw
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\security\JsonUsernamePasswordAuthenticationFilter.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\admin\AdminTemplateController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\AdvancedLikes.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\StringLikesWithMark.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\JwtTokenGenerator.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\controller\admin\AdminLikesController.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\Logo.java

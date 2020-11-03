@@ -90,6 +90,7 @@ public class LikesAndSignController {
         //获取当前用户所有的意向
         List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null).getList();
         int size = likeService.count(user.getId(), null);
+//        System.out.println(likes.get(0));
         List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
         List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);
         signs.addAll(signs_);
@@ -99,7 +100,6 @@ public class LikesAndSignController {
         HashMap<Integer, Integer> map = new HashMap<>();
         HashSet<Integer> signedUserIds = new HashSet<>();
         for (Sign sign : signs) {
-
             if (sign.getSignedUserId().equals(user.getId())) {
                 signedUserIds.add(sign.getSignUserId());
                 map.put(sign.getSignUserId(), sign.getId());

@@ -73,6 +73,7 @@ public class AdminLikesController {
 
     }
 
+    //TODO 此处有一个bug，前端传来的
     @GetMapping({"/listSearchSingle"})
     @ApiOperation(
             value = "查看单项意向，搜索/分页显示",
@@ -125,7 +126,6 @@ public class AdminLikesController {
     @GetMapping({"/exportLikesForm"})
     public void exportLikesForm(@ApiParam(example = "用户的的的ids", value = "[1,2,3]") @RequestParam(required = false, value = "userIds") Integer[] userIds, HttpServletResponse response) throws IOException {
         List<User> users = new LinkedList<>();
-
         if (userIds == null || userIds.length == 0) {
             PageInfo<User> userPageInfo = userService.querySelective();
             users = userPageInfo.getList();
@@ -154,27 +154,21 @@ public class AdminLikesController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object list(@PathVariable("userId") Integer likeUserId) {
-
         List<Likes> likes = this.likeService.querySelective((Integer) null, likeUserId, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null).getList();
         SimpleLikeUser simplerLikeUser = new SimpleLikeUser();
         List<SimpleLike> likesList = new LinkedList<>();
-
+        simplerLikeUser.setUserId(likeUserId);
+        User u = userService.queryById(likeUserId, User.Column.id, User.Column.schoolName);
+        simplerLikeUser.setSchoolName(u.getSchoolName());
         for (Likes like : likes) {
             SimpleLike simpleLike = new SimpleLike();
             simpleLike.setLikeId(like.getId());
-            User likeUser =  userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
+            User likeUser = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
             simpleLike.setLikeSchoolName(likeUser.getSchoolName());
             simpleLike.setLikeUserId(likeUser.getId());
             User u2 = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
             simpleLike.setLikedSchoolName(u2.getSchoolName());
             simpleLike.setLikedUserId(u2.getId());
-            if (simplerLikeUser.getUserId() == null) {
-                simplerLikeUser.setUserId(like.getLikeUserId());
-            }
-            if (simplerLikeUser.getSchoolName() == null) {
-                User user = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
-                simplerLikeUser.setSchoolName(user.getSchoolName());
-            }
             likesList.add(simpleLike);
         }
         simplerLikeUser.setLikes(likesList);
@@ -264,7 +258,7 @@ public class AdminLikesController {
     @PostMapping({"/remind"})
     public String remindSchools(@ApiParam(example = "用户id数组", value = "[1,2,3]") @RequestParam(value = "userIds", required = false) Integer[] userIds) {
         List<User> users = null;
-        if (userIds == null || userIds.length != 0) {
+        if (userIds == null || userIds.length == 0) {
             users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
         } else {
             users = new LinkedList<>();

@@ -350,7 +350,7 @@ public class AdminUserController {
     public Object listSearchUserLoginInfos(@ApiParam(example = "1", value = "schoolName") @RequestParam(required = false) String schoolName,
                                            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
                                            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
-                                           @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "lastLoginTime", required = false) String sort,
+                                           @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "last_login_time", required = false) String sort,
                                            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
         List<User> users = userService.querySelectiveLike(null,
                 null,

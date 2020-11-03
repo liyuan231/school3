@@ -105,11 +105,28 @@ public class UserController {
         Integer size = this.userService.count(schoolName);
         List<User> result = new LinkedList();
         Iterator<User> var9 = users.iterator();
+        UserPro user_pro = new UserPro();
         while (var9.hasNext()) {
-            UserPro user = (UserPro) var9.next();
-            user.setLogo(springFiles + user_service.get_logo(user.getId()));
+            User user = var9.next();
+            user_pro.setId(user.getId());
+            user_pro.setSchoolName(user.getSchoolName());
+            user_pro.setUsername(user.getUsername());
+            user_pro.setAccountStatus(user.getAccountStatus());
+            user_pro.setAddress(user.getAddress());
+            user_pro.setAddTime(user.getAddTime());
+            user_pro.setContact(user.getContact());
+            user_pro.setCountry(user.getCountry());
+            user_pro.setDeleted(user.getDeleted());
+            user_pro.setLastLoginIp(user.getLastLoginIp());
+            user_pro.setLastLoginTime(user.getLastLoginTime());
+            user_pro.getLocation();user.getProfession();
+            user_pro.setSchoolCode(user.getSchoolCode());
+            user_pro.setTelephone(user.getTelephone());
+            user_pro.setUpdateTime(user.getUpdateTime());
+            user_pro.setWebsite(user.getWebsite());
+            user_pro.setLogo(springFiles + user_service.get_logo(user.getId()));
             clean(user);
-            result.add(user);
+            result.add(user_pro);
         }
         SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, result);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
