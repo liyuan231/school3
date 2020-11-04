@@ -41,7 +41,7 @@ public class CertificationDownloadController {
 
 
     @GetMapping("/download/{signId}")
-//    @PreAuthorize("hasAnyRole('USER','ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('USER','ADMINISTRATOR')")
     @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
     public String downloadCertification(@PathVariable("signId") Integer signId,
                                         HttpServletResponse response) throws UserNotFoundException {

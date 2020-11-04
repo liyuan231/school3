@@ -347,7 +347,7 @@ public class LikeServiceImpl {
                 signs.append(s).append(",");
             }
             if (signs.length() > 0) {
-                signs.deleteCharAt(likes.length() - 1);
+                signs.deleteCharAt(signs.length() - 1);
             }
             cell = row.createCell(2);
             cell.setCellValue(signs.toString());
