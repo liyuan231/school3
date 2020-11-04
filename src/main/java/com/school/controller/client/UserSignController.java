@@ -1,18 +1,23 @@
 package com.school.controller.client;
 
+import com.school.dto.FullUser;
 import com.school.exception.SignAlreadyExistException;
 import com.school.exception.SignNotCorrectException;
 import com.school.exception.UserNotFoundException;
+import com.school.model.Pics;
 import com.school.model.Sign;
 import com.school.model.User;
+import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
+import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +37,15 @@ public class UserSignController {
     private SignServiceImpl signService;
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    private PicsServiceImpl picsService;
+
+    @Value("${spring.file.path}")
+    private String springFilePath;
+
+    @Value("${file.default.logo}")
+    private String defaultLogo;
 
 
     //贵校已于20个高校达成合作意向。
@@ -83,7 +97,19 @@ public class UserSignController {
                 users.add(user1);
             }
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "与我达成合作的高校", users);
+        List<FullUser> fullUsers = new LinkedList<>();
+        for (User u : users) {
+            FullUser fullUser = new FullUser();
+            fullUser.setUser(u);
+            List<Pics> pics = picsService.querySelective(null, u.getId(), FileEnum.LOGO.value());
+            if (pics.size() > 0) {
+                fullUser.setLogo(springFilePath + pics.get(0).getLocation());
+            } else {
+                fullUser.setLogo(springFilePath + defaultLogo);
+            }
+            fullUsers.add(fullUser);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "与我达成合作的高校", fullUsers);
     }
 
 

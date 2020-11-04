@@ -64,7 +64,6 @@ public class AdminLikesController {
                          @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order,
                          @ApiParam(example = "2020", value = "year") @RequestParam(defaultValue = "2020", required = false) Integer year) {
-        //由于之前的做法不太妥当，因此采用此种做法，以用户为主体
         PageInfo<User> userPageInfo = userService.querySelective(likeSchoolName, page, pageSize, sort, order);
         int size = (int) userPageInfo.getTotal();
         List<AdvancedLikes> advancedLikesLinkedList = likeService.retrieveAdvancedLikes(userPageInfo.getList());
@@ -213,15 +212,16 @@ public class AdminLikesController {
         }
     }
 
-    private void checkIfNeedSign(Likes like) {
+    private boolean checkIfNeedSign(Likes like) {
         List<Likes> likesList = likeService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null, null).getList();
         //管理端添加一则意向，若这则意向的likeUserId->likedUserId 对应的意向 likedUserId->likeUserId在意向表中已经存在了，说明可实行自动签约
         if (likesList.size() > 0) {
+            Likes anotherLike = likesList.get(0);
             List<Sign> signs1 = signService.querySelective(null, like.getLikeUserId(), null, like.getLikedUserId(), null, null, null, null, null, null);
             List<Sign> signs2 = signService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null);
             //说明该则意向已经有对应
             if (signs1.size() + signs2.size() > 0) {
-                return;
+                return false;
             }
             Sign sign = new Sign();
             sign.setSignUserId(like.getLikeUserId());
@@ -229,8 +229,11 @@ public class AdminLikesController {
             sign.setSignedUserId(like.getLikedUserId());
             sign.setSignedSchoolName(like.getLikedSchoolName());
             signService.add(sign);
+            likeService.deleteByLikeUserIdAndLikedUserId(like.getLikeUserId(), like.getLikedUserId());
+            likeService.deleteByLikeUserIdAndLikedUserId(anotherLike.getLikeUserId(), anotherLike.getLikedUserId());
+            return true;
         }
-
+        return false;
     }
 
     @DeleteMapping({"/delete"})

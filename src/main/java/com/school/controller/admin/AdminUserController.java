@@ -201,7 +201,7 @@ public class AdminUserController {
                     logger.warn(e.getMessage());
                 }
             }).start();
-            return ResponseUtil.build(HttpStatus.OK.value(), "录入excel数据成功！");
+            return ResponseUtil.build(HttpStatus.OK.value(), "录入excel数据成功，具体请检查高校信息处！！");
         }
     }
 

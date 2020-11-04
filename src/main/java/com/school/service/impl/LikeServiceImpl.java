@@ -105,7 +105,6 @@ public class LikeServiceImpl {
         return pageInfo;
     }
 
-
     public PageInfo<Likes> querySelective(Integer id, Integer likeUserId, String likeSchoolName, Integer likedUserId, String likedSchoolName, Integer page, Integer pageSize, String sort, String order, Boolean distinctByLikeSchoolName) {
         return querySelective(id, likeUserId, likeSchoolName, likedUserId, likedSchoolName, page, pageSize, sort, order, distinctByLikeSchoolName, null);
     }
@@ -247,25 +246,25 @@ public class LikeServiceImpl {
                 likesStringList.add(u.getSchoolName());
             }
             advancedLikes.setLikesList(likesStringList);
-            Set<String> theUserThatIHaveSign = new HashSet<>();
+            List<Integer> theUserThatIHaveSign = new ArrayList<>();
             List<String> signStringList = new LinkedList<>();
             List<Sign> signs1 = signService.queryBySignUserId(user.getId());
             List<Sign> signs = signService.queryBySignedUserId(user.getId());
+            signs.addAll(signs1);
             for (Sign sign : signs) {
                 //我即为主动签约人
                 if (user.getId().equals(sign.getSignUserId())) {
                     User u = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
                     signStringList.add(u.getSchoolName());
-                    theUserThatIHaveSign.add(String.valueOf(sign.getSignedUserId()));
+                    theUserThatIHaveSign.add(sign.getSignedUserId());
                 } else {
                     User u = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
                     signStringList.add(u.getSchoolName());
-                    theUserThatIHaveSign.add(String.valueOf(sign.getSignUserId()));
+                    theUserThatIHaveSign.add(sign.getSignUserId());
                 }
             }
             advancedLikes.setSignList(signStringList);
             //我的签约
-            signs.addAll(signs1);
 //            advancedLikes.setSignList(signs);
             //主动邀请我的用户
             List<StringLikesWithMark> stringLikesWithMarks = new LinkedList<>();
@@ -278,14 +277,14 @@ public class LikeServiceImpl {
                 if (l.getLikeUserId().equals(user.getId())) {
                     User u = userService.queryById(l.getLikedUserId());
                     tmp.setSchoolName(u.getSchoolName());
-                    if (theUserThatIHaveSign.contains(String.valueOf(l.getLikedUserId()))) {
+                    if (search(theUserThatIHaveSign, l.getLikedUserId())) {
                         tmp.setSigned(true);
                     }
+
                 } else {
                     User u = userService.queryById(l.getLikeUserId());
                     tmp.setSchoolName(u.getSchoolName());
-                    if (theUserThatIHaveSign.contains(String.valueOf(l.getLikeUserId()))) {
-                        tmp.setSchoolName(u.getSchoolName());
+                    if (search(theUserThatIHaveSign, l.getLikeUserId())) {
                         tmp.setSigned(true);
                     }
                 }
@@ -301,6 +300,15 @@ public class LikeServiceImpl {
             advancedLikesLinkedList.add(advancedLikes);
         }
         return advancedLikesLinkedList;
+    }
+
+    private boolean search(List<Integer> theUserThatIHaveSign, Integer likedUserId) {
+        for (Integer integer : theUserThatIHaveSign) {
+            if (integer.equals(likedUserId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -613,6 +621,15 @@ public class LikeServiceImpl {
         return likes;
     }
 
+    public List<Likes> queryByLikeUserIdAndLikedUserId(Integer likeUserId, Integer likedUserId, Column... columns) {
+        LikesExample likesExample = new LikesExample();
+        Criteria criteria = likesExample.createCriteria();
+        criteria.andLikeUserIdEqualTo(likeUserId);
+        criteria.andLikedUserIdEqualTo(likedUserId);
+        List<Likes> likes = likesMapper.selectByExampleSelective(likesExample, columns);
+        return likes;
+    }
+
     public List<Likes> queryByLikedUserId(Integer likedUserId, Column... columns) {
         LikesExample likesExample = new LikesExample();
         Criteria criteria = likesExample.createCriteria();
@@ -622,8 +639,15 @@ public class LikeServiceImpl {
     }
 
     public PageInfo<Likes> querySelective() {
-        PageInfo<Likes> likesPageInfo = querySelective(null, null, null, null, null, null, null, null, null, null, null, null);
-        return likesPageInfo;
+        return querySelective(null, null, null, null, null, null, null, null, null, null, null, null);
 
+    }
+
+    public void deleteByLikeUserIdAndLikedUserId(Integer likeUserId, Integer likedUserId) {
+        LikesExample likesExample = new LikesExample();
+        Criteria criteria = likesExample.createCriteria();
+        criteria.andLikeUserIdEqualTo(likeUserId);
+        criteria.andLikedUserIdEqualTo(likedUserId);
+        likesMapper.deleteByExample(likesExample);
     }
 }

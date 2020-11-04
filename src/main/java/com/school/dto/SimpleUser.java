@@ -16,8 +16,17 @@ public class SimpleUser {
     private String schoolName;
     private String telephone;
     private String username;
+    private String website;
     private String logo;
     private String signature;
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
 
     public SimpleUser() {
     }

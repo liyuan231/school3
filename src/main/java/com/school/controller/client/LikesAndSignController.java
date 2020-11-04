@@ -5,10 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.PictureRenderData;
 import com.deepoove.poi.util.BytePictureUtils;
-import com.school.dao.LikesMapper;
-import com.school.dao.UserMapper;
-import com.school.dto.LikesWithMark;
-import com.school.dto.SimplePage;
+import com.github.pagehelper.PageInfo;
+import com.school.dto.*;
 import com.school.dto.golden.picture;
 import com.school.model.Likes;
 import com.school.model.Pics;
@@ -19,11 +17,12 @@ import com.school.service.impl.LikeServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
-import com.school.utils.CommonUtil;
+import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -31,7 +30,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
@@ -42,6 +40,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Controller
@@ -67,14 +68,8 @@ public class LikesAndSignController {
     private SignServiceImpl signService;
     @Autowired
     private PicsServiceImpl picsService;
-    @Value("${file.name.witness}")
-    private String witness;
-    @Autowired
-    private CommonUtil commonUtil;
-    @Resource
-    private UserMapper usermapper;
-    @Resource
-    private LikesMapper likesmapper;
+    @Value("${file.default.logo}")
+    private String defaultLogo;
 
 
     @ResponseBody
@@ -84,53 +79,164 @@ public class LikesAndSignController {
     public Object list(
             @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
             @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+            @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
+            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
+        User user = userService.retrieveUserByToken();
+        List<Sign> signs = signService.queryBySignUserId(user.getId());
+        List<Sign> signs2 = signService.queryBySignedUserId(user.getId());
+        signs.addAll(signs2);
+        int size=0;
+        List<List<Sign>> partition = ListUtils.partition(signs, pageSize);
+        List<Sign> result = null;
+        if (partition.size() >= page) {
+            result = partition.get(page - 1);
+        }
+        List<FullSignWithUser> fullSignWithUsers = new LinkedList<>();
+        for (Sign sign : result) {
+            FullSignWithUser fullSignWithUser = new FullSignWithUser();
+            User signUser = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
+            User signedUser = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            fullSignWithUser.setSignId(sign.getId());
+            fullSignWithUser.setSignUserId(signUser.getId());
+            fullSignWithUser.setSignUserSchoolName(signUser.getSchoolName());
+            fullSignWithUser.setSignedUserId(signedUser.getId());
+            fullSignWithUser.setSignedUserSchoolName(signedUser.getSchoolName());
+            List<Pics> signUserLogos = picsService.querySelective(null, signUser.getId(), FileEnum.LOGO.value());
+            if (signUserLogos.size() == 0) {
+                continue;
+            }
+            fullSignWithUser.setSignUserLogo(signUserLogos.get(0).getLocation());
+            List<Pics> signedUserLogos = picsService.querySelective(null, signedUser.getId(), FileEnum.LOGO.value());
+            if (signedUserLogos.size() == 0) {
+                continue;
+            }
+            fullSignWithUser.setSignedUserLogo(signedUserLogos.get(0).getLocation());
+            fullSignWithUsers.add(fullSignWithUser);
+            size++;
+        }
+        SimplePage simplePage = new SimplePage(size, fullSignWithUsers);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取签约证书信息成功！", simplePage);
+    }
+
+    @ResponseBody
+    @GetMapping("/signsList")
+    @ApiOperation(value = "当前用户的签约结果", notes = "当前用户的签约结果")
+    @PreAuthorize("hasRole('USER')")
+    public Object signsList(
+            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
+            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
             @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort,
             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         User user = userService.retrieveUserByToken();
-        //获取当前用户所有的意向
-        List<Likes> likes = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null).getList();
-        int size = likeService.count(user.getId(), null);
-//        System.out.println(likes.get(0));
-        List<Sign> signs = signService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null);
-        List<Sign> signs_ = signService.querySelective(null, null, null, user.getId(), null, null, null, null, null, null);
-        signs.addAll(signs_);
-        String springFile = springFilePath;
-
-        //userId->signId
-        HashMap<Integer, Integer> map = new HashMap<>();
-        HashSet<Integer> signedUserIds = new HashSet<>();
+        List<Sign> signs = signService.queryBySignUserId(user.getId());
+        List<Sign> signs1 = signService.queryBySignedUserId(user.getId());
+        signs.addAll(signs1);
+        int i = 0;
+        int[] signUserIds = new int[signs.size()];
         for (Sign sign : signs) {
-            if (sign.getSignedUserId().equals(user.getId())) {
-                signedUserIds.add(sign.getSignUserId());
-                map.put(sign.getSignUserId(), sign.getId());
+            if (sign.getSignUserId().equals(user.getId())) {
+                signUserIds[i++] = sign.getSignedUserId();
             } else {
-                signedUserIds.add(sign.getSignedUserId());
-                map.put(sign.getSignedUserId(), sign.getId());
-
+                signUserIds[i++] = sign.getSignUserId();
             }
         }
-        List<LikesWithMark> likesWithMarks = new LinkedList<>();
-        int total_sign = 0;
+        List<User> users = new LinkedList<>();
+        for (int id : signUserIds) {
+            User u = userService.queryById(id, User.Column.id, User.Column.schoolName, User.Column.updateTime);
+            users.add(u);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "当前用户的签约结果！", users);
+    }
+
+    @ResponseBody
+    @GetMapping("/retrieveNotLikeOrSignUser")
+    @ApiOperation(value = "获取当前用户未选意向未签约列表", notes = "未选意向未签约列表")
+    @PreAuthorize("hasRole('USER')")
+    public Object retrieveNotLikeOrSignUser() {
+        User user = userService.retrieveUserByToken();
+        PageInfo<User> userPageInfo = userService.querySelective(User.Column.id, User.Column.schoolName);
+        List<User> users = userPageInfo.getList();
+        List<Sign> signs = signService.queryBySignedUserId(user.getId());
+        List<Sign> signs1 = signService.queryBySignUserId(user.getId());
+        PageInfo<Likes> likesPageInfo = likeService.querySelective(null, user.getId(), null, null, null, null, null, null, null, null, null);
+        List<Likes> likesList = likesPageInfo.getList();
+        int[] likeUserIds = new int[likesList.size()];
+        int j = 0;
+        for (Likes likes : likesList) {
+            likeUserIds[j++] = likes.getLikedUserId();
+        }
+        Arrays.sort(likeUserIds);
+        signs.addAll(signs1);
+        int[] signUserIds = new int[signs.size()];
+        int i = 0;
+        for (Sign sign : signs) {
+            if (sign.getSignUserId().equals(user.getId())) {
+                signUserIds[i++] = sign.getSignedUserId();
+            } else {
+                signUserIds[i++] = sign.getSignUserId();
+            }
+        }
+        Arrays.sort(signUserIds);
+
+        Stream<User> userStream = users.stream().filter(new Predicate<User>() {
+            @Override
+            public boolean test(User u1) {
+                if (Arrays.binarySearch(signUserIds, (int) u1.getId()) >= 0 || u1.getId().equals(user.getId())) {
+                    return false;
+                }
+                return true;
+            }
+        });
+
+
+        List<User> collect = userStream.filter(new Predicate<User>() {
+            @Override
+            public boolean test(User user) {
+                if (Arrays.binarySearch(likeUserIds, user.getId()) >= 0) {
+                    return false;
+                }
+                return true;
+            }
+        }).collect(Collectors.toList());
+
+        List<FullUser> fullUsers = new LinkedList<>();
+        for (User u : collect) {
+            FullUser fullUser = new FullUser();
+            fullUser.setUser(u);
+            List<Pics> pics = picsService.querySelective(null, u.getId(), FileEnum.LOGO.value());
+            if (pics.size() > 0) {
+                fullUser.setLogo(springFilePath + pics.get(0).getLocation());
+            } else {
+                fullUser.setLogo(springFilePath + defaultLogo);
+            }
+            fullUsers.add(fullUser);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取未签约未标明意向的用户成功！", fullUsers);
+    }
+
+
+    @ResponseBody
+    @GetMapping("/unreceived")
+    @ApiOperation(value = "未接受我的邀约", notes = "未接受我的邀约")
+    @PreAuthorize("hasRole('USER')")
+    public String unReceived(
+            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
+            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+            @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
+            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
+        User user = userService.retrieveUserByToken();
+        PageInfo<Likes> likesPageInfo = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null, null);
+        List<Likes> likes = likesPageInfo.getList();
+        List<LikeWithUser> likeWithUsers = new LinkedList<>();
         for (Likes like : likes) {
-            LikesWithMark likesWithMark = new LikesWithMark();
-//            clean(like);
-            likesWithMark.setLikes(like);
-            likesWithMark.setLogo1(springFile + user_service.get_logo(like.getLikeUserId()));
-            likesWithMark.setLogo2(springFile + user_service.get_logo(like.getLikedUserId()));
-            if (signedUserIds.contains(like.getLikedUserId())) {
-                total_sign++;
-                likesWithMark.setSigned(true);
-                likesWithMark.setSignId(map.get(like.getLikedUserId()));
-            } else {
-                likesWithMark.setSigned(false);
-            }
-            likesWithMarks.add(likesWithMark);
+            LikeWithUser likeWithUser = new LikeWithUser();
+            User u = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName, User.Column.addTime);
+            likeWithUser.setLikeId(like.getId());
+            likeWithUser.setLikedSchoolName(u.getSchoolName());
+            likeWithUser.setAddTime(like.getAddTime());
+            likeWithUsers.add(likeWithUser);
         }
-
-        SimplePage simplePage = new SimplePage(size, likesWithMarks, total_sign);
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向及签约列表成功!", simplePage);
-
-        //现在当前用户的意向以及签约都有了，就是整合在一起
+        return ResponseUtil.build(HttpStatus.OK.value(), "未接受我的邀约", likeWithUsers);
     }
 
 
@@ -144,7 +250,11 @@ public class LikesAndSignController {
         String code = null;
         User user = userService.retrieveUserByToken();
         List<User> user_list = new ArrayList<User>();
+        List<UserPro> userpro_list = new ArrayList<UserPro>();
         List<Likes> like_list = new ArrayList<Likes>();
+        List<Sign> signs = signService.queryBySignUserId(user.getId());
+        List<Sign> signs1 = signService.queryBySignedUserId(user.getId());
+        signs.addAll(signs1);
         user_list = user_service.get_all_user(user.getId());
         like_list = user_service.get_all_likes(user.getId());
         try {
@@ -152,7 +262,6 @@ public class LikesAndSignController {
             int len_2 = like_list.size();
             int flag = 0;
             for (int i = 0; i < len_1 - flag; i++) {
-                user_list.get(i).setPassword(null);
                 for (int j = 0; j < len_2; j++) {
 //    			System.out.println(i);
                     if (user_list.get(i).getId().equals(like_list.get(j).getLikedUserId())) {
@@ -162,6 +271,29 @@ public class LikesAndSignController {
                         break;
                     }
                 }
+            }
+            int len_3 = user_list.size();
+            for (int i = 0; i < len_3; i++) {
+                UserPro tmp = new UserPro();
+                tmp.setId(user_list.get(i).getId());
+                tmp.setUsername(user_list.get(i).getUsername());
+                tmp.setSchoolName(user_list.get(i).getSchoolName());
+                tmp.setContact(user_list.get(i).getContact());
+                tmp.setAddress(user_list.get(i).getAddress());
+                tmp.setTelephone(user_list.get(i).getTelephone());
+                tmp.setUpdateTime(user_list.get(i).getUpdateTime());
+                tmp.setSchoolCode(user_list.get(i).getSchoolCode());
+                tmp.setLocation(user_list.get(i).getLocation());
+                tmp.setAddTime(user_list.get(i).getAddTime());
+                tmp.setLastLoginIp(user_list.get(i).getLastLoginIp());
+                tmp.setLastLoginTime(user_list.get(i).getLastLoginTime());
+                tmp.setDeleted(user_list.get(i).getDeleted());
+                tmp.setAccountStatus(user_list.get(i).getAccountStatus());
+                tmp.setProfession(user_list.get(i).getProfession());
+                tmp.setCountry(user_list.get(i).getCountry());
+                tmp.setWebsite(user_list.get(i).getWebsite());
+                tmp.setLogo("/files/" + user_service.get_logo(user_list.get(i).getId()));
+                userpro_list.add(tmp);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -174,10 +306,25 @@ public class LikesAndSignController {
         code = "200";
         result.put("msg", msg);
         result.put("code", code);
-        result.put("data", user_list);
+        result.put("data", userpro_list);
         return result;
     }
 
+
+    @ResponseBody
+    @GetMapping("/retrieveTheUsersThatLikeMe")
+    @ApiOperation(value = "获取对我有意向的用户成功", notes = "获取对我有意向的用户成功")
+    @PreAuthorize("hasRole('USER')")
+    public String theUserThatLikesMe() {
+        User user = userService.retrieveUserByToken();
+        List<Likes> likes = likeService.queryByLikedUserId(user.getId());
+        List<User> users = new LinkedList<>();
+        for (Likes like : likes) {
+            User u = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
+            users.add(u);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功", users);
+    }
 
     @ResponseBody
     @GetMapping("/choosedme")
@@ -322,18 +469,23 @@ public class LikesAndSignController {
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/get_Word")
     @ApiOperation(value = "下载签约证书", notes = "下载签约证书")
-    public JSON generateWord(@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户logo访问地址") String logo1,
-                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户logo访问地址") String logo2,
-                             @ApiParam(example = "GDUFS", value = "当前用户学校名称") String school1,
-                             @ApiParam(example = "HUA NAN LI GONG", value = "被签约用户学校名称") String school2,
-                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户签章访问地址") String name1,
-                             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户签章访问地址") String name2,
-                             @ApiParam(example = "headmaster", value = "当前用户职务") String job1,
-                             @ApiParam(example = "headmaster", value = "被签约用户职务") String job2,
-                             @ApiParam(example = "PRC", value = "当前用户所属国家") String country1,
-                             @ApiParam(example = "USA", value = "被签约用户所属国家") String country2,
-                             HttpServletRequest request,
-                             HttpServletResponse response) throws IOException {
+    public JSON generateWord
+            (@ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户logo访问地址") String
+                     logo1,
+             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户logo访问地址") String
+                     logo2,
+             @ApiParam(example = "GDUFS", value = "当前用户学校名称") String school1,
+             @ApiParam(example = "HUA NAN LI GONG", value = "被签约用户学校名称") String school2,
+             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "当前用户签章访问地址") String
+                     name1,
+             @ApiParam(example = "http://175.24.4.196/files/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg", value = "被签约用户签章访问地址") String
+                     name2,
+             @ApiParam(example = "headmaster", value = "当前用户职务") String job1,
+             @ApiParam(example = "headmaster", value = "被签约用户职务") String job2,
+             @ApiParam(example = "PRC", value = "当前用户所属国家") String country1,
+             @ApiParam(example = "USA", value = "被签约用户所属国家") String country2,
+             HttpServletRequest request,
+             HttpServletResponse response) throws IOException {
         //ͼƬ·������ע������linux����windows
         String msg = null;
         String code = null;
@@ -557,19 +709,19 @@ public class LikesAndSignController {
         }
         try {
             if (pic_1.get(0).getType().equals(2)) {
-                logo1 = "http://" + ia.getHostAddress() + "/" +
+                logo1 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_1.get(0).getLocation();
-                name1 = "http://" + ia.getHostAddress() + "/" +
+                        pic_1.get(0).getLocation();
+                name1 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_1.get(1).getLocation();
+                        pic_1.get(1).getLocation();
             } else {
-                logo1 = "http://" + ia.getHostAddress() + "/" +
+                logo1 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_1.get(1).getLocation();
-                name1 = "http://" + ia.getHostAddress() + "/" +
+                        pic_1.get(1).getLocation();
+                name1 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_1.get(0).getLocation();
+                        pic_1.get(0).getLocation();
             }
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
@@ -581,19 +733,19 @@ public class LikesAndSignController {
         }
         try {
             if (pic_2.get(0).getType().equals(2)) {
-                logo2 = "http://" + ia.getHostAddress() + "/" +
+                logo2 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_2.get(0).getLocation();
-                name2 = "http://" + ia.getHostAddress() + "/" +
+                        pic_2.get(0).getLocation();
+                name2 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_2.get(1).getLocation();
+                        pic_2.get(1).getLocation();
             } else {
-                logo2 = "http://" + ia.getHostAddress() + "/" +
+                logo2 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_2.get(1).getLocation();
-                name2 = "http://" + ia.getHostAddress() + "/" +
+                        pic_2.get(1).getLocation();
+                name2 = "http://" + ia.getHostAddress() +
                         springFilePath +
-                        "/" + pic_2.get(0).getLocation();
+                        pic_2.get(0).getLocation();
             }
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();

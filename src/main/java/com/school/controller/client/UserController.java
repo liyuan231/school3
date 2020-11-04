@@ -1,9 +1,10 @@
 package com.school.controller.client;
 
+import com.github.pagehelper.PageInfo;
 import com.school.dao.UserMapper;
+import com.school.dto.FullUser;
 import com.school.dto.SimplePage;
 import com.school.dto.SimpleUser;
-import com.school.dto.UserPro;
 import com.school.exception.*;
 import com.school.model.Pics;
 import com.school.model.User;
@@ -32,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +60,8 @@ public class UserController {
     @Autowired
     userservice user_service;
     String springFiles = "/home/springboot/files/";
+    @Value("${file.default.logo}")
+    private String defaultLogo;
 
     /**
      * 依据 retrieveVerificationCode发过去的验证码重新设置密码
@@ -90,7 +92,6 @@ public class UserController {
     }
 
 
-    //TODO golden1 ->com.school.model.User cannot be cast to com.school.dto.UserPro
     @GetMapping("/listSearch")
     @ApiOperation(
             value = "参会学校->所有参会学校",
@@ -101,34 +102,22 @@ public class UserController {
                              @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
                              @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort,
                              @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
-        Integer size = this.userService.count(schoolName);
-        List<User> result = new LinkedList();
-        Iterator<User> var9 = users.iterator();
-        UserPro user_pro = new UserPro();
-        while (var9.hasNext()) {
-            User user = var9.next();
-            user_pro.setId(user.getId());
-            user_pro.setSchoolName(user.getSchoolName());
-            user_pro.setUsername(user.getUsername());
-            user_pro.setAccountStatus(user.getAccountStatus());
-            user_pro.setAddress(user.getAddress());
-            user_pro.setAddTime(user.getAddTime());
-            user_pro.setContact(user.getContact());
-            user_pro.setCountry(user.getCountry());
-            user_pro.setDeleted(user.getDeleted());
-            user_pro.setLastLoginIp(user.getLastLoginIp());
-            user_pro.setLastLoginTime(user.getLastLoginTime());
-            user_pro.getLocation();user.getProfession();
-            user_pro.setSchoolCode(user.getSchoolCode());
-            user_pro.setTelephone(user.getTelephone());
-            user_pro.setUpdateTime(user.getUpdateTime());
-            user_pro.setWebsite(user.getWebsite());
-            user_pro.setLogo(springFiles + user_service.get_logo(user.getId()));
-            clean(user);
-            result.add(user_pro);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.website, User.Column.profession, User.Column.telephone, User.Column.username, User.Column.address,User.Column.schoolName,User.Column.contact);
+        Integer size = Math.toIntExact(userPageInfo.getTotal());
+        List<User> users = userPageInfo.getList();
+        List<FullUser> fullUsers = new LinkedList<>();
+        for (User user : users) {
+            FullUser fullUser = new FullUser();
+            fullUser.setUser(user);
+            List<Pics> pics = picsService.querySelective(null, user.getId(), FileEnum.LOGO.value());
+            if (pics.size() > 0) {
+                fullUser.setLogo(pics.get(0).getLocation());
+            } else {
+                fullUser.setLogo(springFilePath + defaultLogo);
+            }
+            fullUsers.add(fullUser);
         }
-        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, result);
+        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, fullUsers);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
     }
 

@@ -6,6 +6,7 @@ import com.school.model.User;
 import com.school.service.golden.userservice;
 import com.school.service.impl.LikeServiceImpl;
 import com.school.service.impl.PicsServiceImpl;
+import com.school.service.impl.SignServiceImpl;
 import com.school.service.impl.UserServiceImpl;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
@@ -17,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,6 +29,8 @@ public class UserLikeController {
     private LikeServiceImpl likeService;
     @Autowired
     private userservice user_service;
+    @Autowired
+    private SignServiceImpl signService;
 
     @Autowired
     UserSignController usersign;
@@ -40,45 +42,70 @@ public class UserLikeController {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-
-    //golden
     @PreAuthorize("hasAnyRole('USER')")
     @ApiOperation(value = "选择签约->勾选参会学校->提交，若对方已选择自己为意向签约目标，系统自动匹配签约", notes = "批量表明意向并且自动匹配签约")
     @PostMapping("/batchLike")
-    public Object batchSign(@RequestParam(value = "likedUserIds") Integer[] likedUserIds) {
-        Integer host_id = userService.retrieveUserByToken().getId();
-        Integer batch_sign[] = new Integer[likedUserIds.length + 1];
-        int i = 0;
+    public String batchLike(@RequestParam(value = "likedUserIds") Integer[] likedUserIds) {
+        String message = null;
+        User user = userService.retrieveUserByToken();
         for (Integer likedUserId : likedUserIds) {
             try {
-                likeService.like(likedUserId);
-            } catch (UserLikesNotCorrespondException | LikesNotFoundException | UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
-                logger.warn(e.getMessage() + "->" + likedUserId);
-//                e.printStackTrace();
-            }
-            try {
-                if (user_service.select_both(host_id, likedUserId)) {
-                    batch_sign[i] = likedUserId;
-                    i++;
-                }
-            } catch (Exception e) {
-                logger.warn(e.getMessage() + "->" + likedUserId);
-            }
-        }
-        Integer sign[] = new Integer[likedUserIds.length + 1];
 
-        System.out.println(i);
-        if (i != 0) {
-            sign = Arrays.copyOfRange(batch_sign, 0, i);
-            System.out.println(sign);
-            try {
-                usersign.batchSign(sign);
-            } catch (Exception e) {
-                logger.warn(e.getMessage());
+                List<Likes> likes = likeService.queryByLikeUserIdAndLikedUserId(likedUserId, user.getId());
+                User u = userService.queryById(likedUserId, User.Column.id, User.Column.schoolName);
+                if (likes.size() > 0) {
+                    likeService.deleteById(likes.get(0).getId());
+                    signService.add(user.getId(), user.getSchoolName(), u.getId(), u.getSchoolName());
+                    message = "和" + u.getSchoolName() + "签约成功！";
+                } else {
+                    likeService.add(user.getId(), user.getSchoolName(), u.getId(), u.getSchoolName());
+                    message = "XXX" + u.getSchoolName() + "XXX！";
+                }
+            } catch (UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException | UserLikesNotCorrespondException | LikesNotFoundException e) {
+//                e.printStackTrace();
+                logger.error("批量表明意向并且自动匹配签约" + e.getMessage());
             }
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "用户批量表明意向成功！签约已实时更新");
+        return ResponseUtil.build(HttpStatus.OK.value(), "批量表明意向且自动签约成功！", message);
     }
+    //golden
+//    @PreAuthorize("hasAnyRole('USER')")
+//    @ApiOperation(value = "选择签约->勾选参会学校->提交，若对方已选择自己为意向签约目标，系统自动匹配签约", notes = "批量表明意向并且自动匹配签约")
+//    @PostMapping("/batchLike")
+//    public Object batchSign(@RequestParam(value = "likedUserIds") Integer[] likedUserIds) {
+//        Integer host_id = userService.retrieveUserByToken().getId();
+//        Integer batch_sign[] = new Integer[likedUserIds.length + 1];
+//        int i = 0;
+//        for (Integer likedUserId : likedUserIds) {
+//            try {
+//                likeService.like(likedUserId);
+//            } catch (UserLikesNotCorrespondException | LikesNotFoundException | UserNotFoundException | UserNotCorrectException | LikesAlreadyExistException e) {
+//                logger.warn(e.getMessage() + "->" + likedUserId);
+////                e.printStackTrace();
+//            }
+//            try {
+//                if (user_service.select_both(host_id, likedUserId)) {
+//                    batch_sign[i] = likedUserId;
+//                    i++;
+//                }
+//            } catch (Exception e) {
+//                logger.warn(e.getMessage() + "->" + likedUserId);
+//            }
+//        }
+//        Integer sign[] = new Integer[likedUserIds.length + 1];
+//
+//        System.out.println(i);
+//        if (i != 0) {
+//            sign = Arrays.copyOfRange(batch_sign, 0, i);
+//            System.out.println(sign);
+//            try {
+//                usersign.batchSign(sign);
+//            } catch (Exception e) {
+//                logger.warn(e.getMessage());
+//            }
+//        }
+//        return ResponseUtil.build(HttpStatus.OK.value(), "用户批量表明意向成功！签约已实时更新");
+//    }
 
 
 //    /**
@@ -161,26 +188,4 @@ public class UserLikeController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取我有意向的用户成功！", users);
     }
 
-    private void clean(Likes theUserThatILikes) {
-        theUserThatILikes.setLikeUserId(null);
-        theUserThatILikes.setLikeSchoolName(null);
-        theUserThatILikes.setAddTime(null);
-        theUserThatILikes.setUpdateTime(null);
-        theUserThatILikes.setDeleted(null);
-        theUserThatILikes.setId(null);
-//        theUserThatILikes.set
-    }
-
-//    @GetMapping("/match")
-//    @PreAuthorize("hasAnyRole('ADMINISTRATOR','USER')")
-//    @ApiOperation(value = "查询互有意向的用户", notes = "获取我有意向的用户且对我也有意向，即互相喜欢的用户")
-//    public Object match() throws UserNotFoundException {
-//        List<Likes> matchs = likeService.matchByUserId();
-//        List<User> users = new LinkedList<>();
-//        for (Likes match : matchs) {
-//            User user = userService.findById(match.getLikeduserid());
-//            users.add(user);
-//        }
-//        return ResponseUtil.build(HttpStatus.OK.value(), "获取互相喜欢的用户们成功！", users);
-//    }
 }

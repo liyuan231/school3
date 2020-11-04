@@ -65,6 +65,11 @@ public class SignServiceImpl {
     }
 
     public void add(Integer signUserId, String signUserSchoolName, Integer signedUserId, String signedUserSchoolName) {
+        List<Sign> signs = queryBySignUserAndSignedUserId(signUserId, signedUserId);
+        List<Sign> signs1 = queryBySignUserAndSignedUserId(signedUserId, signUserId);
+        if(signs.size()+signs1.size()>0){
+            return;
+        }
         Sign sign = new Sign();
         sign.setSignUserId(signUserId);
         sign.setSignSchoolName(signUserSchoolName);
@@ -342,6 +347,8 @@ public class SignServiceImpl {
         criteria.andSignedUserIdEqualTo(likedUserId);
         return signMapper.selectByExampleSelective(signExample);
     }
+
+
 
     public List<Sign> queryBySignUserAndSignedUserId(Integer likeUserId, Integer likedUserId) {
         SignExample signExample = new SignExample();
