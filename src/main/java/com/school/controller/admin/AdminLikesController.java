@@ -282,7 +282,7 @@ public class AdminLikesController {
                 try {
                     this.emailService.send(user.getUsername(), "!签约意向提醒!", "时间马上就要截至了,记得来参与意向选择~");
                 } catch (MailException var5) {
-                    this.logger.warn("该邮箱号不存在:" + user.getUsername());
+                    this.logger.warn(user.getUsername() + var5.getMessage());
                 }
             }
         }).start();
