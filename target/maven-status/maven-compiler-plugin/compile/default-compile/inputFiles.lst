@@ -9,6 +9,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\Rol
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserSignCorrespondException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\FileExceptionHandler.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\utils\RoleEnum.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\FullSignWithUser.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\component\jwt\KeyPairFactory.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\model\Usertorole.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\RoleMapper.java

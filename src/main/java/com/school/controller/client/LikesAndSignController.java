@@ -105,12 +105,12 @@ public class LikesAndSignController {
             if (signUserLogos.size() == 0) {
                 continue;
             }
-            fullSignWithUser.setSignUserLogo(signUserLogos.get(0).getLocation());
+            fullSignWithUser.setSignUserLogo(springFilePath+signUserLogos.get(0).getLocation());
             List<Pics> signedUserLogos = picsService.querySelective(null, signedUser.getId(), FileEnum.LOGO.value());
             if (signedUserLogos.size() == 0) {
                 continue;
             }
-            fullSignWithUser.setSignedUserLogo(signedUserLogos.get(0).getLocation());
+            fullSignWithUser.setSignedUserLogo(springFilePath+signedUserLogos.get(0).getLocation());
             fullSignWithUsers.add(fullSignWithUser);
             size++;
         }
@@ -667,8 +667,8 @@ public class LikesAndSignController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/get_certi")
     @ApiOperation(value = "在线查看签约证书", notes = "在线查看签约证书")
-    public JSON get_certi(@ApiParam(example = "1", value = "当前用户id") Integer host_id,
-                          @ApiParam(example = "2", value = "被签约用户的id") Integer liked_id) throws UnknownHostException {
+    public JSON get_certi(@ApiParam(example = "1", value = "当前用户id")@RequestParam("host_id") Integer host_id,
+                          @ApiParam(example = "2", value = "被签约用户的id")@RequestParam("liked_id") Integer liked_id) throws UnknownHostException {
         String msg = null;
         String code = null;
         JSONObject result = new JSONObject();
