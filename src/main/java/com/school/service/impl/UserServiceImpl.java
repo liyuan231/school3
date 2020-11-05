@@ -438,7 +438,8 @@ public class UserServiceImpl implements UserDetailsService {
                         this.logger.warn("邮箱号有误,无法发送邮件到指定用户:" + user.getUsername());
                         continue;
                     }
-                    user.setAccountStatus(Status.LOGIN_NOT_ALLOWED);
+//                    user.setAccountStatus(Status.LOGIN_NOT_ALLOWED);
+                    user.setAccountStatus(Status.LOGIN_ALLOWED);
                     this.add(user, RoleEnum.USER.value());
                     System.out.println(user.toString());
                 }

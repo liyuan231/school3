@@ -5,13 +5,14 @@
 
 package com.school.controller.admin;
 
-import com.school.dto.FullUser;
-import com.school.dto.SimplePage;
-import com.school.dto.SimpleUser;
+import com.school.dto.*;
 import com.school.exception.*;
+import com.school.model.Likes;
 import com.school.model.Pics;
+import com.school.model.Sign;
 import com.school.model.User;
 import com.school.service.impl.*;
+import com.school.utils.AssertUtil;
 import com.school.utils.FileEnum;
 import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -99,7 +101,7 @@ public class AdminUserController {
     @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     public Object sendVertificationCode() {
         User user = userService.retrieveUserByToken();
-        emailService.sendVerificationCode("pop3临时授权码", "获取查看pop3临时授权码成功(3分钟内有效)>", user.getUsername(), 3, TimeUnit.MINUTES);
+        emailService.sendVerificationCode("pop3临时授权码", "获取查看pop3临时授权码成功(3分钟内有效)>", user.getUsername(), 5, TimeUnit.MINUTES);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取查看pop3临时授权码成功！", null);
     }
 
@@ -386,5 +388,127 @@ public class AdminUserController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取高校信息成功！", simplePage);
     }
 
+    @GetMapping("/retrieveIntentionThatIRequestOthersByUserId")
+    @ApiOperation(
+            value = "管理端-》我发出去的邀约，看看有谁接收或没接收我的邀约",
+            notes = "管理端-》我发出去的邀约"
+    )
+    public Object retrieveIntentionThatIRequestOthersByUserId(@RequestParam("userId") Integer userId) {
+        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+        //我的意向（我是主动）
+        List<Likes> likes = likeService.queryByLikeUserId(userId);
+        for (Likes like : likes) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(like.getId());
+            likeOrSign.setSigned(false);
+            likeOrSign.setUpdateTime(like.getUpdateTime());
+            User user = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSigns.add(likeOrSign);
+        }
+        //我的签约(我是主动)
+        List<Sign> signs = signService.queryBySignUserId(userId);
+        for (Sign sign : signs) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(sign.getId());
+            likeOrSign.setSigned(true);
+            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSigns.add(likeOrSign);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出事件，接收情况成功！）", likeOrSigns);
+    }
+
+    @ApiOperation(
+            value = "管理端-》发给我的邀约",
+            notes = "管理端-》发给我的邀约"
+    )
+    @GetMapping("/retrieveIntentionThatOthersRequestMeByUserId")
+    public Object retrieveIntentionThatOthersRequestMeByUserId(@RequestParam("userId") Integer userId) {
+        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+        //我的意向(我是被动）
+        List<Likes> likes = likeService.queryByLikedUserId(userId);
+        for (Likes like : likes) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(like.getId());
+            likeOrSign.setSigned(false);
+            likeOrSign.setUpdateTime(like.getUpdateTime());
+            User user = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSigns.add(likeOrSign);
+        }
+        //我的签约（我是被动）
+        List<Sign> signs = signService.queryBySignedUserId(userId);
+        for (Sign sign : signs) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(sign.getId());
+            likeOrSign.setSigned(true);
+            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSigns.add(likeOrSign);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出事件，接收情况成功！）", likeOrSigns);
+    }
+
+
+    @ApiOperation(
+            value = "管理端-》意向成功匹配即签约成功！",
+            notes = "管理端-》意向成功匹配即签约成功"
+    )
+    @GetMapping("/retrieveTheUsersThatIHaveSign")
+    public Object retrieveTheUsersThatIHaveSign(@RequestParam("userId") Integer userId) {
+        List<Sign> signs = signService.queryBySignUserId(userId);
+        List<Sign> signs1 = signService.queryBySignedUserId(userId);
+        //获取我的签约
+        signs.addAll(signs1);
+        List<SimplifySign> simpleSigns = new LinkedList<>();
+        for (Sign sign : signs) {
+
+            SimplifySign simplifySign = new SimplifySign();
+            simplifySign.setUpdateTime(sign.getUpdateTime());
+            simplifySign.setSignId(sign.getId());
+            if (sign.getSignUserId().equals(userId)) {
+                User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+                simplifySign.setSchoolName(user.getSchoolName());
+            } else {
+                User user = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
+                simplifySign.setSchoolName(user.getSchoolName());
+            }
+            simpleSigns.add(simplifySign);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取和我签约成功用户成功！", simpleSigns);
+    }
+
+
+
+    /**
+     * 依据 retrieveVerificationCode发过去的验证码重新设置密码
+     */
+    @PostMapping("/adminResetPassword")
+    @ApiOperation(value = "用户重置密码", notes = "需要username以及发给该账号邮箱的code（时限5分钟），以及newPassword")
+    public String resetPassword(@ApiParam(example = "123@qq.com", value = "待重置密码的用户名，即邮箱号") @RequestParam("userName") String username,
+                                @ApiParam(example = "123", value = "新密码，前端加过密的") @RequestParam("newPassword") String newPassword,
+                                @ApiParam(example = "1234", value = "发给该用户邮箱的验证码") @RequestParam("code") String code,
+                                HttpServletRequest request) throws EmailVerificationCodeNullPointerException, EmailWrongFormatException, UsernameNullPointerException, EmailVerificationCodeIllegalArgumentException, UserNotFoundException {
+        logger.info("[" + request.getRemoteAddr() + "] " + "is resetting his password!");
+        AssertUtil.isValidMail(username, "用户名邮箱格式有误！");
+        AssertUtil.emailVerificationCodeNotNull(code, "验证码不应为空！");
+        Assert.notNull(newPassword, "新密码不应为空！");
+        emailService.resetPassword(username, code, newPassword);
+        return ResponseUtil.build(HttpStatus.OK.value(), "重设密码成功！", null);
+    }
+
+    @PostMapping("/adminForgetPassword")
+    @ApiOperation(value = "用户忘记密码", notes = "传入一个邮箱账号username")
+    public String retrieveVerificationCode(@ApiParam(example = "123@qq.com", value = "谁忘记了密码（用户名）") @RequestParam String username,
+                                           HttpServletRequest request) throws EmailNotFoundException, UsernameNullPointerException, EmailWrongFormatException {
+        logger.info("[" + request.getRemoteAddr() + "] is retrieving a verificationCode for his account!");
+        AssertUtil.usernameNotNull(username, "邮箱号不应为空！");
+        AssertUtil.isValidMail(username, "邮箱格式错误!");
+        emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（用于重置密码，5分钟内有效）", username, 5, TimeUnit.MINUTES);//忘记密码
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！", null);
+    }
 
 }

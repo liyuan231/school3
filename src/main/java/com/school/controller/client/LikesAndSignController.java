@@ -85,7 +85,7 @@ public class LikesAndSignController {
         List<Sign> signs = signService.queryBySignUserId(user.getId());
         List<Sign> signs2 = signService.queryBySignedUserId(user.getId());
         signs.addAll(signs2);
-        int size=0;
+        int size = 0;
         List<List<Sign>> partition = ListUtils.partition(signs, pageSize);
         List<Sign> result = null;
         if (partition.size() >= page) {
@@ -105,12 +105,12 @@ public class LikesAndSignController {
             if (signUserLogos.size() == 0) {
                 continue;
             }
-            fullSignWithUser.setSignUserLogo(springFilePath+signUserLogos.get(0).getLocation());
+            fullSignWithUser.setSignUserLogo(springFilePath + signUserLogos.get(0).getLocation());
             List<Pics> signedUserLogos = picsService.querySelective(null, signedUser.getId(), FileEnum.LOGO.value());
             if (signedUserLogos.size() == 0) {
                 continue;
             }
-            fullSignWithUser.setSignedUserLogo(springFilePath+signedUserLogos.get(0).getLocation());
+            fullSignWithUser.setSignedUserLogo(springFilePath + signedUserLogos.get(0).getLocation());
             fullSignWithUsers.add(fullSignWithUser);
             size++;
         }
@@ -154,7 +154,7 @@ public class LikesAndSignController {
     @PreAuthorize("hasRole('USER')")
     public Object retrieveNotLikeOrSignUser() {
         User user = userService.retrieveUserByToken();
-        PageInfo<User> userPageInfo = userService.querySelective(User.Column.id, User.Column.schoolName);
+        PageInfo<User> userPageInfo = userService.querySelective(User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username);
         List<User> users = userPageInfo.getList();
         List<Sign> signs = signService.queryBySignedUserId(user.getId());
         List<Sign> signs1 = signService.queryBySignUserId(user.getId());
@@ -187,8 +187,6 @@ public class LikesAndSignController {
                 return true;
             }
         });
-
-
         List<User> collect = userStream.filter(new Predicate<User>() {
             @Override
             public boolean test(User user) {
@@ -207,7 +205,7 @@ public class LikesAndSignController {
             if (pics.size() > 0) {
                 fullUser.setLogo(springFilePath + pics.get(0).getLocation());
             } else {
-                fullUser.setLogo(springFilePath + defaultLogo);
+//                fullUser.setLogo(springFilePath + defaultLogo);
             }
             fullUsers.add(fullUser);
         }
@@ -667,8 +665,8 @@ public class LikesAndSignController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/get_certi")
     @ApiOperation(value = "在线查看签约证书", notes = "在线查看签约证书")
-    public JSON get_certi(@ApiParam(example = "1", value = "当前用户id")@RequestParam("host_id") Integer host_id,
-                          @ApiParam(example = "2", value = "被签约用户的id")@RequestParam("liked_id") Integer liked_id) throws UnknownHostException {
+    public JSON get_certi(@ApiParam(example = "1", value = "当前用户id") @RequestParam("host_id") Integer host_id,
+                          @ApiParam(example = "2", value = "被签约用户的id") @RequestParam("liked_id") Integer liked_id) throws UnknownHostException {
         String msg = null;
         String code = null;
         JSONObject result = new JSONObject();

@@ -67,7 +67,7 @@ public class UserController {
      * 依据 retrieveVerificationCode发过去的验证码重新设置密码
      */
     @PostMapping("/resetPassword")
-    @ApiOperation(value = "用户重置密码", notes = "需要username以及发给该账号邮箱的code（时限3分钟），以及newPassword")
+    @ApiOperation(value = "用户重置密码", notes = "需要username以及发给该账号邮箱的code（时限5分钟），以及newPassword")
     public String resetPassword(@ApiParam(example = "123@qq.com", value = "待重置密码的用户名，即邮箱号") @RequestParam("userName") String username,
                                 @ApiParam(example = "123", value = "新密码，前端加过密的") @RequestParam("newPassword") String newPassword,
                                 @ApiParam(example = "1234", value = "发给该用户邮箱的验证码") @RequestParam("code") String code,
@@ -87,7 +87,7 @@ public class UserController {
         logger.info("[" + request.getRemoteAddr() + "] is retrieving a verificationCode for his account!");
         AssertUtil.usernameNotNull(username, "邮箱号不应为空！");
         AssertUtil.isValidMail(username, "邮箱格式错误!");
-        emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（用于重置密码，3分钟内有效）", username, 180, TimeUnit.SECONDS);//忘记密码
+        emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（用于重置密码，5分钟内有效）", username, 5, TimeUnit.MINUTES);//忘记密码
         return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！", null);
     }
 
@@ -113,7 +113,7 @@ public class UserController {
             if (pics.size() > 0) {
                 fullUser.setLogo(pics.get(0).getLocation());
             } else {
-                fullUser.setLogo(springFilePath + defaultLogo);
+//                fullUser.setLogo(springFilePath + defaultLogo);
             }
             fullUsers.add(fullUser);
         }
@@ -121,40 +121,16 @@ public class UserController {
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
     }
 
-    private void clean(User user) {
-        user.setAccountStatus(null);
-//        user.setUsername(null);
-        user.setPassword(null);
-        user.setUpdateTime(null);
-        user.setLocation(null);
-        user.setAddTime(null);
-        user.setLastLoginIp(null);
-        user.setLastLoginTime(null);
-//        user.setAvatarurl(null);
-        user.setDeleted(null);
+    @GetMapping("/countAllUsers")
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(
+            value = "获取参会学校的数量",
+            notes = "获取参会学校的数量"
+    )
+    public Object countAllUsers(){
+        Integer count = userService.count();
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取目前所有的高校数量信息成功！",count);
     }
-
-
-
-//    @PostMapping("/upload")
-//    @PreAuthorize("hasAnyRole('USER')")
-//    @ApiOperation(value = "上传头像", notes = "用户上传头像")
-//    public Object upload(@ApiParam(example = "file", value = "该文件流,参数名应该为file") @RequestParam("file") MultipartFile file) throws IOException, FileFormattingException, UserNotFoundException {
-//        if (!file.isEmpty()) {
-//            String fileName = file.getOriginalFilename();
-//            String format = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-//            AssertUtil.isPicture(format);
-//            //上传图片并插入数据库中
-//            upload(file, format, FileEnum.AVATAR_URL);
-//            return ResponseUtil.build(HttpStatus.OK.value(), "上传图片成功！", null);
-//        }
-//        return ResponseUtil.build(HttpStatus.OK.value(), "图片为空！", null);
-//    }
-
-//    private void upload(MultipartFile file, String format, FileEnum fileEnum) throws IOException, UserNotFoundException {
-//        User user = userService.retrieveUserByToken();
-//        picsService.upload(user.getId(), fileEnum.value(), file);
-//    }
 
     @PostMapping("/upload/logo")
     @ApiOperation(
@@ -200,14 +176,14 @@ public class UserController {
         String signature = signatures.size() == 0 ? null : this.springFilePath + ((Pics) signatures.get(0)).getLocation();
         SimpleUser simpleUser = new SimpleUser();
 
-        this.fillNexessaryUserInfo(user, simpleUser);
+        this.fillNecessaryUserInfo(user, simpleUser);
         simpleUser.setLogo(logo);
         simpleUser.setSignature(signature);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取用户信息成功!", simpleUser);
     }
 
 
-    private void fillNexessaryUserInfo(User user, SimpleUser simpleUser) {
+    private void fillNecessaryUserInfo(User user, SimpleUser simpleUser) {
         simpleUser.setProfession(user.getProfession());
         simpleUser.setUsername(user.getUsername());
         simpleUser.setAddress(user.getAddress());

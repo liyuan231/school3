@@ -380,19 +380,19 @@ public class LikeServiceImpl {
         cell.setCellStyle(cellStyle);
 
         cell = row.createCell(1);
-        cell.setCellValue("签约意向");
+        cell.setCellValue("邀约学校(未接受)");
         cell.setCellStyle(cellStyle);
 
         cell = row.createCell(2);
-        cell.setCellValue("签约匹配高校");
+        cell.setCellValue("签约成功高校");
         cell.setCellStyle(cellStyle);
 
         cell = row.createCell(3);
-        cell.setCellValue("被邀约情况");
+        cell.setCellValue("被邀约学校(未签约)");
         cell.setCellStyle(cellStyle);
 
         cell = row.createCell(4);
-        cell.setCellValue("学校logo");
+        cell.setCellValue("是否上传学校logo");
         cell.setCellStyle(cellStyle);
     }
 

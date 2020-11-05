@@ -105,7 +105,7 @@ public class UserSignController {
             if (pics.size() > 0) {
                 fullUser.setLogo(springFilePath + pics.get(0).getLocation());
             } else {
-                fullUser.setLogo(springFilePath + defaultLogo);
+//                fullUser.setLogo(springFilePath + defaultLogo);
             }
             fullUsers.add(fullUser);
         }
