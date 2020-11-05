@@ -159,7 +159,7 @@ public class AdminUserController {
                          @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time")
                          @RequestParam(defaultValue = "add_time") String sort,
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id,User.Column.username, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
 //        List<User> users = userService.querySelectiveLike(null,
 //                null,
 //                schoolName,
@@ -352,7 +352,7 @@ public class AdminUserController {
                                            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
                                            @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "last_login_time", required = false) String sort,
                                            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName,User.Column.username, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
 //        List<User> users = userService.querySelectiveLike(null,
 //                null,
 //                schoolName,

@@ -143,13 +143,17 @@ public class FileUtil {
                 put("job1", job1);
                 put("job2", job2);
 
+                String formatLogo1 = logo1.substring(logo1.lastIndexOf("."));
+                String formatLogo2 = logo2.substring(logo2.lastIndexOf("."));
 
-                put("logo1", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo1))));
-                put("logo2", new PictureRenderData(90, 90, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(logo2))));
+                put("logo1", new PictureRenderData(90, 90, formatLogo1, BytePictureUtils.getLocalBufferedImage(new File(logo1))));
+                put("logo2", new PictureRenderData(90, 90, formatLogo2, BytePictureUtils.getLocalBufferedImage(new File(logo2))));
 
                 //最顶部公用的图片
-                put("name1", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature1))));
-                put("name2", new PictureRenderData(120, 50, ".jpg", BytePictureUtils.getLocalBufferedImage(new File(signature2))));
+                String formatSignature1 = logo1.substring(logo1.lastIndexOf("."));
+                String formatSignature2  = logo2.substring(logo2.lastIndexOf("."));
+                put("name1", new PictureRenderData(120, 50, formatSignature1, BytePictureUtils.getLocalBufferedImage(new File(signature1))));
+                put("name2", new PictureRenderData(120, 50, formatSignature2, BytePictureUtils.getLocalBufferedImage(new File(signature2))));
 
 //                put("logo3", "http://124.156.153.105/files/AUPFLOGO_1.jpg");
                 Date date = new Date();
