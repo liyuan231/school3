@@ -332,31 +332,31 @@ public class SignServiceImpl {
         return signPageInfo.getList();
     }
 
-    public List<Sign> queryBySignUserId(Integer likeUserId) {
+    public List<Sign> queryBySignUserId(Integer likeUserId,Column...columns) {
         SignExample signExample = new SignExample();
         SignExample.Criteria criteria = signExample.createCriteria();
         criteria.andDeletedEqualTo(false);
         criteria.andSignUserIdEqualTo(likeUserId);
-        return signMapper.selectByExampleSelective(signExample);
+        return signMapper.selectByExampleSelective(signExample,columns);
     }
 
-    public List<Sign> queryBySignedUserId(Integer likedUserId) {
+    public List<Sign> queryBySignedUserId(Integer likedUserId,Column...columns) {
         SignExample signExample = new SignExample();
         SignExample.Criteria criteria = signExample.createCriteria();
         criteria.andDeletedEqualTo(false);
         criteria.andSignedUserIdEqualTo(likedUserId);
-        return signMapper.selectByExampleSelective(signExample);
+        return signMapper.selectByExampleSelective(signExample,columns);
     }
 
 
 
-    public List<Sign> queryBySignUserAndSignedUserId(Integer likeUserId, Integer likedUserId) {
+    public List<Sign> queryBySignUserAndSignedUserId(Integer likeUserId, Integer likedUserId,Column...columns) {
         SignExample signExample = new SignExample();
         SignExample.Criteria criteria = signExample.createCriteria();
         criteria.andDeletedEqualTo(false);
         criteria.andSignedUserIdEqualTo(likedUserId);
         criteria.andSignUserIdEqualTo(likeUserId);
-        return signMapper.selectByExampleSelective(signExample);
+        return signMapper.selectByExampleSelective(signExample,columns);
     }
 
 }

@@ -674,7 +674,7 @@ public class UserServiceImpl implements UserDetailsService {
         if (page != null && pageSize != null) {
             //此时就已经拦截了sql语句执行完毕了；
             Page<User> users = PageHelper.startPage(page, pageSize);
-            System.out.println(users);
+//            System.out.println(users);
         }
         List<User> users = null;
         if (columns.length != 0) {

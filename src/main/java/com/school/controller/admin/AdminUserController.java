@@ -5,6 +5,7 @@
 
 package com.school.controller.admin;
 
+import com.github.pagehelper.PageInfo;
 import com.school.dto.*;
 import com.school.exception.*;
 import com.school.model.Likes;
@@ -149,41 +150,38 @@ public class AdminUserController {
     @GetMapping({"/listSearch"})
     @ApiOperation(
             value = "高校信息管理->搜索/分页",
-            notes = "输入搞高校名进行搜索"
+            notes = "输入高校名进行搜索"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String search(@ApiParam(example = "1", value = "schoolName") @RequestParam(required = false) String schoolName,
                          @ApiParam(example = "1", value = "分页使用，要第几页的数据")
-                         @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer limit,
+                         @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
                          @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time")
                          @RequestParam(defaultValue = "add_time") String sort,
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, limit, sort, order);
-        Integer size = this.userService.count(schoolName);
-        clean(users);
-//        List<SimpleUser> result = new LinkedList();
-//        Iterator var9 = users.iterator();
-//        while (var9.hasNext()) {
-//            User user = (User) var9.next();
-//            SimpleUser simpleUser = new SimpleUser();
-//            this.fill(user, simpleUser);
-//            result.add(simpleUser);
-//        }
-        SimplePage<List<SimpleUser>> simplePage = new SimplePage(size, users);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+//        List<User> users = userService.querySelectiveLike(null,
+//                null,
+//                schoolName,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                page,
+//                pageSize,
+//                sort,
+//                order);
+        List<User> users = userPageInfo.getList();
+        int size = (int) userPageInfo.getTotal();
+        SimplePage simplePage = new SimplePage(size, users);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索成功,包括高校名关键字！", simplePage);
-    }
-
-    private void clean(List<User> users) {
-        for (User user : users) {
-            user.setUpdateTime(null);
-            user.setUpdateTime(null);
-//            user.setAvatarurl(null);
-            user.setLastLoginIp(null);
-            user.setLocation(null);
-            user.setAccountStatus(null);
-            user.setPassword(null);
-            user.setDeleted(null);
-        }
     }
 
     @PostMapping({"/importRegistrationForm"})
@@ -354,36 +352,27 @@ public class AdminUserController {
                                            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
                                            @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "last_login_time", required = false) String sort,
                                            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        List<User> users = userService.querySelectiveLike(null,
-                null,
-                schoolName,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                page,
-                pageSize,
-                sort,
-                order);
-        Integer size = userService.count(schoolName);
-        for (User user : users) {
-            user.setPassword(null);
-            user.setAddTime(null);
-            user.setUpdateTime(null);
-//            user.setAvatarurl(null);
-            user.setTelephone(null);
-            user.setAddress(null);
-            user.setDeleted(null);
-            user.setContact(null);
-            user.setAccountStatus(null);
-        }
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+//        List<User> users = userService.querySelectiveLike(null,
+//                null,
+//                schoolName,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                null,
+//                page,
+//                pageSize,
+//                sort,
+//                order);
+        List<User> users = userPageInfo.getList();
+        int size = (int) userPageInfo.getTotal();
         SimplePage simplePage = new SimplePage(size, users);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取高校信息成功！", simplePage);
     }
@@ -393,31 +382,38 @@ public class AdminUserController {
             value = "管理端-》我发出去的邀约，看看有谁接收或没接收我的邀约",
             notes = "管理端-》我发出去的邀约"
     )
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object retrieveIntentionThatIRequestOthersByUserId(@RequestParam("userId") Integer userId) {
-        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+        List<SimpleIntention> simpleIntentions = new LinkedList<>();
         //我的意向（我是主动）
         List<Likes> likes = likeService.queryByLikeUserId(userId);
         for (Likes like : likes) {
-            LikeOrSign likeOrSign = new LikeOrSign();
-            likeOrSign.setSignIdOrLikeId(like.getId());
-            likeOrSign.setSigned(false);
-            likeOrSign.setUpdateTime(like.getUpdateTime());
+            SimpleIntention simpleIntention = new SimpleIntention();
+            simpleIntention.setUpdateTime(like.getUpdateTime());
+            simpleIntention.setLikeId(like.getId());
             User user = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
-            likeOrSign.setSchoolName(user.getSchoolName());
-            likeOrSigns.add(likeOrSign);
+            simpleIntention.setSchoolId(user.getId());
+            simpleIntention.setSchoolName(user.getSchoolName());
+            List<Pics> pics = picsService.querySelective(null, like.getLikedUserId(), FileEnum.LOGO.value());
+            if (pics.size() == 0) {
+                simpleIntention.setLogo(false);
+            } else {
+                simpleIntention.setLogo(true);
+            }
+            simpleIntentions.add(simpleIntention);
         }
         //我的签约(我是主动)
-        List<Sign> signs = signService.queryBySignUserId(userId);
-        for (Sign sign : signs) {
-            LikeOrSign likeOrSign = new LikeOrSign();
-            likeOrSign.setSignIdOrLikeId(sign.getId());
-            likeOrSign.setSigned(true);
-            likeOrSign.setUpdateTime(sign.getUpdateTime());
-            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
-            likeOrSign.setSchoolName(user.getSchoolName());
-            likeOrSigns.add(likeOrSign);
-        }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出事件，接收情况成功！）", likeOrSigns);
+//        List<Sign> signs = signService.queryBySignUserId(userId);
+//        for (Sign sign : signs) {
+//            LikeOrSign likeOrSign = new LikeOrSign();
+//            likeOrSign.setSignIdOrLikeId(sign.getId());
+//            likeOrSign.setSigned(true);
+//            likeOrSign.setUpdateTime(sign.getUpdateTime());
+//            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+//            likeOrSign.setSchoolName(user.getSchoolName());
+//            simpleIntentions.add(likeOrSign);
+//        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出时间，接收情况成功！）", simpleIntentions);
     }
 
     @ApiOperation(
@@ -425,31 +421,38 @@ public class AdminUserController {
             notes = "管理端-》发给我的邀约"
     )
     @GetMapping("/retrieveIntentionThatOthersRequestMeByUserId")
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object retrieveIntentionThatOthersRequestMeByUserId(@RequestParam("userId") Integer userId) {
-        List<LikeOrSign> likeOrSigns = new LinkedList<>();
-        //我的意向(我是被动）
+        List<SimpleIntention> simpleIntentions = new LinkedList<>();
+        //我的意向（我是主动）
         List<Likes> likes = likeService.queryByLikedUserId(userId);
         for (Likes like : likes) {
-            LikeOrSign likeOrSign = new LikeOrSign();
-            likeOrSign.setSignIdOrLikeId(like.getId());
-            likeOrSign.setSigned(false);
-            likeOrSign.setUpdateTime(like.getUpdateTime());
-            User user = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
-            likeOrSign.setSchoolName(user.getSchoolName());
-            likeOrSigns.add(likeOrSign);
+            SimpleIntention simpleIntention = new SimpleIntention();
+            simpleIntention.setUpdateTime(like.getUpdateTime());
+            simpleIntention.setLikeId(like.getId());
+            User user = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
+            simpleIntention.setSchoolId(user.getId());
+            simpleIntention.setSchoolName(user.getSchoolName());
+            List<Pics> pics = picsService.querySelective(null, like.getLikeUserId(), FileEnum.LOGO.value());
+            if (pics.size() == 0) {
+                simpleIntention.setLogo(false);
+            } else {
+                simpleIntention.setLogo(true);
+            }
+            simpleIntentions.add(simpleIntention);
         }
-        //我的签约（我是被动）
-        List<Sign> signs = signService.queryBySignedUserId(userId);
-        for (Sign sign : signs) {
-            LikeOrSign likeOrSign = new LikeOrSign();
-            likeOrSign.setSignIdOrLikeId(sign.getId());
-            likeOrSign.setSigned(true);
-            likeOrSign.setUpdateTime(sign.getUpdateTime());
-            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
-            likeOrSign.setSchoolName(user.getSchoolName());
-            likeOrSigns.add(likeOrSign);
-        }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出事件，接收情况成功！）", likeOrSigns);
+        //我的签约(我是主动)
+//        List<Sign> signs = signService.queryBySignUserId(userId);
+//        for (Sign sign : signs) {
+//            LikeOrSign likeOrSign = new LikeOrSign();
+//            likeOrSign.setSignIdOrLikeId(sign.getId());
+//            likeOrSign.setSigned(true);
+//            likeOrSign.setUpdateTime(sign.getUpdateTime());
+//            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+//            likeOrSign.setSchoolName(user.getSchoolName());
+//            simpleIntentions.add(likeOrSign);
+//        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出事件，接收情况成功！）", simpleIntentions);
     }
 
 
@@ -457,6 +460,7 @@ public class AdminUserController {
             value = "管理端-》意向成功匹配即签约成功！",
             notes = "管理端-》意向成功匹配即签约成功"
     )
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping("/retrieveTheUsersThatIHaveSign")
     public Object retrieveTheUsersThatIHaveSign(@RequestParam("userId") Integer userId) {
         List<Sign> signs = signService.queryBySignUserId(userId);
@@ -465,7 +469,6 @@ public class AdminUserController {
         signs.addAll(signs1);
         List<SimplifySign> simpleSigns = new LinkedList<>();
         for (Sign sign : signs) {
-
             SimplifySign simplifySign = new SimplifySign();
             simplifySign.setUpdateTime(sign.getUpdateTime());
             simplifySign.setSignId(sign.getId());
@@ -480,7 +483,6 @@ public class AdminUserController {
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "获取和我签约成功用户成功！", simpleSigns);
     }
-
 
 
     /**

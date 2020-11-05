@@ -7,6 +7,15 @@ public class LikeOrSign {
     private String schoolName;
     private Boolean signed;
     private LocalDateTime updateTime;
+    private Boolean logo;
+
+    public Boolean getLogo() {
+        return logo;
+    }
+
+    public void setLogo(Boolean logo) {
+        this.logo = logo;
+    }
 
     public String getSchoolName() {
         return schoolName;

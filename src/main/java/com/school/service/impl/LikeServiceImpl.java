@@ -465,7 +465,8 @@ public class LikeServiceImpl {
             cell.setCellValue(u1.getSchoolName());
 
             User u2 = userService.queryById(likes.getLikedUserId(), User.Column.id, User.Column.schoolName);
-            cell.setCellValue(u2.getSchoolName());
+            //cell.setCellValue(u2.getSchoolName());
+
             cell = row.createCell(1);
             cell.setCellValue(u2.getSchoolName());
 
@@ -639,7 +640,7 @@ public class LikeServiceImpl {
     }
 
     public PageInfo<Likes> querySelective() {
-        return querySelective(null, null, null, null, null, null, null, null, null, null, null, null);
+        return querySelective(null, null, null, null, null, null, null, null, null, null, null);
 
     }
 
@@ -649,5 +650,13 @@ public class LikeServiceImpl {
         criteria.andLikeUserIdEqualTo(likeUserId);
         criteria.andLikedUserIdEqualTo(likedUserId);
         likesMapper.deleteByExample(likesExample);
+    }
+
+    public Likes queryByLikeId(Integer likeId,Column...columns) {
+        LikesExample likesExample = new LikesExample();
+        Criteria criteria = likesExample.createCriteria();
+        criteria.andIdEqualTo(likeId);
+        List<Likes> likes = likesMapper.selectByExampleSelective(likesExample, columns);
+        return likes.size()==0?null:likes.get(0);
     }
 }

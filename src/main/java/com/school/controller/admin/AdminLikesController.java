@@ -29,9 +29,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @RestController("adminLikeController")
 @RequestMapping({"/api/admin/like"})
@@ -104,7 +107,9 @@ public class AdminLikesController {
         } else {
             likesList = new LinkedList<>();
             for (Integer likeId : likeIds) {
-                likesList.addAll(likeService.querySelective(likeId, null, null, null, null, null, null, null, null, null, null).getList());
+                Likes likes = likeService.queryByLikeId(likeId);
+                likesList.add(likes);
+//                likesList.addAll(likeService.querySelective(likeId, null, null, null, null, null, null, null, null, null, null).getList());
             }
         }
         Workbook workbook = this.likeService.exportLikesFormSingle(likesList);
@@ -153,12 +158,14 @@ public class AdminLikesController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object list(@PathVariable("userId") Integer likeUserId) {
-        List<Likes> likes = this.likeService.querySelective((Integer) null, likeUserId, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null).getList();
+//        List<Likes> likes = this.likeService.querySelective((Integer) null, likeUserId, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null).getList();
+        //查看该用户的意向结果
+        List<Likes> likes = likeService.queryByLikeUserId(likeUserId);
         SimpleLikeUser simplerLikeUser = new SimpleLikeUser();
         List<SimpleLike> likesList = new LinkedList<>();
-        simplerLikeUser.setUserId(likeUserId);
         User u = userService.queryById(likeUserId, User.Column.id, User.Column.schoolName);
         simplerLikeUser.setSchoolName(u.getSchoolName());
+        simplerLikeUser.setUserId(likeUserId);
         for (Likes like : likes) {
             SimpleLike simpleLike = new SimpleLike();
             simpleLike.setLikeId(like.getId());
@@ -184,18 +191,18 @@ public class AdminLikesController {
     public String add(
             @ApiParam(example = "1", value = "主动去喜欢其他用户的用户", required = true) @RequestParam("likeUserId") Integer likeUserId,
             @ApiParam(example = "2", value = "被喜欢的用户的id", required = true) @RequestParam("likedUserIds") Integer[] likedUserIds) throws UserNotFoundException {
-        List<User> users = this.userService.querySelectiveLike(likeUserId, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
-        if (users.size() == 0) {
+        User likeUser = this.userService.queryById(likeUserId, User.Column.id, User.Column.schoolName);
+        if (likeUser==null) {
             throw new UserNotFoundException("用户id不存在！");
         } else {
-            User likeUser = users.get(0);
             for (Integer likedUserId : likedUserIds) {
                 try {
-                    users = this.userService.querySelectiveLike(likedUserId, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
-                    if (users.size() == 0) {
+                    User likedUser = userService.queryById(likedUserId, User.Column.id, User.Column.schoolName);
+                    if (likedUser==null) {
                         throw new UserNotFoundException("用户id不存在！");
                     } else {
-                        User likedUser = users.get(0);
+                        //TODO 此处逻辑可优化
+//                        User likedUser = users.get(0);
                         Likes like = new Likes();
                         like.setLikeUserId(likeUserId);
                         like.setLikeSchoolName(likeUser.getSchoolName());
@@ -213,12 +220,14 @@ public class AdminLikesController {
     }
 
     private boolean checkIfNeedSign(Likes like) {
-        List<Likes> likesList = likeService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null, null).getList();
+        List<Likes> likesList = likeService.queryByLikeUserIdAndLikedUserId(like.getLikedUserId(), like.getLikeUserId());
         //管理端添加一则意向，若这则意向的likeUserId->likedUserId 对应的意向 likedUserId->likeUserId在意向表中已经存在了，说明可实行自动签约
         if (likesList.size() > 0) {
             Likes anotherLike = likesList.get(0);
-            List<Sign> signs1 = signService.querySelective(null, like.getLikeUserId(), null, like.getLikedUserId(), null, null, null, null, null, null);
-            List<Sign> signs2 = signService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null);
+//            List<Sign> signs1 = signService.querySelective(null, like.getLikeUserId(), null, like.getLikedUserId(), null, null, null, null, null, null);
+            List<Sign> signs1 = signService.queryBySignUserAndSignedUserId(like.getLikeUserId(), like.getLikedUserId());
+//            List<Sign> signs2 = signService.querySelective(null, like.getLikedUserId(), null, like.getLikeUserId(), null, null, null, null, null, null);
+            List<Sign> signs2 = signService.queryBySignUserAndSignedUserId(like.getLikedUserId(), like.getLikeUserId());
             //说明该则意向已经有对应
             if (signs1.size() + signs2.size() > 0) {
                 return false;
@@ -262,7 +271,8 @@ public class AdminLikesController {
     public String remindSchools(@ApiParam(example = "用户id数组", value = "[1,2,3]") @RequestParam(value = "userIds", required = false) Integer[] userIds) {
         List<User> users = null;
         if (userIds == null || userIds.length == 0) {
-            users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+            PageInfo<User> userPageInfo = userService.querySelective(User.Column.id, User.Column.username);
+            users = userPageInfo.getList();
         } else {
             users = new LinkedList<>();
             for (Integer userId : userIds) {
@@ -295,24 +305,46 @@ public class AdminLikesController {
             value = "签约意向管理->修改签约意向->添加意向高校->输入高校名搜索",
             notes = "签约意向管理->修改签约意向->添加意向高校->输入高校名搜索"
     )
-    public Object listSchools(@RequestParam(value = "schoolName", required = false) String schoolName, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize, @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
-        int size = this.userService.count(schoolName);
-        List<SimpleUser> simpleUsers = new LinkedList();
-        Iterator var9 = users.iterator();
-
-        while (var9.hasNext()) {
-            User user = (User) var9.next();
-            SimpleUser simpleUser = new SimpleUser();
-            this.fill(user, simpleUser);
-            simpleUsers.add(simpleUser);
+    public Object listSchools(@ApiParam(example = "1", value = "用户id") @RequestParam("userId") Integer userId,
+                              @RequestParam(value = "schoolName", required = false) String schoolName,
+                              @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(required = false) Integer page,
+                              @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(required = false) Integer pageSize,
+                              @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
+                              @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
+//        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName);
+        List<User> users = userPageInfo.getList();
+        List<Sign> signs = signService.queryBySignUserId(userId);
+        List<Sign> signs1 = signService.queryBySignedUserId(userId);
+        //获取了我的签约结果
+        signs.addAll(signs1);
+        //获取了我的意向
+        List<Likes> likes = likeService.queryByLikeUserId(userId);
+        int[] theUserThatIHaveAlreadySignOrLike = new int[signs.size() + likes.size()];
+        int i = 0;
+        for (Sign sign : signs) {
+            if (sign.getSignUserId().equals(userId)) {
+                theUserThatIHaveAlreadySignOrLike[i++] = sign.getSignedUserId();
+            } else {
+                theUserThatIHaveAlreadySignOrLike[i++] = sign.getSignUserId();
+            }
         }
-        SimplePage simplePage = new SimplePage(size, simpleUsers);
+        for (Likes like : likes) {
+            theUserThatIHaveAlreadySignOrLike[i++] = like.getLikedUserId();
+        }
+        Arrays.sort(theUserThatIHaveAlreadySignOrLike);
+
+
+        List<User> collect = users.stream().filter(new Predicate<User>() {
+            @Override
+            public boolean test(User user) {
+                return (Arrays.binarySearch(theUserThatIHaveAlreadySignOrLike, user.getId()) < 0) && !user.getId().equals(userId);
+            }
+        }).collect(Collectors.toList());
+
+        int size = collect.size();
+        SimplePage simplePage = new SimplePage(size, collect);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索用户列表成功！", simplePage);
     }
 
-    private void fill(User user, SimpleUser simpleUser) {
-        simpleUser.setId(user.getId());
-        simpleUser.setSchoolName(user.getSchoolName());
-    }
 }
