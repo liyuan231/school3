@@ -162,19 +162,25 @@ public class AdminSignController {
         return ResponseUtil.build(HttpStatus.OK.value(), "提醒成功!", (Object) null);
     }
 
-    @PostMapping("/rollBack")
+//    @PostMapping("/rollBack")
+//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+//    @ApiOperation(value = "高校信息管理->高校签约名单管理->回退签约名单", notes = "即管理员选中多个签约记录，然后点击回退，因此前端需传来一个数组")
+//    public Object rollBack(@RequestParam("signIds") Integer[] signIds) {
+//        for (Integer signId : signIds) {
+//            try {
+//                signService.deleteById(signId);
+//            } catch (UserNotFoundException | UserSignCorrespondException | SignNotFoundException e) {
+//                logger.warn("删除签约记录失败，该则签约不存在->" + signId);
+//            }`
+//        }
+//        return ResponseUtil.build(HttpStatus.OK.value(), "回退签约信息成功！");
+//    }
+
+    @PostMapping("/delete/{signId}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @ApiOperation(value = "高校信息管理->高校签约名单管理->回退签约名单", notes = "即管理员选中多个签约记录，然后点击回退，因此前端需传来一个数组")
-    public Object rollBack(@RequestParam("signIds") Integer[] signIds) {
-        for (Integer signId : signIds) {
-            try {
-                signService.deleteById(signId);
-            } catch (UserNotFoundException | UserSignCorrespondException | SignNotFoundException e) {
-                logger.warn("删除签约记录失败，该则签约不存在->" + signId);
-            }
-        }
-        return ResponseUtil.build(HttpStatus.OK.value(), "回退签约信息成功！");
+    @ApiOperation(value = "删除签约", notes ="删除签约")
+    public Object rollBack(@PathVariable("signId") Integer signId) {
+        signService.deleteById(signId);
+        return ResponseUtil.build(HttpStatus.OK.value(), "删除一则签约成功！");
     }
-
-
 }

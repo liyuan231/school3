@@ -162,11 +162,8 @@ public class SignServiceImpl {
         this.update(sign);
     }
 
-    public void deleteById(Integer id) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {
+    public void deleteById(Integer id) {
         this.signMapper.deleteByPrimaryKey(id);
-//        Sign sign = new Sign();
-//        sign.setId(id);
-//        delete(sign);
     }
 
     public void delete(Sign sign) throws SignNotFoundException, UserSignCorrespondException, UserNotFoundException {

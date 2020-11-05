@@ -46,7 +46,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl implements UserDetailsService {
@@ -433,7 +432,8 @@ public class UserServiceImpl implements UserDetailsService {
                     user.setPassword(bCryptPasswordEncoder.encode(defaultPassword));
 //                    user.setAvatarurl(defaultAvatarUrl);
                     try {
-                        this.emailService.sendVerificationCode("签约系统临时授权码", "签约系统临时授权码(3天内有效，请尽快重设您的密码)", user.getUsername(), 3, TimeUnit.DAYS);
+//                        this.emailService.sendVerificationCode("签约系统临时授权码", "签约系统临时授权码(3天内有效，请尽快重设您的密码)", user.getUsername(), 3, TimeUnit.DAYS);
+                        this.emailService.send(user.getUsername(),"签约系统通知","您好，您的账号已被系统注册，请及时点击忘记密码重设密码");
                     } catch (MailException var22) {
                         this.logger.warn("邮箱号有误,无法发送邮件到指定用户:" + user.getUsername());
                         continue;
