@@ -249,7 +249,8 @@ public class LikesAndSignController {
 //    @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
 //    @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order
     @ResponseBody
-    @GetMapping("/theUsersThatIRequest")
+//    @GetMapping("/theUsersThatIRequest")
+    @GetMapping("/unreceived")
     @ApiOperation(value = "获取我的意向的用户", notes = "获取我的意向的用户")
     @PreAuthorize("hasRole('USER')")
     public String unReceived() {
@@ -308,7 +309,8 @@ public class LikesAndSignController {
             LikeOrSign likeOrSign = new LikeOrSign();
             likeOrSign.setSignIdOrLikeId(sign.getId());
             likeOrSign.setSigned(true);
-            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            likeOrSign.setUpdateTime(sign.getAddTime());
+            likeOrSign.setSignTime(sign.getUpdateTime());
             User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
             likeOrSign.setSchoolId(user.getId());
             likeOrSign.setSchoolName(user.getSchoolName());
@@ -368,7 +370,8 @@ public class LikesAndSignController {
             LikeOrSign likeOrSign = new LikeOrSign();
             likeOrSign.setSignIdOrLikeId(sign.getId());
             likeOrSign.setSigned(true);
-            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            likeOrSign.setUpdateTime(sign.getAddTime());
+            likeOrSign.setSignTime(sign.getUpdateTime());
             User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
             likeOrSign.setSchoolId(user.getId());
             List<Pics> logos = picsService.querySelective(user.getId(), FileEnum.LOGO.value());

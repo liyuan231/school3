@@ -6,7 +6,10 @@
 package com.school.controller.admin;
 
 import com.github.pagehelper.PageInfo;
-import com.school.dto.*;
+import com.school.dto.FullUser;
+import com.school.dto.LikeOrSign;
+import com.school.dto.SimplePage;
+import com.school.dto.SimpleUser;
 import com.school.exception.*;
 import com.school.model.Likes;
 import com.school.model.Pics;
@@ -389,7 +392,7 @@ public class AdminUserController {
         //我的意向（我是主动）
         List<Likes> likes = likeService.queryByLikeUserId(userId);
         for (Likes like : likes) {
-            SimpleIntention simpleIntention = new SimpleIntention();
+//            SimpleIntention simpleIntention = new SimpleIntention();
             LikeOrSign likeOrSign = new LikeOrSign();
             likeOrSign.setSignIdOrLikeId(like.getId());
             likeOrSign.setSigned(false);
@@ -401,7 +404,7 @@ public class AdminUserController {
             likeOrSign.setSchoolId(user.getId());
 //            simpleIntention.setSchoolId(user.getId());
 //            simpleIntention.setSchoolName(user.getSchoolName());
-            List<Pics> logos = picsService.querySelective(null, like.getLikedUserId(), FileEnum.LOGO.value());
+            List<Pics> logos = picsService.querySelective(like.getLikedUserId(), FileEnum.LOGO.value());
             if (logos.size() > 0) {
 //                simpleIntention.setLogo(false);
                 likeOrSign.setLogo(logos.get(0).getLocation());
@@ -418,10 +421,11 @@ public class AdminUserController {
             LikeOrSign likeOrSign = new LikeOrSign();
             likeOrSign.setSignIdOrLikeId(sign.getId());
             likeOrSign.setSigned(true);
-            likeOrSign.setUpdateTime(sign.getUpdateTime());
             User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
             likeOrSign.setSchoolId(user.getId());
             likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSign.setSignTime(sign.getUpdateTime());
+            likeOrSign.setUpdateTime(sign.getAddTime());
 //            simpleIntentions.add(likeOrSign);
             List<Pics> logos = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.LOGO.value());
             if (logos.size() > 0) {
@@ -471,22 +475,23 @@ public class AdminUserController {
 //            simpleIntentions.add(simpleIntention);
             likeOrSigns.add(likeOrSign);
         }
-        //我的签约(我是主动)
-        List<Sign> signs = signService.queryBySignUserId(userId);
+        //我的签约(我是被动)
+        List<Sign> signs = signService.queryBySignedUserId(userId);
         for (Sign sign : signs) {
             LikeOrSign likeOrSign = new LikeOrSign();
             likeOrSign.setSignIdOrLikeId(sign.getId());
             likeOrSign.setSigned(true);
-            likeOrSign.setUpdateTime(sign.getUpdateTime());
-            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setUpdateTime(sign.getAddTime());
+            likeOrSign.setSignTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
             likeOrSign.setSchoolId(user.getId());
+            likeOrSign.setSchoolName(user.getSchoolName());
             List<Pics> logos = picsService.querySelective(user.getId(), FileEnum.LOGO.value());
             if (logos.size() > 0) {
                 likeOrSign.setLogo(logos.get(0).getLocation());
             } else {
                 likeOrSign.setLogo(null);
             }
-            likeOrSign.setSchoolName(user.getSchoolName());
 //            simpleIntentions.add(likeOrSign);
             likeOrSigns.add(likeOrSign);
         }

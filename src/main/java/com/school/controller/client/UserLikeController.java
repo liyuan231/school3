@@ -53,8 +53,9 @@ public class UserLikeController {
                 List<Likes> likes = likeService.queryByLikeUserIdAndLikedUserId(likedUserId, user.getId());
                 User u = userService.queryById(likedUserId, User.Column.id, User.Column.schoolName);
                 if (likes.size() > 0) {
-                    likeService.deleteById(likes.get(0).getId());
+//                    Likes l = likes.get(0);
                     signService.add(user.getId(), user.getSchoolName(), u.getId(), u.getSchoolName());
+                    likeService.deleteById(likes.get(0).getId());
                     message = "和" + u.getSchoolName() + "签约成功！";
                 } else {
                     likeService.add(user.getId(), user.getSchoolName(), u.getId(), u.getSchoolName());

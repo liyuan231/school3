@@ -132,7 +132,7 @@ public class SignServiceImpl {
     }
 
     public void add(Sign sign) {
-        sign.setAddTime(LocalDateTime.now());
+//        sign.setAddTime(LocalDateTime.now());
         sign.setUpdateTime(LocalDateTime.now());
         this.signMapper.insertSelective(sign);
     }

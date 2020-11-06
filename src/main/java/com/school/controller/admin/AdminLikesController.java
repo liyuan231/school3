@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -228,6 +229,7 @@ public class AdminLikesController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object like(@PathVariable("likeId") Integer likeId) throws LikesNotFoundException {
         Likes likes = likeService.queryByLikeId(likeId);
+        LocalDateTime likeAddTime = likes.getAddTime();
         likeService.deleteById(likeId);
         User likeUser = userService.queryById(likes.getLikeUserId(), User.Column.id, User.Column.schoolName);
         User likedUser = userService.queryById(likes.getLikedUserId(), User.Column.id, User.Column.schoolName);
@@ -236,6 +238,7 @@ public class AdminLikesController {
         sign.setSignSchoolName(likeUser.getSchoolName());
         sign.setSignedUserId(likes.getLikedUserId());
         sign.setSignedSchoolName(likedUser.getSchoolName());
+        sign.setAddTime(likeAddTime);
         signService.add(sign);
         return ResponseUtil.build(HttpStatus.OK.value(), "管理端同意一则意向成功！");
     }
@@ -382,7 +385,7 @@ public class AdminLikesController {
         List<List<User>> partition = ListUtils.partition(collect, pageSize);
         List<User> result = null;
         if (partition.size() >= page) {
-            result = partition.get(page-1);
+            result = partition.get(page - 1);
         }
         SimplePage simplePage = new SimplePage(size[0], result);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索用户列表成功！", simplePage);

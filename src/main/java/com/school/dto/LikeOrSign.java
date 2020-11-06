@@ -7,8 +7,17 @@ public class LikeOrSign {
     private String schoolName;
     private Integer schoolId;
     private Boolean signed;
+    private LocalDateTime signTime;
     private LocalDateTime updateTime;
     private String logo;
+
+    public LocalDateTime getSignTime() {
+        return signTime;
+    }
+
+    public void setSignTime(LocalDateTime signTime) {
+        this.signTime = signTime;
+    }
 
     public Integer getSchoolId() {
         return schoolId;
