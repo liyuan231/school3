@@ -159,7 +159,7 @@ public class AdminUserController {
                          @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time")
                          @RequestParam(defaultValue = "add_time") String sort,
                          @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id,User.Column.username, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.username, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
 //        List<User> users = userService.querySelectiveLike(null,
 //                null,
 //                schoolName,
@@ -352,7 +352,7 @@ public class AdminUserController {
                                            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
                                            @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "last_login_time", required = false) String sort,
                                            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName,User.Column.username, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName, User.Column.username, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
 //        List<User> users = userService.querySelectiveLike(null,
 //                null,
 //                schoolName,
@@ -382,38 +382,58 @@ public class AdminUserController {
             value = "管理端-》我发出去的邀约，看看有谁接收或没接收我的邀约",
             notes = "管理端-》我发出去的邀约"
     )
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object retrieveIntentionThatIRequestOthersByUserId(@RequestParam("userId") Integer userId) {
-        List<SimpleIntention> simpleIntentions = new LinkedList<>();
+        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+//        List<SimpleIntention> simpleIntentions = new LinkedList<>();
         //我的意向（我是主动）
         List<Likes> likes = likeService.queryByLikeUserId(userId);
         for (Likes like : likes) {
             SimpleIntention simpleIntention = new SimpleIntention();
-            simpleIntention.setUpdateTime(like.getUpdateTime());
-            simpleIntention.setLikeId(like.getId());
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(like.getId());
+            likeOrSign.setSigned(false);
+            likeOrSign.setUpdateTime(like.getUpdateTime());
+//            simpleIntention.setUpdateTime(like.getUpdateTime());
+//            simpleIntention.setLikeId(like.getId());
             User user = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
-            simpleIntention.setSchoolId(user.getId());
-            simpleIntention.setSchoolName(user.getSchoolName());
-            List<Pics> pics = picsService.querySelective(null, like.getLikedUserId(), FileEnum.LOGO.value());
-            if (pics.size() == 0) {
-                simpleIntention.setLogo(false);
+            likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSign.setSchoolId(user.getId());
+//            simpleIntention.setSchoolId(user.getId());
+//            simpleIntention.setSchoolName(user.getSchoolName());
+            List<Pics> logos = picsService.querySelective(null, like.getLikedUserId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+//                simpleIntention.setLogo(false);
+                likeOrSign.setLogo(logos.get(0).getLocation());
             } else {
-                simpleIntention.setLogo(true);
+//                simpleIntention.setLogo(true);
+                likeOrSign.setLogo(null);
             }
-            simpleIntentions.add(simpleIntention);
+//            simpleIntentions.add(simpleIntention);
+            likeOrSigns.add(likeOrSign);
         }
-        //我的签约(我是主动)
-//        List<Sign> signs = signService.queryBySignUserId(userId);
-//        for (Sign sign : signs) {
-//            LikeOrSign likeOrSign = new LikeOrSign();
-//            likeOrSign.setSignIdOrLikeId(sign.getId());
-//            likeOrSign.setSigned(true);
-//            likeOrSign.setUpdateTime(sign.getUpdateTime());
-//            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
-//            likeOrSign.setSchoolName(user.getSchoolName());
+//        我的签约(我是主动)
+        List<Sign> signs = signService.queryBySignUserId(userId);
+        for (Sign sign : signs) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(sign.getId());
+            likeOrSign.setSigned(true);
+            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolId(user.getId());
+            likeOrSign.setSchoolName(user.getSchoolName());
 //            simpleIntentions.add(likeOrSign);
-//        }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出时间，接收情况成功！）", simpleIntentions);
+            List<Pics> logos = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+//                simpleIntention.setLogo(false);
+                likeOrSign.setLogo(logos.get(0).getLocation());
+            } else {
+//                simpleIntention.setLogo(true);
+                likeOrSign.setLogo(null);
+            }
+            likeOrSigns.add(likeOrSign);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出时间，接收情况成功！）", likeOrSigns);
     }
 
     @ApiOperation(
@@ -421,40 +441,57 @@ public class AdminUserController {
             notes = "管理端-》发给我的邀约"
     )
     @GetMapping("/retrieveIntentionThatOthersRequestMeByUserId")
-//    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object retrieveIntentionThatOthersRequestMeByUserId(@RequestParam("userId") Integer userId) {
-        List<SimpleIntention> simpleIntentions = new LinkedList<>();
-        //我的意向（我是主动）
+//        List<SimpleIntention> simpleIntentions = new LinkedList<>();
+        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+        //我的意向（我是被动）
         List<Likes> likes = likeService.queryByLikedUserId(userId);
         for (Likes like : likes) {
-            SimpleIntention simpleIntention = new SimpleIntention();
-            simpleIntention.setUpdateTime(like.getUpdateTime());
-            simpleIntention.setLikeId(like.getId());
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setUpdateTime(like.getUpdateTime());
+            likeOrSign.setSignIdOrLikeId(like.getId());
+            likeOrSign.setSigned(false);
+//            SimpleIntention simpleIntention = new SimpleIntention();
+//            simpleIntention.setUpdateTime(like.getUpdateTime());
+//            simpleIntention.setLikeId(like.getId());
             User user = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
-            simpleIntention.setSchoolId(user.getId());
-            simpleIntention.setSchoolName(user.getSchoolName());
-            List<Pics> pics = picsService.querySelective(null, like.getLikeUserId(), FileEnum.LOGO.value());
-            if (pics.size() == 0) {
-                simpleIntention.setLogo(false);
+            likeOrSign.setSchoolId(user.getId());
+            likeOrSign.setSchoolName(user.getSchoolName());
+//            simpleIntention.setSchoolId(user.getId());
+//            simpleIntention.setSchoolName(user.getSchoolName());
+            List<Pics> logos = picsService.querySelective(like.getLikeUserId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+//                simpleIntention.setLogo(false);
+                likeOrSign.setLogo(logos.get(0).getLocation());
             } else {
-                simpleIntention.setLogo(true);
+//                simpleIntention.setLogo(true);
+                likeOrSign.setLogo(null);
             }
-            simpleIntentions.add(simpleIntention);
+//            simpleIntentions.add(simpleIntention);
+            likeOrSigns.add(likeOrSign);
         }
         //我的签约(我是主动)
-//        List<Sign> signs = signService.queryBySignUserId(userId);
-//        for (Sign sign : signs) {
-//            LikeOrSign likeOrSign = new LikeOrSign();
-//            likeOrSign.setSignIdOrLikeId(sign.getId());
-//            likeOrSign.setSigned(true);
-//            likeOrSign.setUpdateTime(sign.getUpdateTime());
-//            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
-//            likeOrSign.setSchoolName(user.getSchoolName());
+        List<Sign> signs = signService.queryBySignUserId(userId);
+        for (Sign sign : signs) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(sign.getId());
+            likeOrSign.setSigned(true);
+            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolId(user.getId());
+            List<Pics> logos = picsService.querySelective(user.getId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+                likeOrSign.setLogo(logos.get(0).getLocation());
+            } else {
+                likeOrSign.setLogo(null);
+            }
+            likeOrSign.setSchoolName(user.getSchoolName());
 //            simpleIntentions.add(likeOrSign);
-//        }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出事件，接收情况成功！）", simpleIntentions);
+            likeOrSigns.add(likeOrSign);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向包括（自主邀约，发出时间，接收情况成功！）", likeOrSigns);
     }
-
 
     @ApiOperation(
             value = "管理端-》意向成功匹配即签约成功！",
@@ -467,21 +504,44 @@ public class AdminUserController {
         List<Sign> signs1 = signService.queryBySignedUserId(userId);
         //获取我的签约
         signs.addAll(signs1);
-        List<SimplifySign> simpleSigns = new LinkedList<>();
+//        List<SimplifySign> simpleSigns = new LinkedList<>();
+        List<FullUser> fullUsers = new LinkedList<>();
         for (Sign sign : signs) {
-            SimplifySign simplifySign = new SimplifySign();
-            simplifySign.setUpdateTime(sign.getUpdateTime());
-            simplifySign.setSignId(sign.getId());
+            FullUser fullUser = new FullUser();
+//            SimplifySign simplifySign = new SimplifySign();
+//            simplifySign.setUpdateTime(sign.getUpdateTime());
+//            simplifySign.setSignId(sign.getId());
             if (sign.getSignUserId().equals(userId)) {
-                User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
-                simplifySign.setSchoolName(user.getSchoolName());
+                User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.id, User.Column.schoolName, User.Column.username, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+                fullUser.setUser(user);
+                List<Pics> logos = picsService.querySelective(user.getId(), FileEnum.LOGO.value());
+                if (logos.size() > 0) {
+                    fullUser.setLogo(logos.get(0).getLocation());
+                }
+
+                List<Pics> signatures = picsService.querySelective(user.getId(), FileEnum.SIGNATURE.value());
+                if (signatures.size() > 0) {
+                    fullUser.setSignature(signatures.get(0).getLocation());
+                }
+//                simplifySign.setSchoolName(user.getSchoolName());
             } else {
-                User user = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
-                simplifySign.setSchoolName(user.getSchoolName());
+                User user = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.id, User.Column.schoolName, User.Column.username, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.schoolCode, User.Column.location, User.Column.lastLoginIp, User.Column.lastLoginTime, User.Column.profession, User.Column.country, User.Column.website);
+                fullUser.setUser(user);
+                List<Pics> logos = picsService.querySelective(user.getId(), FileEnum.LOGO.value());
+                if (logos.size() > 0) {
+                    fullUser.setLogo(logos.get(0).getLocation());
+                }
+
+                List<Pics> signatures = picsService.querySelective(user.getId(), FileEnum.SIGNATURE.value());
+                if (signatures.size() > 0) {
+                    fullUser.setSignature(signatures.get(0).getLocation());
+                }
+//                simplifySign.setSchoolName(user.getSchoolName());
             }
-            simpleSigns.add(simplifySign);
+//            simpleSigns.add(simplifySign);
+            fullUsers.add(fullUser);
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取和我签约成功用户成功！", simpleSigns);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取和我签约成功用户成功！", fullUsers);
     }
 
 

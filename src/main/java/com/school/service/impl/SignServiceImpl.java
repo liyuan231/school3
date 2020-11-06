@@ -297,8 +297,7 @@ public class SignServiceImpl {
 
     //APPENDIX-------------------------------
     public List<SignWithUser> querySelective(Integer year, String schoolName, Integer page, Integer pageSize, String sort, String order) {
-        List<SignWithUser> signWithUsers = signWithUserMapper.querySelective(year, schoolName, page, pageSize, sort, order);
-        return signWithUsers;
+        return signWithUserMapper.querySelective(year, schoolName, page, pageSize, sort, order);
     }
 
     public Integer count(Integer year, String schoolName) {

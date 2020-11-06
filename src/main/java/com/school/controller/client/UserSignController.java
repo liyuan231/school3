@@ -101,12 +101,10 @@ public class UserSignController {
         for (User u : users) {
             FullUser fullUser = new FullUser();
             fullUser.setUser(u);
-            List<Pics> pics = picsService.querySelective(null, u.getId(), FileEnum.LOGO.value());
-            if (pics.size() > 0) {
-                fullUser.setLogo(springFilePath + pics.get(0).getLocation());
-            } else {
-//                fullUser.setLogo(springFilePath + defaultLogo);
-            }
+            List<Pics> logos = picsService.querySelective(null, u.getId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) { fullUser.setLogo(springFilePath + logos.get(0).getLocation()); }
+            List<Pics> signatures = picsService.querySelective(null, u.getId(), FileEnum.SIGNATURE.value());
+            if (signatures.size() > 0) { fullUser.setSignature(springFilePath + signatures.get(0).getLocation()); }
             fullUsers.add(fullUser);
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "与我达成合作的高校", fullUsers);

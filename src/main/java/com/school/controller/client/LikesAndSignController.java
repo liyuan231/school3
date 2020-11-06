@@ -131,6 +131,7 @@ public class LikesAndSignController {
         List<Sign> signs = signService.queryBySignUserId(user.getId());
         List<Sign> signs1 = signService.queryBySignedUserId(user.getId());
         signs.addAll(signs1);
+        int size = signs.size();
         int i = 0;
         int[] signUserIds = new int[signs.size()];
         for (Sign sign : signs) {
@@ -140,21 +141,42 @@ public class LikesAndSignController {
                 signUserIds[i++] = sign.getSignUserId();
             }
         }
-        List<User> users = new LinkedList<>();
+//        List<User> users = new LinkedList<>();
+        List<FullUser> fullUsers = new LinkedList<>();
         for (int id : signUserIds) {
-            User u = userService.queryById(id, User.Column.id, User.Column.schoolName, User.Column.updateTime);
-            users.add(u);
+            FullUser fullUser = new FullUser();
+            User u = userService.queryById(id, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username, User.Column.updateTime);
+            fullUser.setUser(u);
+            List<Pics> logos = picsService.querySelective(u.getId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+                fullUser.setLogo(logos.get(0).getLocation());
+            }
+            List<Pics> signatures = picsService.querySelective(u.getId(), FileEnum.SIGNATURE.value());
+            if (signatures.size() > 0) {
+                fullUser.setSignature(signatures.get(0).getLocation());
+            }
+//            users.add(u);
+            fullUsers.add(fullUser);
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "当前用户的签约结果！", users);
+        SimplePage simplePage = new SimplePage(size, fullUsers);
+        return ResponseUtil.build(HttpStatus.OK.value(), "当前用户的签约结果！", fullUsers);
+//       return ResponseUtil.build(HttpStatus.OK.value(), "当前用户的签约结果！", simplePage);
     }
 
     @ResponseBody
     @GetMapping("/retrieveNotLikeOrSignUser")
     @ApiOperation(value = "获取当前用户未选意向未签约列表", notes = "未选意向未签约列表")
     @PreAuthorize("hasRole('USER')")
-    public Object retrieveNotLikeOrSignUser() {
+    public Object retrieveNotLikeOrSignUser(
+            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "schoolName", required = false) String schoolName,
+            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
+            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+            @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort,
+            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
         User user = userService.retrieveUserByToken();
-        PageInfo<User> userPageInfo = userService.querySelective(User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.schoolCode, User.Column.username);
+        final int[] size = {(int) userPageInfo.getTotal()};
+        //获取了所有的用户
         List<User> users = userPageInfo.getList();
         List<Sign> signs = signService.queryBySignedUserId(user.getId());
         List<Sign> signs1 = signService.queryBySignUserId(user.getId());
@@ -177,11 +199,11 @@ public class LikesAndSignController {
             }
         }
         Arrays.sort(signUserIds);
-
         Stream<User> userStream = users.stream().filter(new Predicate<User>() {
             @Override
             public boolean test(User u1) {
                 if (Arrays.binarySearch(signUserIds, (int) u1.getId()) >= 0 || u1.getId().equals(user.getId())) {
+                    size[0]--;
                     return false;
                 }
                 return true;
@@ -191,50 +213,175 @@ public class LikesAndSignController {
             @Override
             public boolean test(User user) {
                 if (Arrays.binarySearch(likeUserIds, user.getId()) >= 0) {
+                    size[0]--;
                     return false;
                 }
                 return true;
             }
         }).collect(Collectors.toList());
 
+        List<List<User>> partition = ListUtils.partition(collect, pageSize);
+        List<User> result = new LinkedList<>();
+        if (partition.size() >= page) {
+            result = partition.get(page - 1);
+        }
         List<FullUser> fullUsers = new LinkedList<>();
-        for (User u : collect) {
+        for (User u : result) {
             FullUser fullUser = new FullUser();
             fullUser.setUser(u);
-            List<Pics> pics = picsService.querySelective(null, u.getId(), FileEnum.LOGO.value());
-            if (pics.size() > 0) {
-                fullUser.setLogo(springFilePath + pics.get(0).getLocation());
-            } else {
-//                fullUser.setLogo(springFilePath + defaultLogo);
+            List<Pics> logos = picsService.querySelective(null, u.getId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+                fullUser.setLogo(springFilePath + logos.get(0).getLocation());
+            }
+            List<Pics> signatures = picsService.querySelective(null, u.getId(), FileEnum.SIGNATURE.value());
+            if (signatures.size() > 0) {
+                fullUser.setSignature(springFilePath + signatures.get(0).getLocation());
             }
             fullUsers.add(fullUser);
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取未签约未标明意向的用户成功！", fullUsers);
+        SimplePage simplePage = new SimplePage(size[0], fullUsers);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取未签约未标明意向的用户成功！", simplePage);
+    }
+
+
+    //    @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
+//    @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
+//    @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
+//    @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order
+    @ResponseBody
+    @GetMapping("/theUsersThatIRequest")
+    @ApiOperation(value = "获取我的意向的用户", notes = "获取我的意向的用户")
+    @PreAuthorize("hasRole('USER')")
+    public String unReceived() {
+        User u = userService.retrieveUserByToken();
+//        PageInfo<Likes> likesPageInfo = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null, null);
+//        int size = (int) likesPageInfo.getTotal();
+//        List<Likes> likes = likesPageInfo.getList();
+//        List<LikeWithUser> likeWithUsers = new LinkedList<>();
+//        for (Likes like : likes) {
+//            LikeWithUser likeWithUser = new LikeWithUser();
+//            User u = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username, User.Column.addTime);
+//            List<Pics> logos = picsService.querySelective(u.getId(), FileEnum.LOGO.value());
+//            if (logos.size() > 0) {
+//                likeWithUser.setLogo(logos.get(0).getLocation());
+//            }
+//            List<Pics> signatures = picsService.querySelective(u.getId(), FileEnum.SIGNATURE.value());
+//            if (signatures.size() > 0) {
+//                likeWithUser.setSignature(signatures.get(0).getLocation());
+//            }
+//            likeWithUser.setLikeId(like.getId());
+//            likeWithUser.setLikedSchoolName(u.getSchoolName());
+//            likeWithUser.setAddTime(like.getAddTime());
+//            likeWithUsers.add(likeWithUser);
+//        }
+        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+//        List<SimpleIntention> simpleIntentions = new LinkedList<>();
+        //我的意向（我是主动）
+        List<Likes> likes = likeService.queryByLikeUserId(u.getId());
+        for (Likes like : likes) {
+//            SimpleIntention simpleIntention = new SimpleIntention();
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(like.getId());
+            likeOrSign.setSigned(false);
+            likeOrSign.setUpdateTime(like.getUpdateTime());
+//            simpleIntention.setUpdateTime(like.getUpdateTime());
+//            simpleIntention.setLikeId(like.getId());
+            User user = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolName(user.getSchoolName());
+            likeOrSign.setSchoolId(user.getId());
+//            simpleIntention.setSchoolId(user.getId());
+//            simpleIntention.setSchoolName(user.getSchoolName());
+            List<Pics> logos = picsService.querySelective(null, like.getLikedUserId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+//                simpleIntention.setLogo(false);
+                likeOrSign.setLogo(logos.get(0).getLocation());
+            } else {
+//                simpleIntention.setLogo(true);
+                likeOrSign.setLogo(null);
+            }
+//            simpleIntentions.add(simpleIntention);
+            likeOrSigns.add(likeOrSign);
+        }
+//        我的签约(我是主动)
+        List<Sign> signs = signService.queryBySignUserId(u.getId());
+        for (Sign sign : signs) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(sign.getId());
+            likeOrSign.setSigned(true);
+            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolId(user.getId());
+            likeOrSign.setSchoolName(user.getSchoolName());
+//            simpleIntentions.add(likeOrSign);
+            List<Pics> logos = picsService.querySelective(null, sign.getSignedUserId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+//                simpleIntention.setLogo(false);
+                likeOrSign.setLogo(logos.get(0).getLocation());
+            } else {
+//                simpleIntention.setLogo(true);
+                likeOrSign.setLogo(null);
+            }
+            likeOrSigns.add(likeOrSign);
+        }
+//        SimplePage simplePage = new SimplePage(size, likeWithUsers);
+//        return ResponseUtil.build(HttpStatus.OK.value(), "未接受我的邀约", simplePage);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向的用户的情况成功！", likeOrSigns);
     }
 
 
     @ResponseBody
-    @GetMapping("/unreceived")
-    @ApiOperation(value = "未接受我的邀约", notes = "未接受我的邀约")
+    @GetMapping("/theUsersThatRequestMe")
+    @ApiOperation(value = "获取对我有意向的用户", notes = "获取对我有意向的用户")
     @PreAuthorize("hasRole('USER')")
-    public String unReceived(
-            @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page,
-            @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize,
-            @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
-            @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
-        User user = userService.retrieveUserByToken();
-        PageInfo<Likes> likesPageInfo = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null, null);
-        List<Likes> likes = likesPageInfo.getList();
-        List<LikeWithUser> likeWithUsers = new LinkedList<>();
+    public Object theUsersThatRequestMe() {
+        User u = userService.retrieveUserByToken();
+        List<LikeOrSign> likeOrSigns = new LinkedList<>();
+        //我的意向（我是被动）
+        List<Likes> likes = likeService.queryByLikedUserId(u.getId());
         for (Likes like : likes) {
-            LikeWithUser likeWithUser = new LikeWithUser();
-            User u = userService.queryById(like.getLikedUserId(), User.Column.id, User.Column.schoolName, User.Column.addTime);
-            likeWithUser.setLikeId(like.getId());
-            likeWithUser.setLikedSchoolName(u.getSchoolName());
-            likeWithUser.setAddTime(like.getAddTime());
-            likeWithUsers.add(likeWithUser);
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setUpdateTime(like.getUpdateTime());
+            likeOrSign.setSignIdOrLikeId(like.getId());
+            likeOrSign.setSigned(false);
+//            SimpleIntention simpleIntention = new SimpleIntention();
+//            simpleIntention.setUpdateTime(like.getUpdateTime());
+//            simpleIntention.setLikeId(like.getId());
+            User user = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolId(user.getId());
+            likeOrSign.setSchoolName(user.getSchoolName());
+//            simpleIntention.setSchoolId(user.getId());
+//            simpleIntention.setSchoolName(user.getSchoolName());
+            List<Pics> logos = picsService.querySelective(like.getLikeUserId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+//                simpleIntention.setLogo(false);
+                likeOrSign.setLogo(logos.get(0).getLocation());
+            } else {
+//                simpleIntention.setLogo(true);
+                likeOrSign.setLogo(null);
+            }
+//            simpleIntentions.add(simpleIntention);
+            likeOrSigns.add(likeOrSign);
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "未接受我的邀约", likeWithUsers);
+        //我的签约(我是主动)
+        List<Sign> signs = signService.queryBySignUserId(u.getId());
+        for (Sign sign : signs) {
+            LikeOrSign likeOrSign = new LikeOrSign();
+            likeOrSign.setSignIdOrLikeId(sign.getId());
+            likeOrSign.setSigned(true);
+            likeOrSign.setUpdateTime(sign.getUpdateTime());
+            User user = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+            likeOrSign.setSchoolId(user.getId());
+            List<Pics> logos = picsService.querySelective(user.getId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+                likeOrSign.setLogo(logos.get(0).getLocation());
+            } else {
+                likeOrSign.setLogo(null);
+            }
+            likeOrSign.setSchoolName(user.getSchoolName());
+//            simpleIntentions.add(likeOrSign);
+            likeOrSigns.add(likeOrSign);
+        }
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户的情况成功！", likeOrSigns);
     }
 
 
@@ -316,12 +463,23 @@ public class LikesAndSignController {
     public String theUserThatLikesMe() {
         User user = userService.retrieveUserByToken();
         List<Likes> likes = likeService.queryByLikedUserId(user.getId());
-        List<User> users = new LinkedList<>();
+        List<FullUser> fullUsers = new LinkedList<>();
         for (Likes like : likes) {
-            User u = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName);
-            users.add(u);
+            User u = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username);
+            FullUser fullUser = new FullUser();
+            fullUser.setUser(u);
+            List<Pics> logos = picsService.querySelective(u.getId(), FileEnum.LOGO.value());
+            if (logos.size() > 0) {
+                fullUser.setLogo(logos.get(0).getLocation());
+            }
+            List<Pics> signatures = picsService.querySelective(u.getId(), FileEnum.SIGNATURE.value());
+            if (signatures.size() > 0) {
+                fullUser.setSignature(signatures.get(0).getLocation());
+            }
+            fullUsers.add(fullUser);
         }
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功", users);
+
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功", fullUsers);
     }
 
     @ResponseBody

@@ -50,7 +50,6 @@ public class UserLikeController {
         User user = userService.retrieveUserByToken();
         for (Integer likedUserId : likedUserIds) {
             try {
-
                 List<Likes> likes = likeService.queryByLikeUserIdAndLikedUserId(likedUserId, user.getId());
                 User u = userService.queryById(likedUserId, User.Column.id, User.Column.schoolName);
                 if (likes.size() > 0) {

@@ -16,6 +16,7 @@ import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -323,8 +324,8 @@ public class AdminLikesController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @GetMapping({"/listSchools"})
     @ApiOperation(
-            value = "签约意向管理->修改签约意向->添加意向高校->输入高校名搜索",
-            notes = "签约意向管理->修改签约意向->添加意向高校->输入高校名搜索"
+            value = "加上了page和pageSize签约意向管理->修改签约意向->添加意向高校->输入高校名搜索",
+            notes = "加上了page和pageSize 签约意向管理->修改签约意向->添加意向高校->输入高校名搜索"
     )
     public Object listSchools(@ApiParam(example = "1", value = "用户id") @RequestParam("userId") Integer userId,
                               @RequestParam(value = "schoolName", required = false) String schoolName,
@@ -333,8 +334,9 @@ public class AdminLikesController {
                               @ApiParam(example = "1", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
                               @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order) {
 //        List<User> users = this.userService.querySelectiveLike((Integer) null, (String) null, schoolName, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, page, pageSize, sort, order);
-        PageInfo<User> userPageInfo = userService.querySelective(schoolName, page, pageSize, sort, order, User.Column.id, User.Column.schoolName);
+        PageInfo<User> userPageInfo = userService.querySelective(schoolName, null, null, sort, order, User.Column.id, User.Column.schoolName);
         final int[] size = {(int) userPageInfo.getTotal()};
+
         List<User> users = userPageInfo.getList();
         List<Sign> signs = signService.queryBySignUserId(userId);
         List<Sign> signs1 = signService.queryBySignedUserId(userId);
@@ -377,7 +379,12 @@ public class AdminLikesController {
                 return true;
             }
         }).collect(Collectors.toList());
-        SimplePage simplePage = new SimplePage(size[0], collect);
+        List<List<User>> partition = ListUtils.partition(collect, pageSize);
+        List<User> result = null;
+        if (partition.size() >= page) {
+            result = partition.get(page-1);
+        }
+        SimplePage simplePage = new SimplePage(size[0], result);
         return ResponseUtil.build(HttpStatus.OK.value(), "搜索用户列表成功！", simplePage);
     }
 

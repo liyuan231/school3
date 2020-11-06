@@ -159,4 +159,8 @@ public class PicsServiceImpl {
             }
         }
     }
+
+    public List<Pics> querySelective(Integer userId, int type) {
+        return querySelective(null,userId,type);
+    }
 }

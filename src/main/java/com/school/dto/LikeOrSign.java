@@ -5,15 +5,24 @@ import java.time.LocalDateTime;
 public class LikeOrSign {
     private Integer signIdOrLikeId;
     private String schoolName;
+    private Integer schoolId;
     private Boolean signed;
     private LocalDateTime updateTime;
-    private Boolean logo;
+    private String logo;
 
-    public Boolean getLogo() {
+    public Integer getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(Integer schoolId) {
+        this.schoolId = schoolId;
+    }
+
+    public String getLogo() {
         return logo;
     }
 
-    public void setLogo(Boolean logo) {
+    public void setLogo(String logo) {
         this.logo = logo;
     }
 

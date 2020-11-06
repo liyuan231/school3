@@ -6,6 +6,24 @@ public class SimplifySign {
     private Integer signId;
     private String schoolName;
     private LocalDateTime updateTime;
+    private String logo;
+    private String signature;
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
 
     public LocalDateTime getUpdateTime() {
         return updateTime;

@@ -90,7 +90,7 @@ public class CertificationDownloadController {
         }
         pics = picsService.querySelective(null, signUserId, FileEnum.SIGNATURE.value());
         if (pics.size() == 0) {
-            throw new NullPointerException("用户未上传signdature！");
+            throw new NullPointerException("用户未上传signature！");
         }
     }
 }

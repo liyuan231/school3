@@ -9,6 +9,24 @@ public class LikeWithUser {
     private Integer likedUserId;
     private String likedSchoolName;
     private LocalDateTime addTime;
+    private String logo;
+    private String signature;
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
 
     public Integer getLikeUserId() {
         return likeUserId;

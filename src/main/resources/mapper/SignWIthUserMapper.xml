@@ -21,7 +21,7 @@
             and u1.school_name like '%${schoolName}%'
         </if>
         order by l.${sort} ${order}
-        <if test="page!=null and pageSize=null">
+        <if test="page!=null and pageSize!=null">
             limit ${page},${pageSize}
         </if>
 

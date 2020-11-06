@@ -5,6 +5,7 @@ import com.school.dto.Certification;
 import com.school.dto.SimplePage;
 import com.school.exception.UserNotFoundException;
 import com.school.model.Sign;
+import com.school.service.impl.PicsServiceImpl;
 import com.school.service.impl.SignServiceImpl;
 import com.school.utils.CommonUtil;
 import com.school.utils.FileUtil;
@@ -12,6 +13,7 @@ import com.school.utils.ResponseUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.collections4.ListUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,8 @@ public class AdminCertificationController {
     private String witness;
     @Value("${spring.file.path}")
     private String springFilePath;
+    @Autowired
+    private PicsServiceImpl picsService;
 
     @Autowired
     FileUtil fileUtil;
@@ -58,7 +62,29 @@ public class AdminCertificationController {
             @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort,
             @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) throws UserNotFoundException {
 
-        List<Sign> signs = signService.querySelective(null, null, schoolName, null, null, null, page, pageSize, sort, order);
+//        List<Sign> signs = signService.querySelective(null, null, schoolName, null, null, null, page, pageSize, sort, order);
+        List<Sign> signs = signService.querySelective(null, null, schoolName, null, null, null, null, null, sort, order);
+
+
+//        signService.querySelective(null,);
+//        List<SignWithUser> signWithUsers = signService.querySelective(null, schoolName, page, pageSize, sort, order);
+//        List<SignWithUserExtend> signWithUserExtends = new LinkedList<>();
+//        Integer size = signService.count(null, schoolName);
+//        for (SignWithUser signWithUser : signWithUsers) {
+//            SignWithUserExtend signWithUserExtend = new SignWithUserExtend();
+//            signWithUserExtend.setSignWithUser(signWithUser);
+//            List<Pics> signUserLogos = picsService.querySelective(null, signWithUser.getSignUserId(), FileEnum.LOGO.value());
+//            signWithUserExtend.setSignUserLogo(signUserLogos.size() > 0);
+//            List<Pics> signUserSignatures = picsService.querySelective(null, signWithUser.getSignUserId(), FileEnum.SIGNATURE.value());
+//            //                signWithUser.setSignature(false);
+//            signWithUserExtend.setSignUserSignature(signUserSignatures.size() > 0);
+//            List<Pics> signedUserLogos = picsService.querySelective(null, signWithUser.getSignedUserId(), FileEnum.LOGO.value());
+//
+//            signWithUserExtend.setSignUserLogo(signedUserLogos.size() > 0);
+//            List<Pics> signedUserSignatures = picsService.querySelective(null, signWithUser.getSignedUserId(), FileEnum.SIGNATURE.value());
+//            signWithUserExtend.setSignedUserSignature(signedUserSignatures.size() > 0);
+//            signWithUserExtends.add(signWithUserExtend);
+//        }
         Integer count = signService.count(null, schoolName, null, null);
         List<Certification> certifications = new LinkedList<>();
         for (Sign sign : signs) {
@@ -70,12 +96,19 @@ public class AdminCertificationController {
             try {
                 commonUtil.fill(certification, sign.getSignUserId(), sign.getSignedUserId());
             } catch (NullPointerException e) {
+                count--;
                 System.out.println("当前用户未上传logo或signature");
                 continue;
             }
             certifications.add(certification);
         }
-        SimplePage<List<Certification>> simplePage = new SimplePage<>(count, certifications);
+        List<List<Certification>> partition = ListUtils.partition(certifications, pageSize);
+        List<Certification> result = null;
+        if(partition.size()>=page){
+            result = partition.get(page - 1);
+        }
+        SimplePage<List<Certification>> simplePage = new SimplePage<>(count, result);
+//        SimplePage<List<?>> simplePage = new SimplePage<>(size, signWithUserExtends);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取签约证书信息成功!", simplePage);
     }
 
