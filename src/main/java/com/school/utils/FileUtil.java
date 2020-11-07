@@ -3,6 +3,13 @@ package com.school.utils;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.PictureRenderData;
 import com.deepoove.poi.util.BytePictureUtils;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
 import com.school.exception.UserNotFoundException;
 import com.school.model.Pics;
 import com.school.model.Sign;
@@ -42,9 +49,6 @@ public class FileUtil {
     private String filePath;
     @Value("${file.certifications.tmp}")
     private String fileCertificationsTmp;
-
-    @Value("${file.name.witness}")
-    private String witnessFileName;
 
     public String downloadCertification(HttpServletResponse response, Sign sign) throws UserNotFoundException {
         List<Pics> userLogos = picsService.querySelective(null, sign.getSignUserId(), FileEnum.LOGO.value());
@@ -151,7 +155,7 @@ public class FileUtil {
 
                 //最顶部公用的图片
                 String formatSignature1 = logo1.substring(logo1.lastIndexOf("."));
-                String formatSignature2  = logo2.substring(logo2.lastIndexOf("."));
+                String formatSignature2 = logo2.substring(logo2.lastIndexOf("."));
                 put("name1", new PictureRenderData(120, 50, formatSignature1, BytePictureUtils.getLocalBufferedImage(new File(signature1))));
                 put("name2", new PictureRenderData(120, 50, formatSignature2, BytePictureUtils.getLocalBufferedImage(new File(signature2))));
 
@@ -275,11 +279,77 @@ public class FileUtil {
         } else {
             zipOutputStream.putNextEntry(new ZipEntry(base));
             BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(srcFile));
-            byte[]bytes = new byte[1024*2];
-            while (bufferedInputStream.read(bytes,0 ,bytes.length) != -1) {
+            byte[] bytes = new byte[1024 * 2];
+            while (bufferedInputStream.read(bytes, 0, bytes.length) != -1) {
                 zipOutputStream.write(bytes);
             }
             bufferedInputStream.close();
         }
     }
+
+    public void downloadCertification2(HttpServletResponse response, Sign sign) throws IOException, DocumentException {
+        User u1 = userService.queryById(sign.getSignUserId(), User.Column.id, User.Column.schoolName);
+        User u2 = userService.queryById(sign.getSignedUserId(), User.Column.id, User.Column.schoolName);
+        List<Pics> u1Logos = picsService.querySelective(u1.getId(), FileEnum.LOGO.value());
+        if (u1Logos.size() == 0) {
+            throw new NullPointerException("logo不存在！");
+        }
+        List<Pics> u2Logos = picsService.querySelective(u2.getId(), FileEnum.LOGO.value());
+        if (u2Logos.size() == 0) {
+            throw new NullPointerException("logo不存在！");
+        }
+        String mouPdf = filePath + "mou.pdf";
+        String logo1 = filePath + u1Logos.get(0).getLocation();
+        String logo2 = filePath + u2Logos.get(0).getLocation();
+        String schoolName1 = u1.getSchoolName();
+        String schoolName2 = u2.getSchoolName();
+//        String targetPath = filePath + fileCertificationsTmp + schoolName1 + "-" + schoolName2 + ".pdf";
+//        DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(targetPath)));
+        String name = "签约证书(" + schoolName1 + "-" + schoolName2 + ")" + ".pdf";
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "filename=" + new String(name.getBytes(), "iso8859-1"));
+        try (DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(response.getOutputStream()));) {
+            PdfStamper pdfStamper = new PdfStamper(new PdfReader(mouPdf), dataOutputStream);
+            PdfContentByte pdfContentByte = pdfStamper.getOverContent(1);
+            insertImages(logo1, logo2, pdfContentByte);
+            insertText(schoolName1, schoolName2, pdfContentByte);
+            pdfStamper.close();
+        }
+    }
+
+    private static void insertImages(String logo1, String logo2, PdfContentByte pdfContentByte) throws IOException, DocumentException {
+
+        Image imageLogo1 = Image.getInstance(logo1);
+        Image imageLogo2 = Image.getInstance(logo2);
+        imageLogo1.setCompressionLevel(9);
+        imageLogo2.setCompressionLevel(9);
+        imageLogo1.scaleToFit(150, 150);
+        imageLogo2.scaleToFit(150, 150);
+        imageLogo1.setTransparency(new int[0]);
+        imageLogo1.setScaleToFitHeight(true);
+        imageLogo2.setScaleToFitHeight(true);
+
+        imageLogo1.setAbsolutePosition(200, 225);
+        imageLogo2.setAbsolutePosition(470, 225);
+
+        pdfContentByte.addImage(imageLogo1);
+        pdfContentByte.addImage(imageLogo2);
+    }
+
+    private static void insertText(String schoolName1, String schoolName2, PdfContentByte pdfContentByte) throws IOException, DocumentException {
+        BaseFont font = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+        pdfContentByte.setColorFill(BaseColor.RED);
+        pdfContentByte.beginText();
+
+        pdfContentByte.setFontAndSize(font, 24);
+        pdfContentByte.setTextMatrix(120, 155);
+        pdfContentByte.showText(schoolName1);
+
+        pdfContentByte.setFontAndSize(font, 24);
+        pdfContentByte.setTextMatrix(450, 155);
+        pdfContentByte.showText(schoolName2);
+        pdfContentByte.endText();
+    }
+
 }

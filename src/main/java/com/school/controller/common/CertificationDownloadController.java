@@ -1,5 +1,6 @@
 package com.school.controller.common;
 
+import com.itextpdf.text.DocumentException;
 import com.school.dto.SimpleSign;
 import com.school.exception.UserNotFoundException;
 import com.school.model.Pics;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -54,6 +56,21 @@ public class CertificationDownloadController {
         return fileUtil.downloadCertification(response, sign);
     }
 
+    @GetMapping("/download2/{signId}")
+    //下载签约证书 pdf,比较漂亮的那个
+//    @PreAuthorize("hasAnyRole('USER','ADMINISTRATOR')")
+    @ApiOperation(value = "下载签约证书2", notes = "下载签约证书2")
+    public String downloadCertification2(@PathVariable("signId") Integer signId,
+                                         HttpServletResponse response) throws UserNotFoundException, IOException, DocumentException {
+
+        Sign sign = signService.queryById(signId);
+        if (sign == null) {
+            return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "该则签约id不存在！");
+        }
+        fileUtil.downloadCertification2(response, sign);
+        return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "下载签约证书成功！");
+    }
+
 
     @GetMapping("/allSignIds")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
@@ -74,8 +91,6 @@ public class CertificationDownloadController {
             User user = userService.queryById(signUserId, User.Column.id, User.Column.schoolName);
             simpleSign.setSignSchoolName(user.getSchoolName());
             Integer signedUserId = sign.getSignedUserId();
-
-
             User signedUser = userService.queryById(signedUserId, User.Column.id, User.Column.schoolName);
             simpleSign.setSignedSchoolName(signedUser.getSchoolName());
             simpleSigns.add(simpleSign);

@@ -5,6 +5,7 @@ C:\Users\Administrator\Desktop\school3\src\main\java\com\school\configuration\Sp
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\Application.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\SignWithUserMapper.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dao\SignMapper.java
+C:\Users\Administrator\Desktop\school3\src\main\java\com\school\dto\SignWithUserExtend.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\service\impl\RoleServiceImpl.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exception\UserSignCorrespondException.java
 C:\Users\Administrator\Desktop\school3\src\main\java\com\school\exceptionHandler\FileExceptionHandler.java

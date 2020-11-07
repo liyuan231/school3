@@ -58,8 +58,6 @@ public class LikesAndSignController {
 
     @Autowired
     userserviceimpl user_service;
-
-
     @Autowired
     private UserServiceImpl userService;
     @Autowired
@@ -68,8 +66,6 @@ public class LikesAndSignController {
     private SignServiceImpl signService;
     @Autowired
     private PicsServiceImpl picsService;
-    @Value("${file.default.logo}")
-    private String defaultLogo;
 
 
     @ResponseBody
@@ -220,10 +216,14 @@ public class LikesAndSignController {
             }
         }).collect(Collectors.toList());
 
-        List<List<User>> partition = ListUtils.partition(collect, pageSize);
         List<User> result = new LinkedList<>();
-        if (partition.size() >= page) {
-            result = partition.get(page - 1);
+        if (page == null && pageSize == null) {
+            result = collect;
+        } else {
+            List<List<User>> partition = ListUtils.partition(collect, pageSize);
+            if (partition.size() >= page) {
+                result = partition.get(page - 1);
+            }
         }
         List<FullUser> fullUsers = new LinkedList<>();
         for (User u : result) {
@@ -249,11 +249,11 @@ public class LikesAndSignController {
 //    @ApiParam(example = "update_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time", required = false) String sort,
 //    @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc", required = false) String order
     @ResponseBody
-//    @GetMapping("/theUsersThatIRequest")
-    @GetMapping("/unreceived")
+    @GetMapping("/retrieveTheUsersThatIRequest")
+//    @GetMapping("/unreceived")
     @ApiOperation(value = "获取我的意向的用户", notes = "获取我的意向的用户")
     @PreAuthorize("hasRole('USER')")
-    public String unReceived() {
+    public String theUsersThatIRequest() {
         User u = userService.retrieveUserByToken();
 //        PageInfo<Likes> likesPageInfo = likeService.querySelective(null, user.getId(), null, null, null, page, pageSize, sort, order, null, null);
 //        int size = (int) likesPageInfo.getTotal();
@@ -459,31 +459,31 @@ public class LikesAndSignController {
     }
 
 
-    @ResponseBody
-    @GetMapping("/retrieveTheUsersThatLikeMe")
-    @ApiOperation(value = "获取对我有意向的用户成功", notes = "获取对我有意向的用户成功")
-    @PreAuthorize("hasRole('USER')")
-    public String theUserThatLikesMe() {
-        User user = userService.retrieveUserByToken();
-        List<Likes> likes = likeService.queryByLikedUserId(user.getId());
-        List<FullUser> fullUsers = new LinkedList<>();
-        for (Likes like : likes) {
-            User u = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username);
-            FullUser fullUser = new FullUser();
-            fullUser.setUser(u);
-            List<Pics> logos = picsService.querySelective(u.getId(), FileEnum.LOGO.value());
-            if (logos.size() > 0) {
-                fullUser.setLogo(logos.get(0).getLocation());
-            }
-            List<Pics> signatures = picsService.querySelective(u.getId(), FileEnum.SIGNATURE.value());
-            if (signatures.size() > 0) {
-                fullUser.setSignature(signatures.get(0).getLocation());
-            }
-            fullUsers.add(fullUser);
-        }
-
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功", fullUsers);
-    }
+//    @ResponseBody
+//    @GetMapping("/retrieveTheUsersThatLikeMe")
+//    @ApiOperation(value = "获取对我有意向的用户成功", notes = "获取对我有意向的用户成功")
+//    @PreAuthorize("hasRole('USER')")
+//    public String theUserThatLikesMe() {
+//        User user = userService.retrieveUserByToken();
+//        List<Likes> likes = likeService.queryByLikedUserId(user.getId());
+//        List<FullUser> fullUsers = new LinkedList<>();
+//        for (Likes like : likes) {
+//            User u = userService.queryById(like.getLikeUserId(), User.Column.id, User.Column.schoolName, User.Column.contact, User.Column.address, User.Column.telephone, User.Column.profession, User.Column.country, User.Column.website, User.Column.location, User.Column.schoolCode, User.Column.username);
+//            FullUser fullUser = new FullUser();
+//            fullUser.setUser(u);
+//            List<Pics> logos = picsService.querySelective(u.getId(), FileEnum.LOGO.value());
+//            if (logos.size() > 0) {
+//                fullUser.setLogo(logos.get(0).getLocation());
+//            }
+//            List<Pics> signatures = picsService.querySelective(u.getId(), FileEnum.SIGNATURE.value());
+//            if (signatures.size() > 0) {
+//                fullUser.setSignature(signatures.get(0).getLocation());
+//            }
+//            fullUsers.add(fullUser);
+//        }
+//
+//        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功", fullUsers);
+//    }
 
     @ResponseBody
     @GetMapping("/choosedme")

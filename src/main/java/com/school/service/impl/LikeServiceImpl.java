@@ -110,24 +110,24 @@ public class LikeServiceImpl {
     }
 
     public void add(Likes like) throws UserNotFoundException, LikesAlreadyExistException, UserNotCorrectException, UserLikesNotCorrespondException, LikesNotFoundException {
-        Integer likeUserId = like.getLikeUserId();
-        Integer likedUserId = like.getLikedUserId();
-        User byId = this.userService.findById(like.getLikedUserId());
-        if (byId == null) {
-            throw new UserNotFoundException("用户不存在！");
-        } else {
-            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, null, likedUserId, null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null).getList();
-            if (likes1.size() >= 1) {
-                update(likes1.get(0).getId(), likeUserId, likedUserId, like.getLikeSchoolName(), like.getLikedSchoolName(), null);
-                throw new LikesAlreadyExistException("已经和该用户表明过意向了!");
-            } else if (likeUserId.equals(likedUserId)) {
-                throw new UserNotCorrectException("不能自己对自己有意向！");
-            } else {
-                like.setAddTime(LocalDateTime.now());
-                like.setUpdateTime(LocalDateTime.now());
-                this.likesMapper.insertSelective(like);
-            }
-        }
+//        Integer likeUserId = like.getLikeUserId();
+//        Integer likedUserId = like.getLikedUserId();
+//        User byId = this.userService.findById(like.getLikedUserId());
+//        if (byId == null) {
+//            throw new UserNotFoundException("用户不存在！");
+//        } else {
+//            List<Likes> likes1 = this.querySelective((Integer) null, likeUserId, null, likedUserId, null, (Integer) null, (Integer) null, (String) null, (String) null, (Boolean) null, null).getList();
+//            if (likes1.size() >= 1) {
+//                update(likes1.get(0).getId(), likeUserId, likedUserId, like.getLikeSchoolName(), like.getLikedSchoolName(), null);
+//                throw new LikesAlreadyExistException("已经和该用户表明过意向了!");
+//            } else if (likeUserId.equals(likedUserId)) {
+//                throw new UserNotCorrectException("不能自己对自己有意向！");
+//            } else {
+        like.setAddTime(LocalDateTime.now());
+        like.setUpdateTime(LocalDateTime.now());
+        this.likesMapper.insertSelective(like);
+//            }
+//        }
     }
 
     public Likes update(Integer id, Integer likeUserId, Integer likedUserId, String likeSchoolName, String likedSchoolName, Boolean deleted) throws UserLikesNotCorrespondException, LikesNotFoundException {
@@ -652,11 +652,11 @@ public class LikeServiceImpl {
         likesMapper.deleteByExample(likesExample);
     }
 
-    public Likes queryByLikeId(Integer likeId,Column...columns) {
+    public Likes queryByLikeId(Integer likeId, Column... columns) {
         LikesExample likesExample = new LikesExample();
         Criteria criteria = likesExample.createCriteria();
         criteria.andIdEqualTo(likeId);
         List<Likes> likes = likesMapper.selectByExampleSelective(likesExample, columns);
-        return likes.size()==0?null:likes.get(0);
+        return likes.size() == 0 ? null : likes.get(0);
     }
 }

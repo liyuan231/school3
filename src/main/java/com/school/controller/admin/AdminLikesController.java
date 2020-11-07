@@ -77,7 +77,6 @@ public class AdminLikesController {
 
     }
 
-    //TODO 此处有一个bug，前端传来的
     @GetMapping({"/listSearchSingle"})
     @ApiOperation(
             value = "查看单项意向，搜索/分页显示",
@@ -224,7 +223,7 @@ public class AdminLikesController {
     @PostMapping({"/addLike/{likeId}"})
     @ApiOperation(
             value = "添加意向",
-            notes = "添加多则意向"
+            notes = "添加意向"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object like(@PathVariable("likeId") Integer likeId) throws LikesNotFoundException {
