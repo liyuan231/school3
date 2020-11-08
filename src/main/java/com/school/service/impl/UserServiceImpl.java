@@ -36,10 +36,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -367,18 +366,20 @@ public class UserServiceImpl implements UserDetailsService {
     }
 
     //    @Async
-    public void importRegistrationForm(MultipartFile file) throws FileFormattingException, IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ExcelDataException, UsernameAlreadyExistException {
-        String originalFilename = file.getOriginalFilename();
+    public void importRegistrationForm(File file) throws FileFormattingException, IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ExcelDataException, UsernameAlreadyExistException {
+        DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+//        String originalFilename = file.getOriginalFilename();
+           String originalFilename = file.getName();
         String format = originalFilename.substring(originalFilename.lastIndexOf("."));
         AssertUtil.isExcel(format);
         Workbook workbook = null;
         if (format.equals(".xlsx")) {
-            workbook = new XSSFWorkbook(file.getInputStream());
+            workbook = new XSSFWorkbook(dataInputStream);
         } else {
             if (!format.equals(".xls")) {
                 throw new FileFormattingException("文件格式不支持，仅支持.xls以及.xlsx");
             }
-            workbook = new HSSFWorkbook(file.getInputStream());
+            workbook = new HSSFWorkbook(dataInputStream);
         }
         int numberOfSheets = ((Workbook) workbook).getNumberOfSheets();
 
@@ -445,6 +446,7 @@ public class UserServiceImpl implements UserDetailsService {
                 }
             }
         }
+        dataInputStream.close();
     }
 
 

@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -61,6 +62,8 @@ public class AdminUserController {
     private PicsServiceImpl picsService;
     @Value("${spring.file.path}")
     private String springFilePath;
+    @Value("${file.path}")
+    private String filePath;
     @Autowired
     private EmailServiceImpl emailService;
     @Autowired
@@ -193,13 +196,15 @@ public class AdminUserController {
             notes = "但对excel的字段名有严格要求，仅支持.xls以及.xlsx，请直接和我讨论这一块"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) {
+    public String uploadFile(@ApiParam(value = "导入的excel文件", example = "test.xlsx") @RequestParam("registrationForm") MultipartFile file, HttpServletRequest request) throws IOException {
         if (file.isEmpty()) {
             return ResponseUtil.build(HttpStatus.BAD_REQUEST.value(), "文件不能为空！", (Object) null);
         } else {
+            String path = filePath + file.getOriginalFilename();
+            file.transferTo(new File(path));
             new Thread(() -> {
                 try {
-                    this.userService.importRegistrationForm(file);
+                    this.userService.importRegistrationForm(new File(path));
                 } catch (FileFormattingException | IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | ExcelDataException | UsernameAlreadyExistException e) {
                     logger.warn(e.getMessage());
                 }
