@@ -1,5 +1,5 @@
-/target/
+target
 【1025修改】签约系统客户端
 【1025修改】签约系统管理端
-/.idea/
-/src/test/
+.idea
+src/test
