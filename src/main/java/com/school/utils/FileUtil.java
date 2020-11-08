@@ -23,7 +23,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -320,12 +324,29 @@ public class FileUtil {
 
     private static void insertImages(String logo1, String logo2, PdfContentByte pdfContentByte) throws IOException, DocumentException {
 
-        Image imageLogo1 = Image.getInstance(logo1);
-        Image imageLogo2 = Image.getInstance(logo2);
+        byte[] bytesLogo1 = transferAlpha(logo1);
+        byte[] bytesLogo2 = transferAlpha(logo2);
+        Image imageLogo1 = Image.getInstance(bytesLogo1);
+        Image imageLogo2 = Image.getInstance(bytesLogo2);
+//        Image imageLogo1 = Image.getInstance(logo1);
+//        Image imageLogo2 = Image.getInstance(logo2);
         imageLogo1.setCompressionLevel(9);
         imageLogo2.setCompressionLevel(9);
-        imageLogo1.scaleToFit(170, 170);
-        imageLogo2.scaleToFit(170, 170);
+        int widthLogo1 = 130;
+        int heightLogo1 = 130;
+        int widthLogo2 = 130;
+        int heightLogo2 = 130;
+        if(imageLogo1.getWidth()>=2*imageLogo1.getHeight()){
+            widthLogo1 = (int) (1.5*widthLogo1);
+            heightLogo1 = (int) (1.5*heightLogo1);
+        }
+        if(imageLogo2.getWidth()>=2*imageLogo2.getHeight()){
+            widthLogo2 = (int) (1.5*widthLogo2);
+            heightLogo2 = (int) (1.5*heightLogo2);
+        }
+
+        imageLogo1.scaleToFit(widthLogo1, heightLogo1);
+        imageLogo2.scaleToFit(widthLogo2, heightLogo2);
 //        imageLogo1.setScaleToFitHeight(true);
 //        imageLogo2.setScaleToFitHeight(true);
         imageLogo1.setScaleToFitLineWhenOverflow(true);
@@ -355,4 +376,32 @@ public class FileUtil {
         pdfContentByte.endText();
     }
 
+    private static byte[] transferAlpha(String imagePath) throws IOException {
+        String format = imagePath.substring(imagePath.lastIndexOf(".") + 1);
+        BufferedImage b = ImageIO.read(new FileInputStream(imagePath));
+        ImageIcon imageIcon = new ImageIcon(b);
+        BufferedImage bufferedImage = new BufferedImage(imageIcon.getIconWidth(), imageIcon.getIconHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics2D graphics2D = (Graphics2D) bufferedImage.getGraphics();
+        graphics2D.drawImage(imageIcon.getImage(), 0, 0, imageIcon.getImageObserver());
+        int alpha = 0;
+        for (int y = bufferedImage.getMinY(); y < bufferedImage.getHeight(); y++) {
+            for (int x = bufferedImage.getMinX(); x < bufferedImage.getWidth(); x++) {
+                int rgb = bufferedImage.getRGB(x, y);
+
+                int R = (rgb & 0xff0000) >> 16;
+                int G = (rgb & 0xff00) >> 8;
+                int B = (rgb & 0xff);
+                if (((255 - R) < 30) && ((255 - G) < 30) && ((255 - B) < 30)) {
+                    rgb = ((alpha + 1) << 24) | (rgb & 0x00ffffff);
+                }
+                bufferedImage.setRGB(x, y, rgb);
+            }
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        graphics2D.drawImage(bufferedImage, 0, 0, imageIcon.getImageObserver());
+//        return bufferedImage;
+//        ImageIO.write(bufferedImage, "png", new File("C:\\Users\\Administrator\\Desktop\\" + System.currentTimeMillis() + "." + format));
+        boolean png = ImageIO.write(bufferedImage, "png", byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
+    }
 }
