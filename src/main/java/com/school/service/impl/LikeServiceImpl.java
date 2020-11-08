@@ -597,7 +597,7 @@ public class LikeServiceImpl {
 //        if (page != null && pageSize != null) {
 //            PageHelper.startPage(page, pageSize);
 //        }
-        List<LikeWithUser> likeWithUsers = likeWithUserMapper.querySelective(year, likeSchoolName, page, pageSize, sort, order);
+        List<LikeWithUser> likeWithUsers = likeWithUserMapper.querySelective(year, likeSchoolName, (page-1)*pageSize, pageSize, sort, order);
         return new PageInfo<>(likeWithUsers);
     }
 

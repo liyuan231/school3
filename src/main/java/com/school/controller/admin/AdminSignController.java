@@ -79,7 +79,7 @@ public class AdminSignController {
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public String search(@ApiParam(example = "schoolName", value = "schoolname") @RequestParam(value = "schoolname", required = false) String schoolname, @ApiParam(example = "2020", value = "year") @RequestParam(value = "year", required = false) Integer year, @ApiParam(example = "1", value = "分页使用，要第几页的数据") @RequestParam(value = "page", required = false) Integer page, @ApiParam(example = "10", value = "分页使用，要该页的几条数据") @RequestParam(value = "pageSize", required = false) Integer pageSize, @ApiParam(example = "add_time", value = "排序方式，从数据库中要的数据使用什么进行排序，如 add_time,update_time") @RequestParam(defaultValue = "add_time") String sort, @ApiParam(example = "desc", value = "排序方式，升序asc还是降序desc") @RequestParam(defaultValue = "desc") String order) {
-        List<SignWithUser> signWithUsers = this.signService.querySelective(year, schoolname, page, pageSize, sort, order);
+        List<SignWithUser> signWithUsers = this.signService.querySelective(year, schoolname, (page-1)*pageSize, pageSize, sort, order);
         int count = this.signService.count(year, schoolname);
         SimplePage<List<Sign>> result = new SimplePage(count, signWithUsers);
         return ResponseUtil.build(HttpStatus.OK.value(), "获取该关键字学校的签约结果成功！", result);

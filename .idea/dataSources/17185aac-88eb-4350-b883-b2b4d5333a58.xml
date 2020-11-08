@@ -1248,6 +1248,7 @@ APPLICATION_PASSWORD_ADMIN,AUDIT_ADMIN,BACKUP_ADMIN,BINLOG_ADMIN,BINLOG_ENCRYPTI
       <Position>15</Position>
       <Comment>账户状态</Comment>
       <DataType>int|0s</DataType>
+      <DefaultExpression>1</DefaultExpression>
     </column>
     <column id="357" parent="293" name="profession">
       <Position>16</Position>
