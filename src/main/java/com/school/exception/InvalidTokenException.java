@@ -5,9 +5,7 @@
 
 package com.school.exception;
 
-import org.springframework.security.core.AuthenticationException;
-
-public class InvalidTokenException extends AuthenticationException {
+public class InvalidTokenException extends Throwable {
     public InvalidTokenException(String msg, Throwable t) {
         super(msg, t);
     }

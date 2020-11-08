@@ -324,14 +324,14 @@ public class FileUtil {
         Image imageLogo2 = Image.getInstance(logo2);
         imageLogo1.setCompressionLevel(9);
         imageLogo2.setCompressionLevel(9);
-        imageLogo1.scaleToFit(150, 150);
-        imageLogo2.scaleToFit(150, 150);
-        imageLogo1.setTransparency(new int[0]);
-        imageLogo1.setScaleToFitHeight(true);
-        imageLogo2.setScaleToFitHeight(true);
-
-        imageLogo1.setAbsolutePosition(200, 225);
-        imageLogo2.setAbsolutePosition(470, 225);
+        imageLogo1.scaleToFit(170, 170);
+        imageLogo2.scaleToFit(170, 170);
+//        imageLogo1.setScaleToFitHeight(true);
+//        imageLogo2.setScaleToFitHeight(true);
+        imageLogo1.setScaleToFitLineWhenOverflow(true);
+        imageLogo2.setScaleToFitLineWhenOverflow(true);
+        imageLogo1.setAbsolutePosition(200, 237);
+        imageLogo2.setAbsolutePosition(470, 237);
 
         pdfContentByte.addImage(imageLogo1);
         pdfContentByte.addImage(imageLogo2);
@@ -342,13 +342,16 @@ public class FileUtil {
         pdfContentByte.setColorFill(BaseColor.RED);
         pdfContentByte.beginText();
 
+        int logo1X = 325 - (((schoolName1.length() >> 1) * 37)) % 325;
         pdfContentByte.setFontAndSize(font, 24);
-        pdfContentByte.setTextMatrix(120, 155);
+        pdfContentByte.setTextMatrix(logo1X, 153);
         pdfContentByte.showText(schoolName1);
 
+
         pdfContentByte.setFontAndSize(font, 24);
-        pdfContentByte.setTextMatrix(450, 155);
+        pdfContentByte.setTextMatrix(440, 153);
         pdfContentByte.showText(schoolName2);
+
         pdfContentByte.endText();
     }
 

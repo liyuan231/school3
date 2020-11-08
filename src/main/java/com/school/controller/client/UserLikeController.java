@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -94,6 +95,7 @@ public class UserLikeController {
     @PreAuthorize("hasRole('USER')")
     public Object like(@PathVariable("likeId") Integer likeId) throws LikesNotFoundException {
         Likes likes = likeService.queryByLikeId(likeId);
+        Assert.notNull(likes, "该则意向不存在！");
         LocalDateTime likeAddTime = likes.getAddTime();
         likeService.deleteById(likeId);
         User likeUser = userService.queryById(likes.getLikeUserId(), User.Column.id, User.Column.schoolName);
@@ -181,8 +183,6 @@ public class UserLikeController {
         return ResponseUtil.build(HttpStatus.OK.value(), "获取我的意向用户", likeOrSigns);
 //        return ResponseUtil.build(HttpStatus.OK.value(), "获取对我有意向的用户成功！", fullUsers);
     }
-
-
 
 
 }

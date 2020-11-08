@@ -8,21 +8,11 @@ package com.school.component.security;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.school.component.jwt.JwtTokenGenerator;
-import com.school.exception.InvalidTokenException;
+import com.school.exception.JwtExpiredAuthenticationException;
 import com.school.model.Role;
 import com.school.model.Roletoauthorities;
 import com.school.service.impl.RoleServiceImpl;
 import com.school.service.impl.RoleToAuthoritiesServiceImpl;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -38,6 +28,13 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -75,13 +72,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void authenticationTokenHandle(String jwtToken, HttpServletRequest request) throws InvalidTokenException {
+    private void authenticationTokenHandle(String jwtToken, HttpServletRequest request) {
         JSONObject jsonObject = null;
 
         try {
             jsonObject = this.jwtTokenGenerator.decodeAndVerify(jwtToken);
-        } catch (IllegalArgumentException var12) {
-            throw new InvalidTokenException("token解析错误！");
+        } catch (JwtExpiredAuthenticationException var12) {
+            throw var12;
+//            throw new InvalidTokenException("token解析错误！");
         }
 
         if (!Objects.nonNull(jsonObject)) {
@@ -91,21 +89,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JSONArray authoritiesJSONArray = jsonObject.getJSONArray("roles");
             Iterator iterator = authoritiesJSONArray.iterator();
             String next;
-            while(iterator.hasNext()) {
-                next = (String)iterator.next();
-                roles_.add(new SimpleGrantedAuthority("ROLE_"+next));
-                Role role = this.roleService.querySelective((Integer)null, next);
-                List<Roletoauthorities> byRoleId = this.roleToAuthoritiesService.querySelective((Integer)null, role.getId(), (String)null);
+            while (iterator.hasNext()) {
+                next = (String) iterator.next();
+                roles_.add(new SimpleGrantedAuthority("ROLE_" + next));
+                Role role = this.roleService.querySelective((Integer) null, next);
+                List<Roletoauthorities> byRoleId = this.roleToAuthoritiesService.querySelective((Integer) null, role.getId(), (String) null);
                 Iterator var10 = byRoleId.iterator();
-                while(var10.hasNext()) {
-                    Roletoauthorities roletoauthorities = (Roletoauthorities)var10.next();
+                while (var10.hasNext()) {
+                    Roletoauthorities roletoauthorities = (Roletoauthorities) var10.next();
                     roles_.add(new SimpleGrantedAuthority(roletoauthorities.getAuthority()));
                 }
             }
-
             next = jsonObject.getString("audience");
             User user = new User(next, "[PASSWORD]", roles_);
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, (Object)null, roles_);
+            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, (Object) null, roles_);
             usernamePasswordAuthenticationToken.setDetails((new WebAuthenticationDetailsSource()).buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
         }

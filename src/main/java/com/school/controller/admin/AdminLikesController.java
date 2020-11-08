@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -222,12 +223,13 @@ public class AdminLikesController {
 
     @PostMapping({"/addLike/{likeId}"})
     @ApiOperation(
-            value = "添加意向",
-            notes = "添加意向"
+            value = "管理端同意一则意向成功",
+            notes = "管理端同意一则意向成功"
     )
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public Object like(@PathVariable("likeId") Integer likeId) throws LikesNotFoundException {
         Likes likes = likeService.queryByLikeId(likeId);
+        Assert.notNull(likes, "该则意向不存在！");
         LocalDateTime likeAddTime = likes.getAddTime();
         likeService.deleteById(likeId);
         User likeUser = userService.queryById(likes.getLikeUserId(), User.Column.id, User.Column.schoolName);
