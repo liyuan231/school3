@@ -840,8 +840,8 @@ public class LikesAndSignController {
         }
         String logo1, logo2, name1, name2;
         InetAddress ia = InetAddress.getLocalHost();
-        User user_1 = new User();
-        User user_2 = new User();
+        User user_1;
+        User user_2;
         try {
             user_1 = user_service.select_user(host_id);
             user_2 = user_service.select_user(liked_id);
