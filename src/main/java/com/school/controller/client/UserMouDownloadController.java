@@ -30,10 +30,8 @@ public class UserMouDownloadController {
             response.setCharacterEncoding("UTF-8");
             BufferedOutputStream outputStream = new BufferedOutputStream(response.getOutputStream());
             response.setHeader("Content-disposition", String.format("attachment;filename=\"%s\"", "mou-sample.docx"));
-//            BufferedReader bre = null;
             String file = filePath + "mou-sample.docx";
-            InputStream input = null;
-            input = new FileInputStream(file);
+            InputStream input = new FileInputStream(file);
             byte[] buf = new byte[1024];
             int bytesRead;
             while ((bytesRead = input.read(buf)) > 0) {
@@ -46,6 +44,7 @@ public class UserMouDownloadController {
         }
 
     }
+
     @GetMapping("/download2")
     @ApiOperation(value = "下载mou-sample.pdf模板", notes = "客户端下载管理端的mou模板")
     @PreAuthorize("(hasRole('USER'))or hasRole('ADMINISTRATOR')")

@@ -56,6 +56,13 @@ public class UserLikeController {
         User user = userService.retrieveUserByToken();
         for (Integer likedUserId : likedUserIds) {
             try {
+
+                List<Sign> signs1 = signService.queryBySignUserAndSignedUserId(user.getId(), likedUserId, Sign.Column.id);
+                List<Sign> signs2 = signService.queryBySignUserAndSignedUserId(likedUserId, user.getId(), Sign.Column.id);
+                //说明签约表中已有该则签约,那还表明什么意向！！！
+                if (signs1.size() + signs2.size() > 0) {
+                    continue;
+                }
                 List<Likes> likes = likeService.queryByLikeUserIdAndLikedUserId(likedUserId, user.getId());
                 User u = userService.queryById(likedUserId, User.Column.id, User.Column.schoolName);
                 if (likes.size() > 0) {

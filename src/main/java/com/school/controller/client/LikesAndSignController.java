@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -821,6 +822,38 @@ public class LikesAndSignController {
 //        result.put("list", list);
 //        return result;
 //    }
+
+    @ResponseBody
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/get_certi2")
+    @ApiOperation(value = "在线查看签约证书", notes = "在线查看签约证书")
+    public Object retrieveLogoAndSchoolNameByUserId(@ApiParam(example = "1", value = "当前用户id") @RequestParam("host_id") Integer signUserId,
+                                                    @ApiParam(example = "2", value = "被签约用户的id") @RequestParam("liked_id") Integer signedUserId) throws UnknownHostException {
+//
+        picture signUserPicture = new picture();
+        picture signedUserPicture = new picture();
+        User signUser = userService.queryById(signUserId, User.Column.id, User.Column.schoolName);
+        Assert.notNull(signUser, "用户id不存在");
+        User signedUser = userService.queryById(signedUserId, User.Column.id, User.Column.schoolName);
+        Assert.notNull(signedUser, "用户id不存在");
+        List<Pics> signUserLogos = picsService.querySelective(signUserId, FileEnum.LOGO.value());
+        Assert.notEmpty(signUserLogos, "用户未上传logo！");
+        signUserPicture.setLogo(springFilePath + signUserLogos.get(0).getLocation());
+        List<Pics> signedUserLogos = picsService.querySelective(signedUserId, FileEnum.LOGO.value());
+        Assert.notEmpty(signedUserLogos, "用户未上传logo！");
+        signedUserPicture.setLogo(springFilePath + signedUserLogos.get(0).getLocation());
+        Map<String, Object> result = new HashMap<>();
+        result.put("picture1", signUserPicture);
+        result.put("picture2", signedUserPicture);
+        result.put("user_info1", signUser);
+        result.put("user_info2", signedUser);
+        result.put("msg", "获取某一签约证书信息成功！");
+        result.put("code", 200);
+        return result;
+//        result.put("AUDFLOGO", "http://175.24.4.196/images/ddcc226b-ee92-4a39-84ed-2842ecd400c1.jpg");
+
+    }
+
 
     @ResponseBody
     @PreAuthorize("hasRole('USER')")
