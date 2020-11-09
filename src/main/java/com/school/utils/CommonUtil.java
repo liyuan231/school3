@@ -40,13 +40,13 @@ public class CommonUtil {
             throw new NullPointerException("当前用户尚未上传logo！");
         }
         String signUserLogo = springFilePath + logos.get(0).getLocation();
-        List<Pics> signatures = picsService.querySelective(null, signUserId, FileEnum.SIGNATURE.value());
-        if (signatures.size() == 0) {
-            throw new NullPointerException("当前用户尚未上传校长签章！");
-        }
-        String signUserSignature = springFilePath + signatures.get(0).getLocation();
+//        List<Pics> signatures = picsService.querySelective(null, signUserId, FileEnum.SIGNATURE.value());
+//        if (signatures.size() == 0) {
+//            throw new NullPointerException("当前用户尚未上传校长签章！");
+//        }
+//        String signUserSignature = springFilePath + signatures.get(0).getLocation();
         certification.setSignUserLogo(signUserLogo);
-        certification.setSignUserSignature(signUserSignature);
+//        certification.setSignUserSignature(signUserSignature);
 
         //------------------------------
         User signedUser = userService.findById(signedUserId);
@@ -58,13 +58,13 @@ public class CommonUtil {
             throw new NullPointerException("当前用户尚未上传logo！");
         }
         String signedUserLogo = springFilePath + signedUserlogos.get(0).getLocation();
-        List<Pics> signedUserSignatures = picsService.querySelective(null, signedUserId, FileEnum.SIGNATURE.value());
-        if (signedUserSignatures.size() == 0) {
-            throw new NullPointerException("当前用户尚未上传校长签章！");
-        }
-        String signedUserSignature = springFilePath + signedUserSignatures.get(0).getLocation();
+//        List<Pics> signedUserSignatures = picsService.querySelective(null, signedUserId, FileEnum.SIGNATURE.value());
+//        if (signedUserSignatures.size() == 0) {
+//            throw new NullPointerException("当前用户尚未上传校长签章！");
+//        }
+//        String signedUserSignature = springFilePath + signedUserSignatures.get(0).getLocation();
         certification.setSignedUserLogo(signedUserLogo);
-        certification.setSignedUserSignature(signedUserSignature);
+//        certification.setSignedUserSignature(signedUserSignature);
     }
 
 }

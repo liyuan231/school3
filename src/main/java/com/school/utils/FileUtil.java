@@ -332,10 +332,10 @@ public class FileUtil {
 //        Image imageLogo2 = Image.getInstance(logo2);
         imageLogo1.setCompressionLevel(9);
         imageLogo2.setCompressionLevel(9);
-        int widthLogo1 = 130;
-        int heightLogo1 = 130;
-        int widthLogo2 = 130;
-        int heightLogo2 = 130;
+        int widthLogo1 = 140;
+        int heightLogo1 = 140;
+        int widthLogo2 = 140;
+        int heightLogo2 = 140;
         if(imageLogo1.getWidth()>=2*imageLogo1.getHeight()){
             widthLogo1 = (int) (1.5*widthLogo1);
             heightLogo1 = (int) (1.5*heightLogo1);
@@ -365,12 +365,12 @@ public class FileUtil {
 
         int logo1X = 325 - (((schoolName1.length() >> 1) * 37)) % 325;
         pdfContentByte.setFontAndSize(font, 24);
-        pdfContentByte.setTextMatrix(logo1X, 153);
+        pdfContentByte.setTextMatrix(logo1X, 133);
         pdfContentByte.showText(schoolName1);
 
 
         pdfContentByte.setFontAndSize(font, 24);
-        pdfContentByte.setTextMatrix(440, 153);
+        pdfContentByte.setTextMatrix(440, 133);
         pdfContentByte.showText(schoolName2);
 
         pdfContentByte.endText();

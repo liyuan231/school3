@@ -87,8 +87,9 @@ public class UserController {
         logger.info("[" + request.getRemoteAddr() + "] is retrieving a verificationCode for his account!");
         AssertUtil.usernameNotNull(username, "邮箱号不应为空！");
         AssertUtil.isValidMail(username, "邮箱格式错误!");
-        emailService.sendVerificationCode("签约系统验证码", "签约系统验证码（用于重置密码，5分钟内有效）", username, 5, TimeUnit.MINUTES);//忘记密码
-        return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！", null);
+        emailService.sendVerificationCode("亚洲大学校长论坛签约系统验证码", "尊敬的亚洲大学校长论坛会员：\n" +
+                "欢迎贵校加入亚洲大学校长论坛签约系统。本次签约系统验证码为（此验证码用于重置密码，10分钟内有效）", username, 10, TimeUnit.MINUTES);
+        return ResponseUtil.build(HttpStatus.OK.value(), "获取邮箱验证码成功！");
     }
 
 

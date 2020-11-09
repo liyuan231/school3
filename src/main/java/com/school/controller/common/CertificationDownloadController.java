@@ -79,8 +79,10 @@ public class CertificationDownloadController {
         List<SimpleSign> simpleSigns = new LinkedList<>();
         for (Sign sign : signs) {
             try {
-                checkLogoAndSignature(sign.getSignUserId());
-                checkLogoAndSignature(sign.getSignedUserId());
+                checkLogo(sign.getSignUserId());
+                checkLogo(sign.getSignedUserId());
+//                checkLogoAndSignature(sign.getSignUserId());
+//                checkLogoAndSignature(sign.getSignedUserId());
             } catch (NullPointerException e) {
                 System.out.println(e.getMessage());
                 continue;
@@ -96,6 +98,13 @@ public class CertificationDownloadController {
             simpleSigns.add(simpleSign);
         }
         return ResponseUtil.build(HttpStatus.OK.value(), "获取证书id成功！", simpleSigns);
+    }
+
+    private void checkLogo(Integer signUserId) {
+        List<Pics> pics = picsService.querySelective(null, signUserId, FileEnum.LOGO.value());
+        if (pics.size() == 0) {
+            throw new NullPointerException("用户未上传logo！");
+        }
     }
 
     private void checkLogoAndSignature(Integer signUserId) throws NullPointerException {

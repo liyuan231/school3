@@ -162,8 +162,8 @@ public class UserSignController {
     @GetMapping("/countSigns")
     public String countSigns() {
         User user = userService.retrieveUserByToken();
-        List<Sign> signs1 = signService.queryBySignUserId(user.getId());
-        List<Sign> signs = signService.queryBySignedUserId(user.getId());
+        List<Sign> signs1 = signService.queryBySignUserId(user.getId(), Sign.Column.id);
+        List<Sign> signs = signService.queryBySignedUserId(user.getId(), Sign.Column.id);
         return ResponseUtil.build(HttpStatus.OK.value(), "贵校已于n个高校达成合作意向！", signs1.size() + signs.size());
     }
 

@@ -9,6 +9,7 @@ public interface SignWithUserMapper {
     public List<SignWithUser> querySelective(
             @Param("year")Integer year,
             @Param("schoolName") String schoolName,
+            //此处page其实= （page-1）*pageSize
             @Param("page")Integer page,
             @Param("pageSize")Integer pageSize,
             @Param("sort") String sort,

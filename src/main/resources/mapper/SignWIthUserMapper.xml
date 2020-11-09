@@ -18,7 +18,7 @@
         ((l.sign_user_id = u1.id)
         and (l.signed_user_id = u2.id))
         <if test="schoolName!=null">
-            and u1.school_name like '%${schoolName}%'
+            and (u1.school_name like '%${schoolName}%' or u2.school_name like '%${schoolName}%')
         </if>
         order by l.${sort} ${order}
         <if test="page!=null and pageSize!=null">

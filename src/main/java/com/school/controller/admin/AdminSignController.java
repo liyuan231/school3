@@ -5,6 +5,7 @@
 
 package com.school.controller.admin;
 
+import com.github.pagehelper.PageInfo;
 import com.school.dto.SignWithUser;
 import com.school.dto.SimplePage;
 import com.school.exception.SignNotFoundException;
@@ -134,8 +135,10 @@ public class AdminSignController {
     @PostMapping({"/remind"})
     public String remindSchools(@ApiParam(example = "用户id数组", value = "[1,2,3]") @RequestParam("userIds") Integer[] userIds) {
         List<User> users = null;
-        if (userIds == null || userIds.length != 0) {
-            users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+        if (userIds == null || userIds.length == 0) {
+//            users = this.userService.querySelectiveLike((Integer) null, (String) null, (String) null, (String) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (String) null, (Integer) null, (String) null, (Integer) null, (Integer) null, (String) null, (String) null);
+            PageInfo<User> userPageInfo = this.userService.querySelective();
+            users = userPageInfo.getList();
         } else {
             users = new LinkedList<>();
             for (Integer userId : userIds) {
@@ -153,7 +156,8 @@ public class AdminSignController {
             while (var2.hasNext()) {
                 User user = (User) var2.next();
                 try {
-                    this.emailService.send(user.getUsername(), "!签约结果提醒!", "记得查看签约结果~");
+                    this.emailService.send(user.getUsername(), "亚洲大学校长论坛签约系统签约结果提醒", "尊敬的亚洲大学校长论坛会员\n" +
+                            "欢迎贵校加入亚洲大学校长论坛签约系统。请通过 https://aupf2020.com/sign-system/ 来查看自己的签约结果，祝您找到合作意向伙伴！");
                 } catch (MailException var5) {
                     this.logger.warn("该邮箱号不存在->" + user.getUsername());
                 }

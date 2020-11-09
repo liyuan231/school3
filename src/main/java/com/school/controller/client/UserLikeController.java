@@ -107,6 +107,9 @@ public class UserLikeController {
         sign.setSignedSchoolName(likedUser.getSchoolName());
         sign.setAddTime(likeAddTime);
         signService.add(sign);
+        //每添加一则签约，删除其对应的所有意向
+        likeService.deleteByLikeUserIdAndLikedUserId(likeUser.getId(), likedUser.getId());
+        likeService.deleteByLikeUserIdAndLikedUserId(likedUser.getId(), likeUser.getId());
         return ResponseUtil.build(HttpStatus.OK.value(), "用户同意一则意向！");
     }
     //golden

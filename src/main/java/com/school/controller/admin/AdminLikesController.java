@@ -203,6 +203,12 @@ public class AdminLikesController {
                     if (likedUser == null) {
                         throw new UserNotFoundException("用户id不存在！");
                     } else {
+//                        List<Sign> signs1 = signService.queryBySignUserAndSignedUserId(likeUserId, likedUserId, Sign.Column.id);
+//                        List<Sign> signs2 = signService.queryBySignUserAndSignedUserId(likedUserId, likeUserId, Sign.Column.id);
+//                        //已存在签约
+//                        if (signs1.size() + signs2.size() > 0) {
+//                            continue;
+//                        }
                         //TODO 此处逻辑可优化
 //                        User likedUser = users.get(0);
                         Likes like = new Likes();
@@ -241,6 +247,9 @@ public class AdminLikesController {
         sign.setSignedSchoolName(likedUser.getSchoolName());
         sign.setAddTime(likeAddTime);
         signService.add(sign);
+        //每添加一则签约，删除其对应的所有意向
+        likeService.deleteByLikeUserIdAndLikedUserId(likeUser.getId(), likedUser.getId());
+        likeService.deleteByLikeUserIdAndLikedUserId(likedUser.getId(), likeUser.getId());
         return ResponseUtil.build(HttpStatus.OK.value(), "管理端同意一则意向成功！");
     }
 
